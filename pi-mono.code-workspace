@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "pi",
+			"path": "."
+		},
+		{
+			"path": "../../moms"
+		}
+	],
+	"settings": {}
+}
