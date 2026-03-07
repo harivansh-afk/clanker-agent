@@ -228,6 +228,9 @@ export class GatewayRuntime {
       void this.handleHttpRequest(request, response).catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
         const statusCode = error instanceof HttpError ? error.statusCode : 500;
+        this.log(
+          `[http] <-- ${request.method ?? "GET"} ${request.url ?? "/"} ${statusCode} error: ${message}`,
+        );
         if (!response.writableEnded) {
           this.writeJson(response, statusCode, { error: message });
         }
@@ -298,6 +301,9 @@ export class GatewayRuntime {
       queuedMessage.request.sessionKey,
     );
     if (managedSession.queue.length >= this.config.session.maxQueuePerSession) {
+      this.log(
+        `[queue] session=${queuedMessage.request.sessionKey} queue full (${this.config.session.maxQueuePerSession})`,
+      );
       return {
         ok: false,
         response: "",
@@ -442,6 +448,9 @@ export class GatewayRuntime {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      this.log(
+        `[prompt] session=${managedSession.sessionKey} error: ${message}`,
+      );
       if (message.includes("aborted")) {
         this.emit(managedSession, {
           type: "aborted",
@@ -677,6 +686,8 @@ export class GatewayRuntime {
       return;
     }
 
+    this.log(`[http] --> ${method} ${path}`);
+
     if (method === "GET" && path === "/ready") {
       this.requireAuth(request, response);
       if (response.writableEnded) return;
@@ -904,6 +915,9 @@ export class GatewayRuntime {
       return;
     }
 
+    const preview = text.length > 80 ? `${text.slice(0, 80)}...` : text;
+    this.log(`[chat] session=${sessionKey} text="${preview}"`);
+
     // Set up SSE response headers
     response.writeHead(200, {
       "Content-Type": "text/event-stream",
@@ -952,20 +966,27 @@ export class GatewayRuntime {
       if (!clientDisconnected) {
         stopStreaming();
         if (result.ok) {
+          this.log(`[chat] session=${sessionKey} completed ok`);
           finishVercelStream(response, "stop");
         } else {
           const isAbort = result.error?.includes("aborted");
+          this.log(
+            `[chat] session=${sessionKey} failed: ${result.error}${isAbort ? " (aborted)" : ""}`,
+          );
           if (isAbort) {
             finishVercelStream(response, "error");
           } else {
             errorVercelStream(response, result.error ?? "Unknown error");
           }
         }
+      } else {
+        this.log(`[chat] session=${sessionKey} client disconnected`);
       }
     } catch (error) {
       if (!clientDisconnected) {
         stopStreaming();
         const message = error instanceof Error ? error.message : String(error);
+        this.log(`[chat] session=${sessionKey} exception: ${message}`);
         errorVercelStream(response, message);
       }
     }
@@ -1008,6 +1029,9 @@ export class GatewayRuntime {
     statusCode: number,
     payload: unknown,
   ): void {
+    if (statusCode >= 400) {
+      this.log(`[http] <-- ${statusCode} ${JSON.stringify(payload)}`);
+    }
     response.statusCode = statusCode;
     response.setHeader("content-type", "application/json; charset=utf-8");
     response.end(JSON.stringify(payload));
