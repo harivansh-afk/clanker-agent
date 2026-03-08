@@ -841,11 +841,13 @@ export async function syncProjectMemory(
   if (action === "status") {
     const dirty = await getRepositoryDirtyState(localPath, projectPath);
     return {
-      success: repositoryReady,
+      success: repositoryReady && dirty !== null,
       message: repositoryReady
-        ? dirty
-          ? "Memory repository has uncommitted changes"
-          : "Memory repository is clean"
+        ? dirty === null
+          ? "Memory repository status is unavailable"
+          : dirty
+            ? "Memory repository has uncommitted changes"
+            : "Memory repository is clean"
         : configured
           ? "Memory repository is not initialized"
           : "Memory repository is not configured",
