@@ -197,9 +197,8 @@ export function parseArgs(
 }
 
 export function printHelp(): void {
-  const defaultToolsText = defaultCodingToolNames.join(",");
-  const availableToolsText = Object.keys(allTools).join(", ");
-  const defaultToolsLabel = defaultCodingToolNames.join(", ");
+	const defaultToolsText = defaultCodingToolNames.join(", ");
+	const availableToolsText = Object.keys(allTools).join(", ");
 
   console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, browser, edit, write tools
 
@@ -330,7 +329,7 @@ ${chalk.bold("Environment Variables:")}
   PI_SHARE_VIEWER_URL              - Base URL for /share command (default: https://pi.dev/session/)
   PI_AI_ANTIGRAVITY_VERSION        - Override Antigravity User-Agent version (e.g., 1.23.0)
 
-${chalk.bold(`Available Tools (default: ${defaultToolsLabel}):`)}
+${chalk.bold(`Available Tools (default: ${defaultToolsText}):`)}
   read   - Read file contents
   bash   - Execute bash commands
   browser - Browser automation with persistent state

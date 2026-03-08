@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -41,7 +41,7 @@ function getTextOutput(result: ToolResultLike): string {
 
 function createMockBrowserOperations(
 	output = "",
-	exitCode = 0,
+	exitCode: number | null = 0,
 ): {
 	calls: BrowserExecCall[];
 	operations: BrowserOperations;
@@ -166,6 +166,48 @@ describe("browser tool", () => {
 		expect(calls).toHaveLength(0);
 	});
 
+	it("preserves empty string wait targets instead of falling through to loadState", async () => {
+		const cwd = createTempDir("coding-agent-browser-wait-empty-");
+		const profileDir = join(cwd, "profile");
+		const stateDir = join(cwd, "states");
+		const { calls, operations } = createMockBrowserOperations();
+
+		const browserTool = createBrowserTool(cwd, {
+			operations,
+			profileDir,
+			stateDir,
+		});
+
+		await browserTool.execute("browser-wait-empty-text", {
+			action: "wait",
+			text: "",
+		});
+
+		expect(calls[0]?.args).toEqual(["--profile", profileDir, "wait", "--text", ""]);
+	});
+
+	it("does not create browser directories when validation fails before command construction", async () => {
+		const cwd = createTempDir("coding-agent-browser-invalid-open-");
+		const profileDir = join(cwd, "profile");
+		const stateDir = join(cwd, "states");
+		const { operations } = createMockBrowserOperations();
+
+		const browserTool = createBrowserTool(cwd, {
+			operations,
+			profileDir,
+			stateDir,
+		});
+
+		await expect(
+			browserTool.execute("browser-open-missing-url", {
+				action: "open",
+			}),
+		).rejects.toThrow("browser open requires url");
+
+		expect(existsSync(profileDir)).toBe(false);
+		expect(existsSync(stateDir)).toBe(false);
+	});
+
 	it("stores named state under the managed browser state directory", async () => {
 		const cwd = createTempDir("coding-agent-browser-state-");
 		const profileDir = join(cwd, "profile");
@@ -189,6 +231,26 @@ describe("browser tool", () => {
 		const details = result.details as BrowserToolDetails | undefined;
 		expect(details?.statePath).toBe(expectedStatePath);
 		expect(getTextOutput(result)).toContain(expectedStatePath);
+	});
+
+	it("treats null exit codes as browser failures", async () => {
+		const cwd = createTempDir("coding-agent-browser-null-exit-");
+		const profileDir = join(cwd, "profile");
+		const stateDir = join(cwd, "states");
+		const { operations } = createMockBrowserOperations("browser crashed", null);
+
+		const browserTool = createBrowserTool(cwd, {
+			operations,
+			profileDir,
+			stateDir,
+		});
+
+		await expect(
+			browserTool.execute("browser-open-null-exit", {
+				action: "open",
+				url: "https://example.com",
+			}),
+		).rejects.toThrow('browser crashed\n\nBrowser action "open" failed');
 	});
 
 	it("accepts browser in --tools and exposes it in default tool wiring", () => {

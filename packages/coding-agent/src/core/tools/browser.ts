@@ -186,6 +186,8 @@ interface BrowserCommandContext {
 	statePath?: string;
 }
 
+type BrowserCommandContextWithoutProfile = Omit<BrowserCommandContext, "profilePath">;
+
 function resolveCommandPath(cwd: string, inputPath: string): string {
 	return resolve(cwd, inputPath);
 }
@@ -235,6 +237,18 @@ function ensureBrowserDirs(profilePath: string, stateDir: string): void {
 	mkdirSync(stateDir, { recursive: true });
 }
 
+function createBrowserCommandContext(
+	profilePath: string,
+	stateDir: string,
+	context: BrowserCommandContextWithoutProfile,
+): BrowserCommandContext {
+	ensureBrowserDirs(profilePath, stateDir);
+	return {
+		...context,
+		profilePath,
+	};
+}
+
 function buildWaitArgs(input: BrowserToolInput): { args: string[]; status: string } {
 	const targets = [
 		input.ref !== undefined ? "ref" : undefined,
@@ -248,16 +262,16 @@ function buildWaitArgs(input: BrowserToolInput): { args: string[]; status: strin
 		throw new Error("browser wait requires exactly one of ref, url, text, ms, or loadState");
 	}
 
-	if (input.ref) {
+	if (input.ref !== undefined) {
 		return { args: ["wait", input.ref], status: `Waiting for ${input.ref}...` };
 	}
-	if (input.url) {
+	if (input.url !== undefined) {
 		return {
 			args: ["wait", "--url", input.url],
 			status: `Waiting for URL ${input.url}...`,
 		};
 	}
-	if (input.text) {
+	if (input.text !== undefined) {
 		return {
 			args: ["wait", "--text", input.text],
 			status: `Waiting for text "${input.text}"...`,
@@ -283,8 +297,6 @@ function buildBrowserCommand(
 ): BrowserCommandContext {
 	const profilePath = getBrowserProfilePath(cwd, options);
 	const stateDir = getBrowserStateDir(cwd, options);
-	ensureBrowserDirs(profilePath, stateDir);
-
 	const baseArgs = ["--profile", profilePath];
 
 	switch (input.action) {
@@ -292,58 +304,53 @@ function buildBrowserCommand(
 			if (!input.url) {
 				throw new Error("browser open requires url");
 			}
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "open", input.url],
 				statusMessage: `Opening ${input.url}...`,
 				successMessage: `Opened ${input.url}`,
-				profilePath,
-			};
+			});
 		}
 		case "snapshot": {
 			const mode = input.mode ?? "interactive";
 			const args = mode === "interactive" ? [...baseArgs, "snapshot", "-i"] : [...baseArgs, "snapshot"];
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args,
 				statusMessage: "Capturing browser snapshot...",
 				successMessage: "Captured browser snapshot",
-				profilePath,
-			};
+			});
 		}
 		case "click": {
 			if (!input.ref) {
 				throw new Error("browser click requires ref");
 			}
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "click", input.ref],
 				statusMessage: `Clicking ${input.ref}...`,
 				successMessage: `Clicked ${input.ref}`,
-				profilePath,
-			};
+			});
 		}
 		case "fill": {
 			if (!input.ref || input.value === undefined) {
 				throw new Error("browser fill requires ref and value");
 			}
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "fill", input.ref, input.value],
 				statusMessage: `Filling ${input.ref}...`,
 				successMessage: `Filled ${input.ref}`,
-				profilePath,
-			};
+			});
 		}
 		case "wait": {
 			const wait = buildWaitArgs(input);
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, ...wait.args],
 				statusMessage: wait.status,
 				successMessage: "Browser wait condition satisfied",
-				profilePath,
-			};
+			});
 		}
 		case "screenshot": {
 			const screenshotPath = input.path ? resolveCommandPath(cwd, input.path) : createTempScreenshotPath();
@@ -353,28 +360,26 @@ function buildBrowserCommand(
 			}
 			args.push(screenshotPath);
 
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args,
 				statusMessage: "Taking browser screenshot...",
 				successMessage: `Saved browser screenshot to ${screenshotPath}`,
-				profilePath,
 				screenshotPath,
-			};
+			});
 		}
 		case "state_save": {
 			if (!input.stateName) {
 				throw new Error("browser state_save requires stateName");
 			}
 			const statePath = join(stateDir, `${sanitizeStateName(input.stateName)}.json`);
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "state", "save", statePath],
 				statusMessage: `Saving browser state "${input.stateName}"...`,
 				successMessage: `Saved browser state "${input.stateName}" to ${statePath}`,
-				profilePath,
 				statePath,
-			};
+			});
 		}
 		case "state_load": {
 			if (!input.stateName) {
@@ -384,23 +389,21 @@ function buildBrowserCommand(
 			if (!existsSync(statePath)) {
 				throw new Error(`Saved browser state "${input.stateName}" not found at ${statePath}`);
 			}
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "state", "load", statePath],
 				statusMessage: `Loading browser state "${input.stateName}"...`,
 				successMessage: `Loaded browser state "${input.stateName}" from ${statePath}`,
-				profilePath,
 				statePath,
-			};
+			});
 		}
 		case "close":
-			return {
+			return createBrowserCommandContext(profilePath, stateDir, {
 				action: input.action,
 				args: [...baseArgs, "close"],
 				statusMessage: "Closing browser...",
 				successMessage: "Closed browser",
-				profilePath,
-			};
+			});
 		default: {
 			const unsupportedAction: never = input.action;
 			throw new Error(`Unsupported browser action: ${unsupportedAction}`);
@@ -466,7 +469,7 @@ export function createBrowserTool(cwd: string, options?: BrowserToolOptions): Ag
 				});
 
 				const output = normalizeOutput(chunks);
-				if (exitCode !== 0 && exitCode !== null) {
+				if (exitCode !== 0) {
 					throw new Error(buildBrowserErrorMessage(commandContext.action, output, exitCode));
 				}
 
