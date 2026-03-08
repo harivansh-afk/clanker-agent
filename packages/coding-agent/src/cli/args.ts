@@ -197,8 +197,8 @@ export function parseArgs(
 }
 
 export function printHelp(): void {
-	const defaultToolsText = defaultCodingToolNames.join(", ");
-	const availableToolsText = Object.keys(allTools).join(", ");
+  const defaultToolsText = defaultCodingToolNames.join(", ");
+  const availableToolsText = Object.keys(allTools).join(", ");
 
   console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, browser, edit, write tools
 
