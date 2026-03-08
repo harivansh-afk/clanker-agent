@@ -62,6 +62,15 @@ import {
 } from "./export-html/index.js";
 import { createToolHtmlRenderer } from "./export-html/tool-renderer.js";
 import {
+  RuntimeMemoryManager,
+  type RuntimeMemoryForgetInput,
+  type RuntimeMemoryRebuildResult,
+  type RuntimeMemoryRememberInput,
+  type RuntimeMemorySearchResult,
+  type RuntimeMemoryStatus,
+  type RuntimeMemoryRecord,
+} from "./memory/runtime-memory.js";
+import {
   type ContextUsage,
   type ExtensionCommandContextActions,
   type ExtensionErrorListener,
@@ -337,6 +346,9 @@ export class AgentSession {
 
   // Base system prompt (without extension appends) - used to apply fresh appends each turn
   private _baseSystemPrompt = "";
+  private _memoryManager: RuntimeMemoryManager;
+  private _memoryWriteQueue: Promise<void> = Promise.resolve();
+  private _memoryDisposePromise: Promise<void> | null = null;
 
   constructor(config: AgentSessionConfig) {
     this.agent = config.agent;
@@ -350,6 +362,10 @@ export class AgentSession {
     this._extensionRunnerRef = config.extensionRunnerRef;
     this._initialActiveToolNames = config.initialActiveToolNames;
     this._baseToolsOverride = config.baseToolsOverride;
+    this._memoryManager = new RuntimeMemoryManager({
+      sessionManager: this.sessionManager,
+      settingsManager: this.settingsManager,
+    });
 
     // Always subscribe to agent events for internal handling
     // (session persistence, extensions, auto-compaction, retry logic)
@@ -499,6 +515,16 @@ export class AgentSession {
           this._resolveRetry();
         }
       }
+
+      if (event.message.role === "user" || event.message.role === "assistant") {
+        try {
+          this._memoryManager.recordMessage(event.message);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          console.error(`[memory] episode write failed: ${message}`);
+        }
+      }
     }
 
     // Check auto-retry and auto-compaction after agent completes
@@ -513,6 +539,10 @@ export class AgentSession {
       }
 
       await this._checkCompaction(msg);
+
+      if (msg.stopReason !== "error") {
+        this._enqueueMemoryPromotion([...this.agent.state.messages]);
+      }
     }
   }
 
@@ -667,6 +697,7 @@ export class AgentSession {
   dispose(): void {
     this._disconnectFromAgent();
     this._eventListeners = [];
+    void this._disposeMemoryManager();
   }
 
   // =========================================================================
@@ -802,6 +833,107 @@ export class AgentSession {
   /** File-based prompt templates */
   get promptTemplates(): ReadonlyArray<PromptTemplate> {
     return this._resourceLoader.getPrompts().prompts;
+  }
+
+  async transformRuntimeContext(
+    messages: AgentMessage[],
+    signal?: AbortSignal,
+  ): Promise<AgentMessage[]> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.injectContext(messages, { signal });
+  }
+
+  async getMemoryStatus(): Promise<RuntimeMemoryStatus> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.getStatus();
+  }
+
+  async getCoreMemories(): Promise<RuntimeMemoryRecord[]> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.listCoreMemories();
+  }
+
+  async searchMemory(
+    query: string,
+    limit?: number,
+  ): Promise<RuntimeMemorySearchResult> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.search(query, limit);
+  }
+
+  async rememberMemory(
+    input: RuntimeMemoryRememberInput,
+  ): Promise<RuntimeMemoryRecord | null> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.remember(input);
+  }
+
+  async forgetMemory(
+    input: RuntimeMemoryForgetInput,
+  ): Promise<{ ok: true; forgotten: boolean }> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.forget(input);
+  }
+
+  async rebuildMemory(): Promise<RuntimeMemoryRebuildResult> {
+    await this._awaitMemoryWrites();
+    return this._memoryManager.rebuild();
+  }
+
+  private async _awaitMemoryWrites(): Promise<void> {
+    try {
+      await this._memoryWriteQueue;
+    } catch {
+      // Memory writes are best-effort; failures should not block chat.
+    }
+  }
+
+  private async _disposeMemoryManager(): Promise<void> {
+    if (this._memoryDisposePromise) {
+      await this._memoryDisposePromise;
+      return;
+    }
+
+    this._memoryDisposePromise = (async () => {
+      try {
+        await this._agentEventQueue;
+      } catch {
+        // Event processing failures should not block shutdown.
+      }
+
+      try {
+        await this._memoryWriteQueue;
+      } catch {
+        // Memory writes are best-effort during shutdown too.
+      }
+
+      this._memoryManager.dispose();
+    })();
+
+    await this._memoryDisposePromise;
+  }
+
+  private _enqueueMemoryPromotion(messages: AgentMessage[]): void {
+    this._memoryWriteQueue = this._memoryWriteQueue
+      .catch(() => undefined)
+      .then(async () => {
+        if (!this.model) {
+          return;
+        }
+        const apiKey = await this._modelRegistry.getApiKey(this.model);
+        if (!apiKey) {
+          return;
+        }
+        await this._memoryManager.promoteTurn({
+          model: this.model,
+          apiKey,
+          messages,
+        });
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`[memory] promotion failed: ${message}`);
+      });
   }
 
   private _normalizePromptSnippet(

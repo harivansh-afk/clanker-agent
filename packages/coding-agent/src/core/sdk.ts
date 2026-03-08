@@ -320,6 +320,7 @@ export async function createAgentSession(
   };
 
   const extensionRunnerRef: { current?: ExtensionRunner } = {};
+  const sessionRef: { current?: AgentSession } = {};
 
   agent = new Agent({
     initialState: {
@@ -331,9 +332,15 @@ export async function createAgentSession(
     convertToLlm: convertToLlmWithBlockImages,
     sessionId: sessionManager.getSessionId(),
     transformContext: async (messages) => {
+      const currentSession = sessionRef.current;
+      let transformedMessages = messages;
+      if (currentSession) {
+        transformedMessages =
+          await currentSession.transformRuntimeContext(transformedMessages);
+      }
       const runner = extensionRunnerRef.current;
-      if (!runner) return messages;
-      return runner.emitContext(messages);
+      if (!runner) return transformedMessages;
+      return runner.emitContext(transformedMessages);
     },
     steeringMode: settingsManager.getSteeringMode(),
     followUpMode: settingsManager.getFollowUpMode(),
@@ -393,6 +400,7 @@ export async function createAgentSession(
     initialActiveToolNames,
     extensionRunnerRef,
   });
+  sessionRef.current = session;
   const extensionsResult = resourceLoader.getExtensions();
 
   return {

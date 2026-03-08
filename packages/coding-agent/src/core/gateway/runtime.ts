@@ -297,6 +297,16 @@ export class GatewayRuntime {
     return managedSession;
   }
 
+  private async resolveMemorySession(
+    sessionKey: string | null | undefined,
+  ): Promise<AgentSession> {
+    if (!sessionKey || sessionKey === this.primarySessionKey) {
+      return this.primarySession;
+    }
+    const managedSession = await this.ensureSession(sessionKey);
+    return managedSession.session;
+  }
+
   private async processNext(
     managedSession: ManagedGatewaySession,
   ): Promise<void> {
@@ -621,6 +631,102 @@ export class GatewayRuntime {
     if (method === "GET" && path === "/logs") {
       const logs = this.handleGetLogs();
       this.writeJson(response, 200, { logs });
+      return;
+    }
+
+    if (method === "GET" && path === "/memory/status") {
+      const sessionKey = url.searchParams.get("sessionKey");
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memory = await memorySession.getMemoryStatus();
+      this.writeJson(response, 200, { memory });
+      return;
+    }
+
+    if (method === "GET" && path === "/memory/core") {
+      const sessionKey = url.searchParams.get("sessionKey");
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memories = await memorySession.getCoreMemories();
+      this.writeJson(response, 200, { memories });
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/search") {
+      const body = await this.readJsonBody(request);
+      const query = typeof body.query === "string" ? body.query : "";
+      const limit =
+        typeof body.limit === "number" && Number.isFinite(body.limit)
+          ? Math.max(1, Math.floor(body.limit))
+          : undefined;
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.searchMemory(query, limit);
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/remember") {
+      const body = await this.readJsonBody(request);
+      const content = typeof body.content === "string" ? body.content : "";
+      if (!content.trim()) {
+        this.writeJson(response, 400, { error: "Missing memory content" });
+        return;
+      }
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memory = await memorySession.rememberMemory({
+        bucket:
+          body.bucket === "core" || body.bucket === "archival"
+            ? body.bucket
+            : undefined,
+        kind:
+          body.kind === "profile" ||
+          body.kind === "preference" ||
+          body.kind === "relationship" ||
+          body.kind === "fact" ||
+          body.kind === "secret"
+            ? body.kind
+            : undefined,
+        key: typeof body.key === "string" ? body.key : undefined,
+        content,
+        source: "manual",
+      });
+      this.writeJson(response, 200, { ok: true, memory });
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/forget") {
+      const body = await this.readJsonBody(request);
+      const id =
+        typeof body.id === "number" && Number.isFinite(body.id)
+          ? Math.floor(body.id)
+          : undefined;
+      const key = typeof body.key === "string" ? body.key : undefined;
+      if (id === undefined && !key) {
+        this.writeJson(response, 400, {
+          error: "Memory forget requires an id or key",
+        });
+        return;
+      }
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.forgetMemory({
+        id,
+        key,
+      });
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/rebuild") {
+      const body = await this.readJsonBody(request);
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.rebuildMemory();
+      this.writeJson(response, 200, result);
       return;
     }
 
