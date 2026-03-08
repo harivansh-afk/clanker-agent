@@ -60,7 +60,7 @@ This installer:
 Preinstalled package sources are:
 
 ```json
-["npm:@e9n/pi-channels", "npm:pi-memory-md", "npm:pi-teams"]
+["npm:@e9n/pi-channels", "npm:pi-teams"]
 ```
 
 If `npm` is available, it also installs these packages during install.

@@ -29,15 +29,6 @@ import type {
   HistoryPart,
   ModelInfo,
 } from "./types.js";
-import {
-  getMemoryStatus,
-  initializeMemory,
-  listProjectMemoryFiles,
-  readProjectMemoryFile,
-  searchProjectMemory,
-  syncProjectMemory,
-  writeProjectMemoryFile,
-} from "./memory.js";
 import type { Settings } from "../settings-manager.js";
 import {
   createVercelStreamListener,
@@ -304,6 +295,16 @@ export class GatewayRuntime {
     this.sessions.set(sessionKey, managedSession);
     this.emitState(managedSession);
     return managedSession;
+  }
+
+  private async resolveMemorySession(
+    sessionKey: string | null | undefined,
+  ): Promise<AgentSession> {
+    if (!sessionKey || sessionKey === this.primarySessionKey) {
+      return this.primarySession;
+    }
+    const managedSession = await this.ensureSession(sessionKey);
+    return managedSession.session;
   }
 
   private async processNext(
@@ -634,106 +635,89 @@ export class GatewayRuntime {
     }
 
     if (method === "GET" && path === "/memory/status") {
-      const memory = await getMemoryStatus(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-      );
+      const sessionKey = url.searchParams.get("sessionKey");
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memory = await memorySession.getMemoryStatus();
       this.writeJson(response, 200, { memory });
       return;
     }
 
-    if (method === "POST" && path === "/memory/init") {
-      const body = await this.readJsonBody(request);
-      const result = await initializeMemory(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        { force: body.force === true },
-      );
-      this.writeJson(response, 200, result);
-      return;
-    }
-
-    if (method === "GET" && path === "/memory/files") {
-      const directory = url.searchParams.get("directory") ?? undefined;
-      const result = await listProjectMemoryFiles(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        directory,
-      );
-      this.writeJson(response, 200, result);
-      return;
-    }
-
-    if (method === "GET" && path === "/memory/file") {
-      const filePath = url.searchParams.get("path");
-      if (!filePath) {
-        this.writeJson(response, 400, { error: "Missing memory file path" });
-        return;
-      }
-      const result = await readProjectMemoryFile(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        filePath,
-      );
-      this.writeJson(response, 200, result);
-      return;
-    }
-
-    if (method === "POST" && path === "/memory/file") {
-      const body = await this.readJsonBody(request);
-      const filePath = typeof body.path === "string" ? body.path : "";
-      const content = typeof body.content === "string" ? body.content : "";
-      const description =
-        typeof body.description === "string" ? body.description : "";
-      const tags = Array.isArray(body.tags)
-        ? body.tags.filter((tag): tag is string => typeof tag === "string")
-        : undefined;
-      const result = await writeProjectMemoryFile(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        {
-          path: filePath,
-          content,
-          description,
-          tags,
-        },
-      );
-      this.writeJson(response, 200, result);
+    if (method === "GET" && path === "/memory/core") {
+      const sessionKey = url.searchParams.get("sessionKey");
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memories = await memorySession.getCoreMemories();
+      this.writeJson(response, 200, { memories });
       return;
     }
 
     if (method === "POST" && path === "/memory/search") {
       const body = await this.readJsonBody(request);
       const query = typeof body.query === "string" ? body.query : "";
-      const searchIn =
-        body.searchIn === "content" ||
-        body.searchIn === "tags" ||
-        body.searchIn === "description"
-          ? body.searchIn
-          : "content";
-      const result = await searchProjectMemory(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        query,
-        searchIn,
-      );
+      const limit =
+        typeof body.limit === "number" && Number.isFinite(body.limit)
+          ? Math.max(1, Math.floor(body.limit))
+          : undefined;
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.searchMemory(query, limit);
       this.writeJson(response, 200, result);
       return;
     }
 
-    if (method === "POST" && path === "/memory/sync") {
+    if (method === "POST" && path === "/memory/remember") {
       const body = await this.readJsonBody(request);
-      const action =
-        body.action === "pull" ||
-        body.action === "push" ||
-        body.action === "status"
-          ? body.action
-          : "status";
-      const result = await syncProjectMemory(
-        this.primarySession.settingsManager,
-        this.primarySession.sessionManager.getCwd(),
-        action,
-      );
+      const content = typeof body.content === "string" ? body.content : "";
+      if (!content.trim()) {
+        this.writeJson(response, 400, { error: "Missing memory content" });
+        return;
+      }
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const memory = await memorySession.rememberMemory({
+        bucket:
+          body.bucket === "core" || body.bucket === "archival"
+            ? body.bucket
+            : undefined,
+        kind:
+          body.kind === "profile" ||
+          body.kind === "preference" ||
+          body.kind === "relationship" ||
+          body.kind === "fact" ||
+          body.kind === "secret"
+            ? body.kind
+            : undefined,
+        key: typeof body.key === "string" ? body.key : undefined,
+        content,
+        source: "manual",
+      });
+      this.writeJson(response, 200, { ok: true, memory });
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/forget") {
+      const body = await this.readJsonBody(request);
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.forgetMemory({
+        id:
+          typeof body.id === "number" && Number.isFinite(body.id)
+            ? Math.floor(body.id)
+            : undefined,
+        key: typeof body.key === "string" ? body.key : undefined,
+      });
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/rebuild") {
+      const body = await this.readJsonBody(request);
+      const sessionKey =
+        typeof body.sessionKey === "string" ? body.sessionKey : undefined;
+      const memorySession = await this.resolveMemorySession(sessionKey);
+      const result = await memorySession.rebuildMemory();
       this.writeJson(response, 200, result);
       return;
     }

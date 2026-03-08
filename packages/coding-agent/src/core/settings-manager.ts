@@ -63,6 +63,17 @@ export interface GatewaySettings {
   webhook?: GatewayWebhookSettings;
 }
 
+export interface CompanionMemorySettings {
+  enabled?: boolean;
+  storageDir?: string;
+  maxCoreTokens?: number;
+  maxRecallResults?: number;
+  writer?: {
+    enabled?: boolean;
+    maxTokens?: number;
+  };
+}
+
 export type TransportSetting = Transport;
 
 /**
@@ -125,6 +136,7 @@ export interface Settings {
   showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
   markdown?: MarkdownSettings;
   gateway?: GatewaySettings;
+  companionMemory?: CompanionMemorySettings;
 }
 
 /** Deep merge settings: project/overrides take precedence, nested objects merge recursively */

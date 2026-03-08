@@ -23,7 +23,6 @@ SERVICE_STDERR_LOG=""
 
 DEFAULT_PACKAGES=(
   "npm:@e9n/pi-channels"
-  "npm:pi-memory-md"
   "npm:pi-teams"
 )
 

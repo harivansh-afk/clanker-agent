@@ -6,21 +6,14 @@ import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 import type { MemoryFrontmatter, MemoryMdSettings } from "./memory-md.js";
 import {
-  createDefaultFiles,
-  ensureDirectoryStructure,
-  formatMemoryDirectoryTree,
   getCurrentDate,
   getMemoryDir,
-  getProjectRepoPath,
   gitExec,
   listMemoryFiles,
   readMemoryFile,
-  resolveMemoryPath,
   syncRepository,
   writeMemoryFile,
 } from "./memory-md.js";
-
-type MemorySettingsGetter = () => MemoryMdSettings;
 
 function renderWithExpandHint(
   text: string,
@@ -41,7 +34,7 @@ function renderWithExpandHint(
 
 export function registerMemorySync(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
   isRepoInitialized: { value: boolean },
 ): void {
   pi.registerTool({
@@ -59,73 +52,26 @@ export function registerMemorySync(
 
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const { action } = params as { action: "pull" | "push" | "status" };
-      const settings = getSettings();
-      const localPath = settings.localPath;
+      const localPath = settings.localPath!;
       const memoryDir = getMemoryDir(settings, ctx);
-      const projectRepoPath = getProjectRepoPath(settings, ctx);
       const coreUserDir = path.join(memoryDir, "core", "user");
-      const configured = Boolean(settings.repoUrl);
-      const initialized = fs.existsSync(coreUserDir);
-      const repoReady = Boolean(
-        localPath && fs.existsSync(path.join(localPath, ".git")),
-      );
 
       if (action === "status") {
+        const initialized =
+          isRepoInitialized.value && fs.existsSync(coreUserDir);
         if (!initialized) {
           return {
             content: [
               {
                 type: "text",
-                text: "Memory not initialized. Use memory_init to set up.",
+                text: "Memory repository not initialized. Use memory_init to set up.",
               },
             ],
-            details: { initialized: false, configured, dirty: null },
+            details: { initialized: false },
           };
         }
 
-        if (!configured) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Memory repository is not configured. Local memory is available only on this machine.",
-              },
-            ],
-            details: { initialized: true, configured: false, dirty: null },
-          };
-        }
-
-        if (!repoReady || !localPath) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Memory repository is configured but not initialized locally.",
-              },
-            ],
-            details: { initialized: true, configured: true, dirty: null },
-          };
-        }
-
-        const result = await gitExec(
-          pi,
-          localPath,
-          "status",
-          "--porcelain",
-          "--",
-          projectRepoPath,
-        );
-        if (!result.success) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Unable to inspect memory repository status.",
-              },
-            ],
-            details: { initialized: true, configured: true, dirty: null },
-          };
-        }
+        const result = await gitExec(pi, localPath, "status", "--porcelain");
         const dirty = result.stdout.trim().length > 0;
 
         return {
@@ -142,95 +88,36 @@ export function registerMemorySync(
       }
 
       if (action === "pull") {
-        if (!configured) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Memory repository is not configured. Nothing to pull.",
-              },
-            ],
-            details: { success: false, configured: false },
-          };
-        }
         const result = await syncRepository(pi, settings, isRepoInitialized);
         return {
           content: [{ type: "text", text: result.message }],
-          details: { success: result.success, configured: true },
+          details: { success: result.success },
         };
       }
 
       if (action === "push") {
-        if (!configured || !localPath) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Memory repository is not configured. Nothing to push.",
-              },
-            ],
-            details: { success: false, configured: false },
-          };
-        }
-
-        if (!repoReady) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Memory repository is configured but not initialized locally.",
-              },
-            ],
-            details: { success: false, configured: true },
-          };
-        }
-
-        const syncResult = await syncRepository(pi, settings, isRepoInitialized);
-        if (!syncResult.success) {
-          return {
-            content: [{ type: "text", text: syncResult.message }],
-            details: { success: false, configured: true },
-          };
-        }
-
         const statusResult = await gitExec(
           pi,
           localPath,
           "status",
           "--porcelain",
-          "--",
-          projectRepoPath,
         );
-        if (!statusResult.success) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Unable to inspect memory repository before push.",
-              },
-            ],
-            details: { success: false, configured: true },
-          };
-        }
         const hasChanges = statusResult.stdout.trim().length > 0;
 
         if (hasChanges) {
-          await gitExec(pi, localPath, "add", "-A", "--", projectRepoPath);
+          await gitExec(pi, localPath, "add", ".");
 
           const timestamp = new Date()
             .toISOString()
             .replace(/[:.]/g, "-")
             .slice(0, 19);
-          const commitMessage = `Update memory for ${path.basename(ctx.cwd)} - ${timestamp}`;
+          const commitMessage = `Update memory - ${timestamp}`;
           const commitResult = await gitExec(
             pi,
             localPath,
             "commit",
             "-m",
             commitMessage,
-            "--only",
-            "--",
-            projectRepoPath,
           );
 
           if (!commitResult.success) {
@@ -302,7 +189,7 @@ export function registerMemorySync(
 
 export function registerMemoryRead(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
 ): void {
   pi.registerTool({
     name: "memory_read",
@@ -317,8 +204,8 @@ export function registerMemoryRead(
 
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const { path: relPath } = params as { path: string };
-      const settings = getSettings();
-      const fullPath = resolveMemoryPath(settings, ctx, relPath);
+      const memoryDir = getMemoryDir(settings, ctx);
+      const fullPath = path.join(memoryDir, relPath);
 
       const memory = readMemoryFile(fullPath);
       if (!memory) {
@@ -384,7 +271,7 @@ export function registerMemoryRead(
 
 export function registerMemoryWrite(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
 ): void {
   pi.registerTool({
     name: "memory_write",
@@ -413,24 +300,17 @@ export function registerMemoryWrite(
         tags?: string[];
       };
 
-      const settings = getSettings();
-      const fullPath = resolveMemoryPath(settings, ctx, relPath);
+      const memoryDir = getMemoryDir(settings, ctx);
+      const fullPath = path.join(memoryDir, relPath);
 
       const existing = readMemoryFile(fullPath);
-      const existingFrontmatter = existing?.frontmatter;
+      const existingFrontmatter = existing?.frontmatter || { description };
 
       const frontmatter: MemoryFrontmatter = {
+        ...existingFrontmatter,
         description,
-        created: existingFrontmatter?.created ?? getCurrentDate(),
         updated: getCurrentDate(),
-        ...(existingFrontmatter?.limit !== undefined
-          ? { limit: existingFrontmatter.limit }
-          : {}),
-        ...(tags !== undefined
-          ? { tags }
-          : existingFrontmatter?.tags
-            ? { tags: existingFrontmatter.tags }
-            : {}),
+        ...(tags && { tags }),
       };
 
       writeMemoryFile(fullPath, content, frontmatter);
@@ -487,7 +367,7 @@ export function registerMemoryWrite(
 
 export function registerMemoryList(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
 ): void {
   pi.registerTool({
     name: "memory_list",
@@ -501,11 +381,8 @@ export function registerMemoryList(
 
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const { directory } = params as { directory?: string };
-      const settings = getSettings();
       const memoryDir = getMemoryDir(settings, ctx);
-      const searchDir = directory
-        ? resolveMemoryPath(settings, ctx, directory)
-        : memoryDir;
+      const searchDir = directory ? path.join(memoryDir, directory) : memoryDir;
       const files = listMemoryFiles(searchDir);
       const relPaths = files.map((f) => path.relative(memoryDir, f));
 
@@ -555,7 +432,7 @@ export function registerMemoryList(
 
 export function registerMemorySearch(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
 ): void {
   pi.registerTool({
     name: "memory_search",
@@ -580,7 +457,6 @@ export function registerMemorySearch(
         query: string;
         searchIn: "content" | "tags" | "description";
       };
-      const settings = getSettings();
       const memoryDir = getMemoryDir(settings, ctx);
       const files = listMemoryFiles(memoryDir);
       const results: Array<{ path: string; match: string }> = [];
@@ -668,7 +544,7 @@ export function registerMemorySearch(
 
 export function registerMemoryInit(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
   isRepoInitialized: { value: boolean },
 ): void {
   pi.registerTool({
@@ -682,19 +558,10 @@ export function registerMemoryInit(
       ),
     }) as any,
 
-    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const { force = false } = params as { force?: boolean };
-      const settings = getSettings();
-      const memoryDir = getMemoryDir(settings, ctx);
-      const alreadyInitialized = fs.existsSync(
-        path.join(memoryDir, "core", "user"),
-      );
-      const repoReady = Boolean(
-        settings.localPath &&
-          fs.existsSync(path.join(settings.localPath, ".git")),
-      );
 
-      if (alreadyInitialized && (!settings.repoUrl || repoReady) && !force) {
+      if (isRepoInitialized.value && !force) {
         return {
           content: [
             {
@@ -706,35 +573,18 @@ export function registerMemoryInit(
         };
       }
 
-      if (settings.repoUrl) {
-        const result = await syncRepository(pi, settings, isRepoInitialized);
-        if (!result.success) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Initialization failed: ${result.message}`,
-              },
-            ],
-            details: { success: false },
-          };
-        }
-      }
-
-      ensureDirectoryStructure(memoryDir);
-      createDefaultFiles(memoryDir);
-      isRepoInitialized.value = true;
+      const result = await syncRepository(pi, settings, isRepoInitialized);
 
       return {
         content: [
           {
             type: "text",
-            text: settings.repoUrl
-              ? `Memory repository initialized.\n\nCreated directory structure:\n${["core/user", "core/project", "reference"].map((d) => `  - ${d}`).join("\n")}`
-              : `Local memory initialized.\n\nCreated directory structure:\n${["core/user", "core/project", "reference"].map((d) => `  - ${d}`).join("\n")}`,
+            text: result.success
+              ? `Memory repository initialized:\n${result.message}\n\nCreated directory structure:\n${["core/user", "core/project", "reference"].map((d) => `  - ${d}`).join("\n")}`
+              : `Initialization failed: ${result.message}`,
           },
         ],
-        details: { success: true },
+        details: { success: result.success },
       };
     },
 
@@ -778,7 +628,7 @@ export function registerMemoryInit(
 
 export function registerMemoryCheck(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
 ): void {
   pi.registerTool({
     name: "memory_check",
@@ -787,7 +637,6 @@ export function registerMemoryCheck(
     parameters: Type.Object({}) as any,
 
     async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
-      const settings = getSettings();
       const memoryDir = getMemoryDir(settings, ctx);
 
       if (!fs.existsSync(memoryDir)) {
@@ -802,7 +651,26 @@ export function registerMemoryCheck(
         };
       }
 
-      const treeOutput = formatMemoryDirectoryTree(memoryDir);
+      const { execSync } = await import("node:child_process");
+      let treeOutput = "";
+
+      try {
+        treeOutput = execSync(`tree -L 3 -I "node_modules" "${memoryDir}"`, {
+          encoding: "utf-8",
+        });
+      } catch {
+        try {
+          treeOutput = execSync(
+            `find "${memoryDir}" -type d -not -path "*/node_modules/*" | head -20`,
+            {
+              encoding: "utf-8",
+            },
+          );
+        } catch {
+          treeOutput =
+            "Unable to generate directory tree. Please check permissions.";
+        }
+      }
 
       const files = listMemoryFiles(memoryDir);
       const relPaths = files.map((f) => path.relative(memoryDir, f));
@@ -851,14 +719,14 @@ export function registerMemoryCheck(
 
 export function registerAllTools(
   pi: ExtensionAPI,
-  getSettings: MemorySettingsGetter,
+  settings: MemoryMdSettings,
   isRepoInitialized: { value: boolean },
 ): void {
-  registerMemorySync(pi, getSettings, isRepoInitialized);
-  registerMemoryRead(pi, getSettings);
-  registerMemoryWrite(pi, getSettings);
-  registerMemoryList(pi, getSettings);
-  registerMemorySearch(pi, getSettings);
-  registerMemoryInit(pi, getSettings, isRepoInitialized);
-  registerMemoryCheck(pi, getSettings);
+  registerMemorySync(pi, settings, isRepoInitialized);
+  registerMemoryRead(pi, settings);
+  registerMemoryWrite(pi, settings);
+  registerMemoryList(pi, settings);
+  registerMemorySearch(pi, settings);
+  registerMemoryInit(pi, settings, isRepoInitialized);
+  registerMemoryCheck(pi, settings);
 }
