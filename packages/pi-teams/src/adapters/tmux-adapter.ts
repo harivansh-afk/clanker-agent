@@ -4,7 +4,6 @@
  * Implements the TerminalAdapter interface for tmux terminal multiplexer.
  */
 
-import { execSync } from "node:child_process";
 import {
   execCommand,
   type SpawnOptions,
@@ -15,8 +14,12 @@ export class TmuxAdapter implements TerminalAdapter {
   readonly name = "tmux";
 
   detect(): boolean {
-    // tmux is available if TMUX environment variable is set
-    return !!process.env.TMUX;
+    if (process.env.TMUX) return true;
+    if (process.env.ZELLIJ || process.env.TERM_PROGRAM === "iTerm.app") {
+      return false;
+    }
+    if (process.env.WEZTERM_PANE) return false;
+    return execCommand("tmux", ["-V"]).status === 0;
   }
 
   spawn(options: SpawnOptions): string {
@@ -24,12 +27,50 @@ export class TmuxAdapter implements TerminalAdapter {
       .filter(([k]) => k.startsWith("PI_"))
       .map(([k, v]) => `${k}=${v}`);
 
+    let targetWindow: string | null = null;
+    if (!process.env.TMUX) {
+      const sessionName = `pi-teams-${options.env.PI_TEAM_NAME || "default"}`;
+      targetWindow = `${sessionName}:0`;
+      const hasSession = execCommand("tmux", [
+        "has-session",
+        "-t",
+        sessionName,
+      ]);
+      if (hasSession.status !== 0) {
+        const result = execCommand("tmux", [
+          "new-session",
+          "-d",
+          "-s",
+          sessionName,
+          "-P",
+          "-F",
+          "#{pane_id}",
+          "-c",
+          options.cwd,
+          "env",
+          ...envArgs,
+          "sh",
+          "-c",
+          options.command,
+        ]);
+
+        if (result.status !== 0) {
+          throw new Error(
+            `tmux spawn failed with status ${result.status}: ${result.stderr}`,
+          );
+        }
+
+        return result.stdout.trim();
+      }
+    }
+
     const tmuxArgs = [
       "split-window",
       "-h",
       "-dP",
       "-F",
       "#{pane_id}",
+      ...(targetWindow ? ["-t", targetWindow] : []),
       "-c",
       options.cwd,
       "env",
@@ -48,8 +89,17 @@ export class TmuxAdapter implements TerminalAdapter {
     }
 
     // Apply layout after spawning
-    execCommand("tmux", ["set-window-option", "main-pane-width", "60%"]);
-    execCommand("tmux", ["select-layout", "main-vertical"]);
+    execCommand("tmux", [
+      "set-window-option",
+      ...(targetWindow ? ["-t", targetWindow] : []),
+      "main-pane-width",
+      "60%",
+    ]);
+    execCommand("tmux", [
+      "select-layout",
+      ...(targetWindow ? ["-t", targetWindow] : []),
+      "main-vertical",
+    ]);
 
     return result.stdout.trim();
   }
@@ -79,12 +129,14 @@ export class TmuxAdapter implements TerminalAdapter {
       return false; // Not a tmux pane
     }
 
-    try {
-      execSync(`tmux has-session -t ${paneId}`);
-      return true;
-    } catch {
-      return false;
-    }
+    const result = execCommand("tmux", [
+      "display-message",
+      "-p",
+      "-t",
+      paneId.trim(),
+      "#{pane_id}",
+    ]);
+    return result.status === 0 && result.stdout.trim() === paneId.trim();
   }
 
   setTitle(title: string): void {
