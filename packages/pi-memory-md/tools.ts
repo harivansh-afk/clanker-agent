@@ -8,6 +8,7 @@ import type { MemoryFrontmatter, MemoryMdSettings } from "./memory-md.js";
 import {
   createDefaultFiles,
   ensureDirectoryStructure,
+  formatMemoryDirectoryTree,
   getCurrentDate,
   getMemoryDir,
   getProjectRepoPath,
@@ -180,6 +181,14 @@ export function registerMemorySync(
                 text: "Memory repository is configured but not initialized locally.",
               },
             ],
+            details: { success: false, configured: true },
+          };
+        }
+
+        const syncResult = await syncRepository(pi, settings, isRepoInitialized);
+        if (!syncResult.success) {
+          return {
+            content: [{ type: "text", text: syncResult.message }],
             details: { success: false, configured: true },
           };
         }
@@ -793,26 +802,7 @@ export function registerMemoryCheck(
         };
       }
 
-      const { execSync } = await import("node:child_process");
-      let treeOutput = "";
-
-      try {
-        treeOutput = execSync(`tree -L 3 -I "node_modules" "${memoryDir}"`, {
-          encoding: "utf-8",
-        });
-      } catch {
-        try {
-          treeOutput = execSync(
-            `find "${memoryDir}" -type d -not -path "*/node_modules/*" | head -20`,
-            {
-              encoding: "utf-8",
-            },
-          );
-        } catch {
-          treeOutput =
-            "Unable to generate directory tree. Please check permissions.";
-        }
-      }
+      const treeOutput = formatMemoryDirectoryTree(memoryDir);
 
       const files = listMemoryFiles(memoryDir);
       const relPaths = files.map((f) => path.relative(memoryDir, f));

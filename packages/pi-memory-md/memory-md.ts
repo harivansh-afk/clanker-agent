@@ -147,6 +147,18 @@ function getRepoName(settings: MemoryMdSettings): string {
   return match ? match[1] : "memory-md";
 }
 
+async function getGitHead(
+  pi: ExtensionAPI,
+  cwd: string,
+): Promise<string | null> {
+  const result = await gitExec(pi, cwd, "rev-parse", "HEAD");
+  if (!result.success) {
+    return null;
+  }
+  const head = result.stdout.trim();
+  return head.length > 0 ? head : null;
+}
+
 function loadScopedSettings(settingsPath: string): MemoryMdSettings {
   if (!fs.existsSync(settingsPath)) {
     return {};
@@ -286,6 +298,7 @@ export async function syncRepository(
       };
     }
 
+    const previousHead = await getGitHead(pi, localPath);
     const pullResult = await gitExec(
       pi,
       localPath,
@@ -301,15 +314,21 @@ export async function syncRepository(
     }
 
     isRepoInitialized.value = true;
+    const currentHead = await getGitHead(pi, localPath);
     const updated =
-      pullResult.stdout.includes("Updating") ||
-      pullResult.stdout.includes("Fast-forward");
+      previousHead !== null &&
+      currentHead !== null &&
+      previousHead !== currentHead;
     const repoName = getRepoName(settings);
+    const message =
+      previousHead === null || currentHead === null
+        ? `Synchronized [${repoName}]`
+        : updated
+          ? `Pulled latest changes from [${repoName}]`
+          : `[${repoName}] is already latest`;
     return {
       success: true,
-      message: updated
-        ? `Pulled latest changes from [${repoName}]`
-        : `[${repoName}] is already latest`,
+      message,
       updated,
     };
   }
@@ -475,6 +494,68 @@ export function createDefaultFiles(memoryDir: string): void {
       },
     );
   }
+}
+
+export function formatMemoryDirectoryTree(
+  memoryDir: string,
+  maxDepth = 3,
+  maxLines = 40,
+): string {
+  if (!fs.existsSync(memoryDir)) {
+    return "Unable to generate directory tree.";
+  }
+
+  const lines = [`${path.basename(memoryDir) || memoryDir}/`];
+  let truncated = false;
+
+  function visit(dir: string, depth: number, prefix: string): void {
+    if (depth >= maxDepth || lines.length >= maxLines) {
+      truncated = true;
+      return;
+    }
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs
+        .readdirSync(dir, { withFileTypes: true })
+        .filter((entry) => entry.name !== "node_modules")
+        .sort((left, right) => {
+          if (left.isDirectory() !== right.isDirectory()) {
+            return left.isDirectory() ? -1 : 1;
+          }
+          return left.name.localeCompare(right.name);
+        });
+    } catch {
+      truncated = true;
+      return;
+    }
+
+    for (const [index, entry] of entries.entries()) {
+      if (lines.length >= maxLines) {
+        truncated = true;
+        return;
+      }
+
+      const isLast = index === entries.length - 1;
+      const marker = isLast ? "\\-- " : "|-- ";
+      const childPrefix = `${prefix}${isLast ? "    " : "|   "}`;
+      lines.push(
+        `${prefix}${marker}${entry.name}${entry.isDirectory() ? "/" : ""}`,
+      );
+
+      if (entry.isDirectory()) {
+        visit(path.join(dir, entry.name), depth + 1, childPrefix);
+      }
+    }
+  }
+
+  visit(memoryDir, 0, "");
+
+  if (truncated) {
+    lines.push("... (tree truncated)");
+  }
+
+  return lines.join("\n");
 }
 
 function buildMemoryContext(
@@ -779,25 +860,7 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
         return;
       }
 
-      const { execSync } = await import("node:child_process");
-      let treeOutput = "";
-
-      try {
-        treeOutput = execSync(`tree -L 3 -I "node_modules" "${memoryDir}"`, {
-          encoding: "utf-8",
-        });
-      } catch {
-        try {
-          treeOutput = execSync(
-            `find "${memoryDir}" -type d -not -path "*/node_modules/*"`,
-            { encoding: "utf-8" },
-          );
-        } catch {
-          treeOutput = "Unable to generate directory tree.";
-        }
-      }
-
-      ctx.ui.notify(treeOutput.trim(), "info");
+      ctx.ui.notify(formatMemoryDirectoryTree(memoryDir).trim(), "info");
     },
   });
 }

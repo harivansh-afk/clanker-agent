@@ -479,6 +479,15 @@ function getRepoName(settings: MemoryMdSettings): string {
   return match?.[1] ?? "memory-md";
 }
 
+async function getGitHead(cwd: string): Promise<string | null> {
+  const result = await runGit(cwd, "rev-parse", "HEAD");
+  if (!result.success) {
+    return null;
+  }
+  const head = result.stdout.trim();
+  return head.length > 0 ? head : null;
+}
+
 async function getRepositoryDirtyState(
   localPath: string,
   projectPath?: string,
@@ -541,6 +550,7 @@ async function syncRepository(
         message: `Directory exists but is not a git repo: ${localPath}`,
       };
     }
+    const previousHead = await getGitHead(localPath);
     const pullResult = await runGit(localPath, "pull", "--rebase", "--autostash");
     if (!pullResult.success) {
       return {
@@ -549,14 +559,20 @@ async function syncRepository(
           pullResult.stderr.trim() || "Pull failed. Check repository state.",
       };
     }
+    const currentHead = await getGitHead(localPath);
     const updated =
-      pullResult.stdout.includes("Updating") ||
-      pullResult.stdout.includes("Fast-forward");
+      previousHead !== null &&
+      currentHead !== null &&
+      previousHead !== currentHead;
+    const message =
+      previousHead === null || currentHead === null
+        ? `Synchronized ${getRepoName(settings)}`
+        : updated
+          ? `Pulled latest changes from ${getRepoName(settings)}`
+          : `${getRepoName(settings)} is already up to date`;
     return {
       success: true,
-      message: updated
-        ? `Pulled latest changes from ${getRepoName(settings)}`
-        : `${getRepoName(settings)} is already up to date`,
+      message,
       updated,
     };
   }
@@ -861,17 +877,16 @@ export async function syncProjectMemory(
     };
   }
 
-  if (!repositoryReady) {
-    const cloned = await syncRepository(settings);
-    if (!cloned.success) {
-      return {
-        success: false,
-        message: cloned.message,
-        configured,
-        initialized,
-        dirty: null,
-      };
-    }
+  const syncResult = await syncRepository(settings);
+  if (!syncResult.success) {
+    return {
+      success: false,
+      message: syncResult.message,
+      configured,
+      initialized,
+      dirty: null,
+      updated: syncResult.updated,
+    };
   }
 
   const statusResult = await runGit(
@@ -941,5 +956,6 @@ export async function syncProjectMemory(
     initialized,
     dirty: await getRepositoryDirtyState(localPath, projectPath),
     committed: hasChanges,
+    updated: syncResult.updated,
   };
 }
