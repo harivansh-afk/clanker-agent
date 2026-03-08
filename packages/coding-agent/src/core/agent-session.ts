@@ -348,6 +348,7 @@ export class AgentSession {
   private _baseSystemPrompt = "";
   private _memoryManager: RuntimeMemoryManager;
   private _memoryWriteQueue: Promise<void> = Promise.resolve();
+  private _memoryDisposePromise: Promise<void> | null = null;
 
   constructor(config: AgentSessionConfig) {
     this.agent = config.agent;
@@ -540,7 +541,7 @@ export class AgentSession {
       await this._checkCompaction(msg);
 
       if (msg.stopReason !== "error") {
-        this._enqueueMemoryPromotion(event.messages);
+        this._enqueueMemoryPromotion([...this.agent.state.messages]);
       }
     }
   }
@@ -696,9 +697,7 @@ export class AgentSession {
   dispose(): void {
     this._disconnectFromAgent();
     this._eventListeners = [];
-    void this._memoryWriteQueue.finally(() => {
-      this._memoryManager.dispose();
-    });
+    void this._disposeMemoryManager();
   }
 
   // =========================================================================
@@ -887,6 +886,31 @@ export class AgentSession {
     } catch {
       // Memory writes are best-effort; failures should not block chat.
     }
+  }
+
+  private async _disposeMemoryManager(): Promise<void> {
+    if (this._memoryDisposePromise) {
+      await this._memoryDisposePromise;
+      return;
+    }
+
+    this._memoryDisposePromise = (async () => {
+      try {
+        await this._agentEventQueue;
+      } catch {
+        // Event processing failures should not block shutdown.
+      }
+
+      try {
+        await this._memoryWriteQueue;
+      } catch {
+        // Memory writes are best-effort during shutdown too.
+      }
+
+      this._memoryManager.dispose();
+    })();
+
+    await this._memoryDisposePromise;
   }
 
   private _enqueueMemoryPromotion(messages: AgentMessage[]): void {

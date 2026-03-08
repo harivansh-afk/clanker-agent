@@ -698,15 +698,23 @@ export class GatewayRuntime {
 
     if (method === "POST" && path === "/memory/forget") {
       const body = await this.readJsonBody(request);
+      const id =
+        typeof body.id === "number" && Number.isFinite(body.id)
+          ? Math.floor(body.id)
+          : undefined;
+      const key = typeof body.key === "string" ? body.key : undefined;
+      if (id === undefined && !key) {
+        this.writeJson(response, 400, {
+          error: "Memory forget requires an id or key",
+        });
+        return;
+      }
       const sessionKey =
         typeof body.sessionKey === "string" ? body.sessionKey : undefined;
       const memorySession = await this.resolveMemorySession(sessionKey);
       const result = await memorySession.forgetMemory({
-        id:
-          typeof body.id === "number" && Number.isFinite(body.id)
-            ? Math.floor(body.id)
-            : undefined,
-        key: typeof body.key === "string" ? body.key : undefined,
+        id,
+        key,
       });
       this.writeJson(response, 200, result);
       return;

@@ -6,7 +6,7 @@ import {
   readFileSync,
   statSync,
 } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
@@ -26,6 +26,7 @@ const DEFAULT_CORE_TOKEN_BUDGET = 700;
 const DEFAULT_RECALL_RESULTS = 4;
 const DEFAULT_WRITER_MAX_TOKENS = 600;
 const CUSTOM_MEMORY_TYPE = "companion_memory";
+const require = createRequire(import.meta.url);
 
 const MEMORY_WRITER_SYSTEM_PROMPT = `You manage long-term conversational memory for a companion agent.
 
@@ -162,6 +163,50 @@ interface MemoryWriterResponse {
 interface LegacyMemoryFile {
   path: string;
   body: string;
+}
+
+interface SqliteStatementResult {
+  changes: number;
+  lastInsertRowid: number | bigint;
+}
+
+interface SqliteStatement {
+  run(...args: unknown[]): SqliteStatementResult;
+  get(...args: unknown[]): unknown;
+  all(...args: unknown[]): unknown[];
+}
+
+interface SqliteDatabase {
+  exec(sql: string): void;
+  prepare(sql: string): SqliteStatement;
+  close(): void;
+}
+
+type SqliteDatabaseConstructor = new (path: string) => SqliteDatabase;
+
+let cachedSqliteDatabaseConstructor:
+  | SqliteDatabaseConstructor
+  | null
+  | undefined;
+
+function loadSqliteDatabaseConstructor(): SqliteDatabaseConstructor | null {
+  if (cachedSqliteDatabaseConstructor !== undefined) {
+    return cachedSqliteDatabaseConstructor;
+  }
+
+  try {
+    const sqliteModule = require("node:sqlite") as {
+      DatabaseSync?: SqliteDatabaseConstructor;
+    };
+    cachedSqliteDatabaseConstructor =
+      typeof sqliteModule.DatabaseSync === "function"
+        ? sqliteModule.DatabaseSync
+        : null;
+  } catch {
+    cachedSqliteDatabaseConstructor = null;
+  }
+
+  return cachedSqliteDatabaseConstructor;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -530,7 +575,7 @@ export class RuntimeMemoryManager {
   };
   private readonly identity: RuntimeMemoryIdentity | null;
   private readonly dbPath: string | null;
-  private readonly database: DatabaseSync | null;
+  private readonly database: SqliteDatabase | null;
 
   constructor(params: {
     sessionManager: ReadonlySessionManager;
@@ -547,11 +592,18 @@ export class RuntimeMemoryManager {
       return;
     }
 
-    mkdirSync(this.settings.storageDir, { recursive: true });
     this.dbPath = join(
       this.settings.storageDir,
       buildDbFileName(this.identity),
     );
+
+    const DatabaseSync = loadSqliteDatabaseConstructor();
+    if (!DatabaseSync) {
+      this.database = null;
+      return;
+    }
+
+    mkdirSync(this.settings.storageDir, { recursive: true });
     this.database = new DatabaseSync(this.dbPath);
     this.database.exec("PRAGMA journal_mode = WAL;");
     this.database.exec("PRAGMA busy_timeout = 5000;");
@@ -610,12 +662,27 @@ export class RuntimeMemoryManager {
   }
 
   getStatus(): RuntimeMemoryStatus {
-    if (!this.database || !this.identity) {
+    if (!this.identity) {
       return {
         enabled: this.settings.enabled,
         ready: false,
         identity: null,
         storagePath: null,
+        coreCount: 0,
+        archivalCount: 0,
+        episodeCount: 0,
+        lastMemoryWriteAt: null,
+        lastEpisodeAt: null,
+        legacyImportComplete: false,
+      };
+    }
+
+    if (!this.database) {
+      return {
+        enabled: this.settings.enabled,
+        ready: false,
+        identity: this.identity,
+        storagePath: this.dbPath,
         coreCount: 0,
         archivalCount: 0,
         episodeCount: 0,
@@ -811,47 +878,69 @@ export class RuntimeMemoryManager {
           .run(now, now, existing.id);
         return this.getMemoryById(existing.id);
       }
-
-      this.database
-        .prepare(
-          `UPDATE memories
-           SET active = 0, superseded_at = ?
-           WHERE id = ?`,
-        )
-        .run(now, existing.id);
     }
+    let newId = 0;
+    this.database.exec("BEGIN IMMEDIATE;");
+    try {
+      if (existing) {
+        this.database
+          .prepare(
+            `UPDATE memories
+             SET active = 0, superseded_at = ?
+             WHERE id = ?`,
+          )
+          .run(now, existing.id);
+      }
 
-    const insertResult = this.database
-      .prepare(
-        `INSERT INTO memories (
-           bucket,
-           kind,
-           memory_key,
-           content,
-           search_text,
-           source,
-           active,
-           created_at,
-           updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
-      )
-      .run(
-        bucket,
-        kind,
-        memoryKey,
-        content,
-        createSearchText({
+      const insertResult = this.database
+        .prepare(
+          `INSERT INTO memories (
+             bucket,
+             kind,
+             memory_key,
+             content,
+             search_text,
+             source,
+             active,
+             created_at,
+             updated_at
+           ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+        )
+        .run(
           bucket,
           kind,
-          key: memoryKey,
+          memoryKey,
           content,
-        }),
-        input.source ?? "manual",
-        now,
-        now,
-      );
+          createSearchText({
+            bucket,
+            kind,
+            key: memoryKey,
+            content,
+          }),
+          input.source ?? "manual",
+          now,
+          now,
+        );
 
-    return this.getMemoryById(Number(insertResult.lastInsertRowid));
+      newId = Number(insertResult.lastInsertRowid);
+
+      if (existing) {
+        this.database
+          .prepare(
+            `UPDATE memories
+             SET superseded_by_id = ?
+             WHERE id = ?`,
+          )
+          .run(newId, existing.id);
+      }
+
+      this.database.exec("COMMIT;");
+    } catch (error) {
+      this.database.exec("ROLLBACK;");
+      throw error;
+    }
+
+    return this.getMemoryById(newId);
   }
 
   forget(input: RuntimeMemoryForgetInput): { ok: true; forgotten: boolean } {
@@ -927,8 +1016,6 @@ export class RuntimeMemoryManager {
         .prepare(`UPDATE episodes SET search_text = ? WHERE id = ?`)
         .run(createEpisodeSearchText(row.role, row.text), row.id);
     }
-
-    this.database.exec("VACUUM;");
 
     return {
       ok: true,
@@ -1022,9 +1109,9 @@ export class RuntimeMemoryManager {
     };
 
     return [
-      ...messages.slice(0, lastUserIndex + 1),
+      ...messages.slice(0, lastUserIndex),
       injectedMessage,
-      ...messages.slice(lastUserIndex + 1),
+      ...messages.slice(lastUserIndex),
     ];
   }
 
