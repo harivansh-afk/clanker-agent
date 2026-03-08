@@ -29,6 +29,15 @@ import type {
   HistoryPart,
   ModelInfo,
 } from "./types.js";
+import {
+  getMemoryStatus,
+  initializeMemory,
+  listProjectMemoryFiles,
+  readProjectMemoryFile,
+  searchProjectMemory,
+  syncProjectMemory,
+  writeProjectMemoryFile,
+} from "./memory.js";
 import type { Settings } from "../settings-manager.js";
 import {
   createVercelStreamListener,
@@ -621,6 +630,111 @@ export class GatewayRuntime {
     if (method === "GET" && path === "/logs") {
       const logs = this.handleGetLogs();
       this.writeJson(response, 200, { logs });
+      return;
+    }
+
+    if (method === "GET" && path === "/memory/status") {
+      const memory = await getMemoryStatus(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+      );
+      this.writeJson(response, 200, { memory });
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/init") {
+      const body = await this.readJsonBody(request);
+      const result = await initializeMemory(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        { force: body.force === true },
+      );
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "GET" && path === "/memory/files") {
+      const directory = url.searchParams.get("directory") ?? undefined;
+      const result = await listProjectMemoryFiles(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        directory,
+      );
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "GET" && path === "/memory/file") {
+      const filePath = url.searchParams.get("path");
+      if (!filePath) {
+        this.writeJson(response, 400, { error: "Missing memory file path" });
+        return;
+      }
+      const result = await readProjectMemoryFile(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        filePath,
+      );
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/file") {
+      const body = await this.readJsonBody(request);
+      const filePath = typeof body.path === "string" ? body.path : "";
+      const content = typeof body.content === "string" ? body.content : "";
+      const description =
+        typeof body.description === "string" ? body.description : "";
+      const tags = Array.isArray(body.tags)
+        ? body.tags.filter((tag): tag is string => typeof tag === "string")
+        : undefined;
+      const result = await writeProjectMemoryFile(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        {
+          path: filePath,
+          content,
+          description,
+          tags,
+        },
+      );
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/search") {
+      const body = await this.readJsonBody(request);
+      const query = typeof body.query === "string" ? body.query : "";
+      const searchIn =
+        body.searchIn === "content" ||
+        body.searchIn === "tags" ||
+        body.searchIn === "description"
+          ? body.searchIn
+          : "content";
+      const result = await searchProjectMemory(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        query,
+        searchIn,
+      );
+      this.writeJson(response, 200, result);
+      return;
+    }
+
+    if (method === "POST" && path === "/memory/sync") {
+      const body = await this.readJsonBody(request);
+      const action =
+        body.action === "pull" ||
+        body.action === "push" ||
+        body.action === "status"
+          ? body.action
+          : "status";
+      const result = await syncProjectMemory(
+        this.primarySession.settingsManager,
+        this.primarySession.sessionManager.getCwd(),
+        action,
+      );
+      this.writeJson(response, 200, result);
       return;
     }
 

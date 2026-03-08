@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import type {
@@ -61,7 +62,7 @@ export type ParsedFrontmatter = GrayMatterFile<string>["data"];
 const DEFAULT_LOCAL_PATH = path.join(os.homedir(), ".pi", "memory-md");
 
 export function getCurrentDate(): string {
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0] ?? "";
 }
 
 function expandPath(p: string): string {
@@ -71,12 +72,73 @@ function expandPath(p: string): string {
   return p;
 }
 
+function getLegacyProjectDirName(cwd: string): string {
+  return path.basename(cwd);
+}
+
+function getProjectDirName(cwd: string): string {
+  const projectName = getLegacyProjectDirName(cwd);
+  const hash = createHash("sha256")
+    .update(path.resolve(cwd))
+    .digest("hex")
+    .slice(0, 12);
+  return `${projectName}-${hash}`;
+}
+
+function migrateLegacyMemoryDir(
+  preferredDir: string,
+  legacyDir: string,
+): string {
+  try {
+    fs.renameSync(legacyDir, preferredDir);
+    return preferredDir;
+  } catch (error) {
+    console.warn("Failed to migrate legacy memory dir:", error);
+    return legacyDir;
+  }
+}
+
 export function getMemoryDir(
   settings: MemoryMdSettings,
   ctx: ExtensionContext,
 ): string {
   const basePath = settings.localPath || DEFAULT_LOCAL_PATH;
-  return path.join(basePath, path.basename(ctx.cwd));
+  const preferredDir = path.join(basePath, getProjectDirName(ctx.cwd));
+  if (fs.existsSync(preferredDir)) {
+    return preferredDir;
+  }
+
+  const legacyDir = path.join(basePath, getLegacyProjectDirName(ctx.cwd));
+  if (fs.existsSync(legacyDir)) {
+    return migrateLegacyMemoryDir(preferredDir, legacyDir);
+  }
+
+  return preferredDir;
+}
+
+export function getProjectRepoPath(
+  settings: MemoryMdSettings,
+  ctx: ExtensionContext,
+): string {
+  const basePath = settings.localPath || DEFAULT_LOCAL_PATH;
+  return path.relative(basePath, getMemoryDir(settings, ctx)).split(path.sep).join("/");
+}
+
+export function resolveMemoryPath(
+  settings: MemoryMdSettings,
+  ctx: ExtensionContext,
+  relativePath: string,
+): string {
+  const memoryDir = getMemoryDir(settings, ctx);
+  const resolvedPath = path.resolve(memoryDir, relativePath.trim());
+  const resolvedRoot = path.resolve(memoryDir);
+  if (
+    resolvedPath !== resolvedRoot &&
+    !resolvedPath.startsWith(`${resolvedRoot}${path.sep}`)
+  ) {
+    throw new Error(`Memory path escapes root: ${relativePath}`);
+  }
+  return resolvedPath;
 }
 
 function getRepoName(settings: MemoryMdSettings): string {
@@ -85,7 +147,26 @@ function getRepoName(settings: MemoryMdSettings): string {
   return match ? match[1] : "memory-md";
 }
 
-function loadSettings(): MemoryMdSettings {
+function loadScopedSettings(settingsPath: string): MemoryMdSettings {
+  if (!fs.existsSync(settingsPath)) {
+    return {};
+  }
+
+  try {
+    const content = fs.readFileSync(settingsPath, "utf-8");
+    const parsed = JSON.parse(content);
+    const scoped = parsed["pi-memory-md"];
+    if (!scoped || typeof scoped !== "object" || Array.isArray(scoped)) {
+      return {};
+    }
+    return scoped as MemoryMdSettings;
+  } catch (error) {
+    console.warn("Failed to load memory settings:", error);
+    return {};
+  }
+}
+
+function loadSettings(cwd?: string): MemoryMdSettings {
   const DEFAULT_SETTINGS: MemoryMdSettings = {
     enabled: true,
     repoUrl: "",
@@ -104,27 +185,34 @@ function loadSettings(): MemoryMdSettings {
     "agent",
     "settings.json",
   );
-  if (!fs.existsSync(globalSettings)) {
-    return DEFAULT_SETTINGS;
+  const projectSettings = cwd
+    ? path.join(cwd, ".pi", "settings.json")
+    : undefined;
+  const globalLoaded = loadScopedSettings(globalSettings);
+  const projectLoaded = projectSettings
+    ? loadScopedSettings(projectSettings)
+    : {};
+  const loadedSettings = {
+    ...DEFAULT_SETTINGS,
+    ...globalLoaded,
+    ...projectLoaded,
+    autoSync: {
+      ...DEFAULT_SETTINGS.autoSync,
+      ...globalLoaded.autoSync,
+      ...projectLoaded.autoSync,
+    },
+    systemPrompt: {
+      ...DEFAULT_SETTINGS.systemPrompt,
+      ...globalLoaded.systemPrompt,
+      ...projectLoaded.systemPrompt,
+    },
+  };
+
+  if (loadedSettings.localPath) {
+    loadedSettings.localPath = expandPath(loadedSettings.localPath);
   }
 
-  try {
-    const content = fs.readFileSync(globalSettings, "utf-8");
-    const parsed = JSON.parse(content);
-    const loadedSettings = {
-      ...DEFAULT_SETTINGS,
-      ...(parsed["pi-memory-md"] as MemoryMdSettings),
-    };
-
-    if (loadedSettings.localPath) {
-      loadedSettings.localPath = expandPath(loadedSettings.localPath);
-    }
-
-    return loadedSettings;
-  } catch (error) {
-    console.warn("Failed to load memory settings:", error);
-    return DEFAULT_SETTINGS;
-  }
+  return loadedSettings;
 }
 
 /**
@@ -165,6 +253,33 @@ export async function syncRepository(
   if (fs.existsSync(localPath)) {
     const gitDir = path.join(localPath, ".git");
     if (!fs.existsSync(gitDir)) {
+      let existingEntries: string[];
+      try {
+        existingEntries = fs.readdirSync(localPath);
+      } catch {
+        return {
+          success: false,
+          message: `Path exists but is not a directory: ${localPath}`,
+        };
+      }
+
+      if (existingEntries.length === 0) {
+        const cloneIntoEmptyDir = await gitExec(pi, localPath, "clone", repoUrl, ".");
+        if (cloneIntoEmptyDir.success) {
+          isRepoInitialized.value = true;
+          const repoName = getRepoName(settings);
+          return {
+            success: true,
+            message: `Cloned [${repoName}] successfully`,
+            updated: true,
+          };
+        }
+        return {
+          success: false,
+          message: "Clone failed - check repo URL and auth",
+        };
+      }
+
       return {
         success: false,
         message: `Directory exists but is not a git repo: ${localPath}`,
@@ -322,7 +437,7 @@ export function writeMemoryFile(
  * Build memory context for agent prompt.
  */
 
-function ensureDirectoryStructure(memoryDir: string): void {
+export function ensureDirectoryStructure(memoryDir: string): void {
   const dirs = [
     path.join(memoryDir, "core", "user"),
     path.join(memoryDir, "core", "project"),
@@ -334,7 +449,7 @@ function ensureDirectoryStructure(memoryDir: string): void {
   }
 }
 
-function createDefaultFiles(memoryDir: string): void {
+export function createDefaultFiles(memoryDir: string): void {
   const identityFile = path.join(memoryDir, "core", "user", "identity.md");
   if (!fs.existsSync(identityFile)) {
     writeMemoryFile(
@@ -434,7 +549,7 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
   let memoryInjected = false;
 
   pi.on("session_start", async (_event, ctx) => {
-    settings = loadSettings();
+    settings = loadSettings(ctx.cwd);
 
     if (!settings.enabled) {
       return;
@@ -451,7 +566,11 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
       return;
     }
 
-    if (settings.autoSync?.onSessionStart && settings.localPath) {
+    if (
+      settings.autoSync?.onSessionStart &&
+      settings.localPath &&
+      settings.repoUrl
+    ) {
       syncPromise = syncRepository(pi, settings, repoInitialized).then(
         (syncResult) => {
           if (settings.repoUrl) {
@@ -509,14 +628,20 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
     return undefined;
   });
 
-  registerAllTools(pi, settings, repoInitialized);
+  registerAllTools(pi, () => settings, repoInitialized);
 
   pi.registerCommand("memory-status", {
     description: "Show memory repository status",
     handler: async (_args, ctx) => {
+      settings = loadSettings(ctx.cwd);
       const projectName = path.basename(ctx.cwd);
       const memoryDir = getMemoryDir(settings, ctx);
+      const projectRepoPath = getProjectRepoPath(settings, ctx);
       const coreUserDir = path.join(memoryDir, "core", "user");
+      const repoConfigured = Boolean(settings.repoUrl);
+      const repoReady = Boolean(
+        settings.localPath && fs.existsSync(path.join(settings.localPath, ".git")),
+      );
 
       if (!fs.existsSync(coreUserDir)) {
         ctx.ui.notify(
@@ -526,12 +651,37 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
         return;
       }
 
+      if (!repoConfigured) {
+        ctx.ui.notify(
+          `Memory: ${projectName} | Local only | Path: ${memoryDir}`,
+          "info",
+        );
+        return;
+      }
+
+      if (!repoReady || !settings.localPath) {
+        ctx.ui.notify(
+          `Memory: ${projectName} | Repo not initialized | Path: ${memoryDir}`,
+          "warning",
+        );
+        return;
+      }
+
       const result = await gitExec(
         pi,
-        settings.localPath!,
+        settings.localPath,
         "status",
         "--porcelain",
+        "--",
+        projectRepoPath,
       );
+      if (!result.success) {
+        ctx.ui.notify(
+          `Memory: ${projectName} | Repo status unavailable | Path: ${memoryDir}`,
+          "warning",
+        );
+        return;
+      }
       const isDirty = result.stdout.trim().length > 0;
 
       ctx.ui.notify(
@@ -544,26 +694,36 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
   pi.registerCommand("memory-init", {
     description: "Initialize memory repository",
     handler: async (_args, ctx) => {
+      settings = loadSettings(ctx.cwd);
       const memoryDir = getMemoryDir(settings, ctx);
       const alreadyInitialized = fs.existsSync(
         path.join(memoryDir, "core", "user"),
       );
 
-      const result = await syncRepository(pi, settings, repoInitialized);
-
-      if (!result.success) {
-        ctx.ui.notify(`Initialization failed: ${result.message}`, "error");
-        return;
+      if (settings.repoUrl) {
+        const result = await syncRepository(pi, settings, repoInitialized);
+        if (!result.success) {
+          ctx.ui.notify(`Initialization failed: ${result.message}`, "error");
+          return;
+        }
       }
 
       ensureDirectoryStructure(memoryDir);
       createDefaultFiles(memoryDir);
+      repoInitialized.value = true;
 
       if (alreadyInitialized) {
-        ctx.ui.notify(`Memory already exists: ${result.message}`, "info");
+        ctx.ui.notify(
+          settings.repoUrl
+            ? "Memory already exists and repository is ready"
+            : "Local memory already exists",
+          "info",
+        );
       } else {
         ctx.ui.notify(
-          `Memory initialized: ${result.message}\n\nCreated:\n  - core/user\n  - core/project\n  - reference`,
+          settings.repoUrl
+            ? "Memory initialized and repository is ready\n\nCreated:\n  - core/user\n  - core/project\n  - reference"
+            : "Local memory initialized\n\nCreated:\n  - core/user\n  - core/project\n  - reference",
           "info",
         );
       }
@@ -573,6 +733,7 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
   pi.registerCommand("memory-refresh", {
     description: "Refresh memory context from files",
     handler: async (_args, ctx) => {
+      settings = loadSettings(ctx.cwd);
       const memoryContext = buildMemoryContext(settings, ctx);
 
       if (!memoryContext) {
@@ -610,6 +771,7 @@ export default function memoryMdExtension(pi: ExtensionAPI) {
   pi.registerCommand("memory-check", {
     description: "Check memory folder structure",
     handler: async (_args, ctx) => {
+      settings = loadSettings(ctx.cwd);
       const memoryDir = getMemoryDir(settings, ctx);
 
       if (!fs.existsSync(memoryDir)) {
