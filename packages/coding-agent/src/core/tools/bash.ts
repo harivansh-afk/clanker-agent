@@ -74,8 +74,6 @@ export interface BashOperations {
       signal?: AbortSignal;
       timeout?: number;
       env?: NodeJS.ProcessEnv;
-      /** Called with a function that can kill the process tree. Used by no-output timeout. */
-      onKillHandle?: (kill: () => void) => void;
     },
   ) => Promise<{ exitCode: number | null }>;
 }
@@ -84,7 +82,7 @@ export interface BashOperations {
  * Default bash operations using local shell
  */
 const defaultBashOperations: BashOperations = {
-  exec: (command, cwd, { onData, signal, timeout, env, onKillHandle }) => {
+  exec: (command, cwd, { onData, signal, timeout, env }) => {
     return new Promise((resolve, reject) => {
       const { shell, args } = getShellConfig();
 
@@ -103,15 +101,6 @@ const defaultBashOperations: BashOperations = {
         env: env ?? getShellEnv(),
         stdio: ["ignore", "pipe", "pipe"],
       });
-
-      // Expose kill handle for no-output timeout
-      if (onKillHandle) {
-        onKillHandle(() => {
-          if (child.pid) {
-            killProcessTree(child.pid);
-          }
-        });
-      }
 
       let timedOut = false;
 
@@ -199,6 +188,27 @@ function resolveSpawnContext(
   return spawnHook ? spawnHook(baseContext) : baseContext;
 }
 
+/**
+ * Combine multiple AbortSignals into one. Aborts when any input signal fires.
+ */
+function combineAbortSignals(
+  ...signals: (AbortSignal | undefined)[]
+): AbortSignal | undefined {
+  const defined = signals.filter((s): s is AbortSignal => s !== undefined);
+  if (defined.length === 0) return undefined;
+  if (defined.length === 1) return defined[0];
+
+  const controller = new AbortController();
+  for (const sig of defined) {
+    if (sig.aborted) {
+      controller.abort();
+      return controller.signal;
+    }
+    sig.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  return controller.signal;
+}
+
 export interface BashToolOptions {
   /** Custom operations for command execution. Default: local shell */
   operations?: BashOperations;
@@ -248,18 +258,30 @@ export function createBashTool(
         let tempFileStream: ReturnType<typeof createWriteStream> | undefined;
         let totalBytes = 0;
 
-        // No-output timeout: kill process if it goes silent
+        // No-output timeout: abort via AbortController when process goes silent.
+        // This keeps the kill mechanism at the tool level, not inside BashOperations.
         let noOutputTimer: NodeJS.Timeout | undefined;
         let noOutputTriggered = false;
-        // Store kill function to call from no-output timeout
-        let killFn: (() => void) | undefined;
+        const noOutputAbort = configNoOutputTimeout > 0 ? new AbortController() : undefined;
+
+        // Combine caller signal and no-output signal
+        const combinedSignal = noOutputAbort
+          ? combineAbortSignals(signal, noOutputAbort.signal)
+          : signal;
+
+        const clearNoOutputTimer = () => {
+          if (noOutputTimer) {
+            clearTimeout(noOutputTimer);
+            noOutputTimer = undefined;
+          }
+        };
 
         const resetNoOutputTimer = () => {
-          if (configNoOutputTimeout <= 0) return;
-          if (noOutputTimer) clearTimeout(noOutputTimer);
+          if (!noOutputAbort) return;
+          clearNoOutputTimer();
           noOutputTimer = setTimeout(() => {
             noOutputTriggered = true;
-            killFn?.();
+            noOutputAbort.abort();
           }, configNoOutputTimeout * 1000);
         };
 
@@ -315,106 +337,78 @@ export function createBashTool(
           }
         };
 
+        // Collect output and build final text (shared by success and error paths)
+        const buildOutput = (): { text: string; details?: BashToolDetails } => {
+          const fullBuffer = Buffer.concat(chunks);
+          const fullOutput = fullBuffer.toString("utf-8");
+          const truncation = truncateTail(fullOutput);
+          let outputText = truncation.content || "(no output)";
+          let details: BashToolDetails | undefined;
+
+          if (truncation.truncated) {
+            details = { truncation, fullOutputPath: tempFilePath };
+            const startLine = truncation.totalLines - truncation.outputLines + 1;
+            const endLine = truncation.totalLines;
+
+            if (truncation.lastLinePartial) {
+              const lastLineSize = formatSize(
+                Buffer.byteLength(fullOutput.split("\n").pop() || "", "utf-8"),
+              );
+              outputText += `\n\n[Showing last ${formatSize(truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${tempFilePath}]`;
+            } else if (truncation.truncatedBy === "lines") {
+              outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines}. Full output: ${tempFilePath}]`;
+            } else {
+              outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${tempFilePath}]`;
+            }
+          }
+
+          return { text: outputText, details };
+        };
+
         // Start the no-output timer (will fire if command produces no output at all)
         resetNoOutputTimer();
 
         ops
           .exec(spawnContext.command, spawnContext.cwd, {
             onData: handleData,
-            signal,
+            signal: combinedSignal,
             timeout: effectiveTimeout,
             env: spawnContext.env,
-            onKillHandle: (kill) => { killFn = kill; },
           })
           .then(({ exitCode }) => {
-            if (noOutputTimer) clearTimeout(noOutputTimer);
+            clearNoOutputTimer();
+            if (tempFileStream) tempFileStream.end();
 
-            // Close temp file stream
-            if (tempFileStream) {
-              tempFileStream.end();
-            }
+            const { text, details } = buildOutput();
 
-            // Combine all buffered chunks
-            const fullBuffer = Buffer.concat(chunks);
-            const fullOutput = fullBuffer.toString("utf-8");
-
-            // Apply tail truncation
-            const truncation = truncateTail(fullOutput);
-            let outputText = truncation.content || "(no output)";
-
-            // Build details with truncation info
-            let details: BashToolDetails | undefined;
-
-            if (truncation.truncated) {
-              details = {
-                truncation,
-                fullOutputPath: tempFilePath,
-              };
-
-              // Build actionable notice
-              const startLine =
-                truncation.totalLines - truncation.outputLines + 1;
-              const endLine = truncation.totalLines;
-
-              if (truncation.lastLinePartial) {
-                // Edge case: last line alone > 30KB
-                const lastLineSize = formatSize(
-                  Buffer.byteLength(
-                    fullOutput.split("\n").pop() || "",
-                    "utf-8",
-                  ),
-                );
-                outputText += `\n\n[Showing last ${formatSize(truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${tempFilePath}]`;
-              } else if (truncation.truncatedBy === "lines") {
-                outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines}. Full output: ${tempFilePath}]`;
-              } else {
-                outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${tempFilePath}]`;
-              }
-            }
-
-            // If killed by no-output timeout, report it clearly
             if (noOutputTriggered) {
-              if (outputText) outputText += "\n\n";
-              outputText += `Process was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`;
-              reject(new Error(outputText));
+              reject(new Error(
+                `${text}\n\nProcess was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`,
+              ));
               return;
             }
 
             if (exitCode !== 0 && exitCode !== null) {
-              outputText += `\n\nCommand exited with code ${exitCode}`;
-              reject(new Error(outputText));
+              reject(new Error(`${text}\n\nCommand exited with code ${exitCode}`));
             } else {
-              resolve({
-                content: [{ type: "text", text: outputText }],
-                details,
-              });
+              resolve({ content: [{ type: "text", text }], details });
             }
           })
           .catch((err: Error) => {
-            if (noOutputTimer) clearTimeout(noOutputTimer);
+            clearNoOutputTimer();
+            if (tempFileStream) tempFileStream.end();
 
-            // Close temp file stream
-            if (tempFileStream) {
-              tempFileStream.end();
-            }
-
-            // Combine all buffered chunks for error output
-            const fullBuffer = Buffer.concat(chunks);
-            let output = fullBuffer.toString("utf-8");
+            const { text } = buildOutput();
 
             if (noOutputTriggered) {
-              if (output) output += "\n\n";
-              output += `Process was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`;
-              reject(new Error(output));
+              reject(new Error(
+                `${text}\n\nProcess was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`,
+              ));
             } else if (err.message === "aborted") {
-              if (output) output += "\n\n";
-              output += "Command aborted";
-              reject(new Error(output));
+              reject(new Error(text ? `${text}\n\nCommand aborted` : "Command aborted"));
             } else if (err.message.startsWith("timeout:")) {
               const timeoutSecs = err.message.split(":")[1];
-              if (output) output += "\n\n";
-              output += `Command timed out after ${timeoutSecs} seconds`;
-              reject(new Error(output));
+              reject(new Error(text ? `${text}\n\nCommand timed out after ${timeoutSecs} seconds` : `Command timed out after ${timeoutSecs} seconds`));
             } else {
               reject(err);
             }
