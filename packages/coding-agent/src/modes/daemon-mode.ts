@@ -12,7 +12,7 @@ import {
   GatewayRuntime,
   type GatewaySessionFactory,
   setActiveGatewayRuntime,
-} from "../core/gateway-runtime.js";
+} from "../core/gateway/index.js";
 import type { GatewaySettings } from "../core/settings-manager.js";
 
 /**
