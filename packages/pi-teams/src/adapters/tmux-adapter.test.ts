@@ -13,6 +13,7 @@ describe("TmuxAdapter", () => {
     delete process.env.ZELLIJ;
     delete process.env.WEZTERM_PANE;
     delete process.env.TERM_PROGRAM;
+    delete process.env.COLORTERM;
   });
 
   afterEach(() => {
@@ -28,6 +29,18 @@ describe("TmuxAdapter", () => {
 
     expect(adapter.detect()).toBe(true);
     expect(mockExecCommand).toHaveBeenCalledWith("tmux", ["-V"]);
+  });
+
+  it("does not detect tmux in GUI terminals just because the binary exists", () => {
+    process.env.COLORTERM = "truecolor";
+    mockExecCommand.mockReturnValue({
+      stdout: "tmux 3.4",
+      stderr: "",
+      status: 0,
+    });
+
+    expect(adapter.detect()).toBe(false);
+    expect(mockExecCommand).not.toHaveBeenCalled();
   });
 
   it("creates a detached team session when not already inside tmux", () => {
@@ -56,19 +69,44 @@ describe("TmuxAdapter", () => {
     );
   });
 
+  it("splits an existing detached session when not already inside tmux", () => {
+    mockExecCommand.mockImplementation((_bin: string, args: string[]) => {
+      if (args[0] === "has-session") {
+        return { stdout: "", stderr: "", status: 0 };
+      }
+      if (args[0] === "split-window") {
+        return { stdout: "%2\n", stderr: "", status: 0 };
+      }
+      return { stdout: "", stderr: "", status: 0 };
+    });
+
+    expect(
+      adapter.spawn({
+        name: "worker",
+        cwd: "/tmp/project",
+        command: "pi",
+        env: { PI_TEAM_NAME: "demo", PI_AGENT_NAME: "worker" },
+      }),
+    ).toBe("%2");
+
+    expect(mockExecCommand).toHaveBeenCalledWith(
+      "tmux",
+      expect.arrayContaining(["split-window", "-t", "pi-teams-demo:0"]),
+    );
+  });
+
   it("checks pane liveness by pane id", () => {
     mockExecCommand.mockReturnValue({
-      stdout: "%7\n",
+      stdout: "%1\n%7\n",
       stderr: "",
       status: 0,
     });
 
     expect(adapter.isAlive("%7")).toBe(true);
     expect(mockExecCommand).toHaveBeenCalledWith("tmux", [
-      "display-message",
-      "-p",
-      "-t",
-      "%7",
+      "list-panes",
+      "-a",
+      "-F",
       "#{pane_id}",
     ]);
   });

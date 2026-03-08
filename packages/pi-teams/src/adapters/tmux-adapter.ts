@@ -18,6 +18,7 @@ export class TmuxAdapter implements TerminalAdapter {
     if (process.env.ZELLIJ || process.env.TERM_PROGRAM === "iTerm.app") {
       return false;
     }
+    if (process.env.TERM_PROGRAM || process.env.COLORTERM) return false;
     if (process.env.WEZTERM_PANE) return false;
     return execCommand("tmux", ["-V"]).status === 0;
   }
@@ -60,6 +61,7 @@ export class TmuxAdapter implements TerminalAdapter {
           );
         }
 
+        // The first pane becomes window 0; layout only matters once later spawns split it.
         return result.stdout.trim();
       }
     }
@@ -130,13 +132,15 @@ export class TmuxAdapter implements TerminalAdapter {
     }
 
     const result = execCommand("tmux", [
-      "display-message",
-      "-p",
-      "-t",
-      paneId.trim(),
+      "list-panes",
+      "-a",
+      "-F",
       "#{pane_id}",
     ]);
-    return result.status === 0 && result.stdout.trim() === paneId.trim();
+    return (
+      result.status === 0 &&
+      result.stdout.split("\n").some((line) => line.trim() === paneId.trim())
+    );
   }
 
   setTitle(title: string): void {
