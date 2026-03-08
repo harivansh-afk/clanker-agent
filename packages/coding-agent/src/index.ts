@@ -156,7 +156,7 @@ export {
   getActiveGatewayRuntime,
   sanitizeSessionKey,
   setActiveGatewayRuntime,
-} from "./core/gateway-runtime.js";
+} from "./core/gateway/index.js";
 export { convertToLlm } from "./core/messages.js";
 export { ModelRegistry } from "./core/model-registry.js";
 export type {

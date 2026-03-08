@@ -8,18 +8,15 @@ import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { URL } from "node:url";
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
-import type { AgentSession, AgentSessionEvent } from "./agent-session.js";
-import {
-  extractMessageText,
-  getLastAssistantText,
-} from "./gateway-runtime-helpers.js";
+import type { AgentSession, AgentSessionEvent } from "../agent-session.js";
+import { extractMessageText, getLastAssistantText } from "./helpers.js";
 import {
   type GatewayEvent,
   type GatewayQueuedMessage,
   HttpError,
   type ManagedGatewaySession,
-} from "./gateway-runtime-internal-types.js";
-import { sanitizeSessionKey } from "./gateway-session-manager.js";
+} from "./internal-types.js";
+import { sanitizeSessionKey } from "./session-manager.js";
 import type {
   ChannelStatus,
   GatewayConfig,
@@ -31,8 +28,8 @@ import type {
   HistoryMessage,
   HistoryPart,
   ModelInfo,
-} from "./gateway-runtime-types.js";
-import type { Settings } from "./settings-manager.js";
+} from "./types.js";
+import type { Settings } from "../settings-manager.js";
 import {
   createVercelStreamListener,
   errorVercelStream,
@@ -42,7 +39,7 @@ import {
 export {
   createGatewaySessionManager,
   sanitizeSessionKey,
-} from "./gateway-session-manager.js";
+} from "./session-manager.js";
 export type {
   ChannelStatus,
   GatewayConfig,
@@ -54,7 +51,7 @@ export type {
   HistoryMessage,
   HistoryPart,
   ModelInfo,
-} from "./gateway-runtime-types.js";
+} from "./types.js";
 
 let activeGatewayRuntime: GatewayRuntime | null = null;
 
@@ -966,7 +963,7 @@ export class GatewayRuntime {
     const managed = await this.ensureSession(sessionKey);
     const rawMessages = managed.session.messages;
     const messages: HistoryMessage[] = [];
-    for (const msg of rawMessages) {
+    for (const [index, msg] of rawMessages.entries()) {
       if (
         msg.role !== "user" &&
         msg.role !== "assistant" &&
@@ -975,7 +972,7 @@ export class GatewayRuntime {
         continue;
       }
       messages.push({
-        id: `${msg.timestamp}-${msg.role}`,
+        id: `${msg.timestamp}-${msg.role}-${index}`,
         role: msg.role,
         parts: this.messageContentToParts(msg),
         timestamp: msg.timestamp,
@@ -1006,14 +1003,16 @@ export class GatewayRuntime {
     if (sessionKey === this.primarySessionKey) {
       throw new HttpError(400, "Cannot delete primary session");
     }
-    const managed = await this.ensureSession(sessionKey);
-    if (managed.processing) {
-      await managed.session.abort();
+    const managed = this.sessions.get(sessionKey);
+    if (managed) {
+      if (managed.processing) {
+        await managed.session.abort();
+      }
+      this.rejectQueuedMessages(managed, `Session deleted: ${sessionKey}`);
+      managed.unsubscribe();
+      managed.session.dispose();
+      this.sessions.delete(sessionKey);
     }
-    this.rejectQueuedMessages(managed, `Session deleted: ${sessionKey}`);
-    managed.unsubscribe();
-    managed.session.dispose();
-    this.sessions.delete(sessionKey);
     await rm(this.getGatewaySessionDir(sessionKey), {
       recursive: true,
       force: true,

@@ -1,4 +1,4 @@
-import type { AgentSession } from "./agent-session.js";
+import type { AgentSession } from "../agent-session.js";
 
 export function extractMessageText(message: { content: unknown }): string {
   if (!Array.isArray(message.content)) {

@@ -1,9 +1,9 @@
-import type { AgentSession } from "./agent-session.js";
+import type { AgentSession } from "../agent-session.js";
 import type {
   GatewayMessageRequest,
   GatewayMessageResult,
   GatewaySessionSnapshot,
-} from "./gateway-runtime-types.js";
+} from "./types.js";
 
 export interface GatewayQueuedMessage {
   request: GatewayMessageRequest;

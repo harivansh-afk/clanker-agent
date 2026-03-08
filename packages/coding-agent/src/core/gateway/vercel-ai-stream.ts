@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
-import type { AgentSessionEvent } from "./agent-session.js";
+import type { AgentSessionEvent } from "../agent-session.js";
 
 /**
  * Write a single Vercel AI SDK v5+ SSE chunk to the response.

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { SessionManager } from "./session-manager.js";
+import { SessionManager } from "../session-manager.js";
 
 export function sanitizeSessionKey(sessionKey: string): string {
   return sessionKey.replace(/[^a-zA-Z0-9._-]/g, "_");

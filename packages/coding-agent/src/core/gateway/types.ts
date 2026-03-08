@@ -1,5 +1,5 @@
-import type { AgentSession } from "./agent-session.js";
 import type { ImageContent } from "@mariozechner/pi-ai";
+import type { AgentSession } from "../agent-session.js";
 
 export interface GatewayConfig {
   bind: string;
