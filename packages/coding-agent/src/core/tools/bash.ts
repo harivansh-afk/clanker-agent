@@ -26,11 +26,23 @@ function getTempFilePath(): string {
   return join(tmpdir(), `pi-bash-${id}.log`);
 }
 
+/**
+ * Default timeout applied when the LLM does not specify one.
+ * Prevents indefinite hangs from long-running processes (dev servers, watchers, etc.)
+ */
+const DEFAULT_TIMEOUT_SECONDS = 120;
+
+/**
+ * If no stdout/stderr output is received for this many seconds, kill the process.
+ * Catches processes that are alive but idle (e.g. a backgrounded server after startup).
+ */
+const DEFAULT_NO_OUTPUT_TIMEOUT_SECONDS = 30;
+
 const bashSchema = Type.Object({
   command: Type.String({ description: "Bash command to execute" }),
   timeout: Type.Optional(
     Type.Number({
-      description: "Timeout in seconds (optional, no default timeout)",
+      description: `Timeout in seconds. Defaults to ${DEFAULT_TIMEOUT_SECONDS}s if not specified. Use a higher value for long-running builds or installations.`,
     }),
   ),
 });
@@ -62,6 +74,8 @@ export interface BashOperations {
       signal?: AbortSignal;
       timeout?: number;
       env?: NodeJS.ProcessEnv;
+      /** Called with a function that can kill the process tree. Used by no-output timeout. */
+      onKillHandle?: (kill: () => void) => void;
     },
   ) => Promise<{ exitCode: number | null }>;
 }
@@ -70,7 +84,7 @@ export interface BashOperations {
  * Default bash operations using local shell
  */
 const defaultBashOperations: BashOperations = {
-  exec: (command, cwd, { onData, signal, timeout, env }) => {
+  exec: (command, cwd, { onData, signal, timeout, env, onKillHandle }) => {
     return new Promise((resolve, reject) => {
       const { shell, args } = getShellConfig();
 
@@ -89,6 +103,15 @@ const defaultBashOperations: BashOperations = {
         env: env ?? getShellEnv(),
         stdio: ["ignore", "pipe", "pipe"],
       });
+
+      // Expose kill handle for no-output timeout
+      if (onKillHandle) {
+        onKillHandle(() => {
+          if (child.pid) {
+            killProcessTree(child.pid);
+          }
+        });
+      }
 
       let timedOut = false;
 
@@ -183,6 +206,10 @@ export interface BashToolOptions {
   commandPrefix?: string;
   /** Hook to adjust command, cwd, or env before execution */
   spawnHook?: BashSpawnHook;
+  /** Default timeout in seconds when LLM does not specify one. Set to 0 to disable. Default: 120 */
+  defaultTimeoutSeconds?: number;
+  /** Kill process if no output received for this many seconds. Set to 0 to disable. Default: 30 */
+  noOutputTimeoutSeconds?: number;
 }
 
 export function createBashTool(
@@ -192,11 +219,13 @@ export function createBashTool(
   const ops = options?.operations ?? defaultBashOperations;
   const commandPrefix = options?.commandPrefix;
   const spawnHook = options?.spawnHook;
+  const configDefaultTimeout = options?.defaultTimeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS;
+  const configNoOutputTimeout = options?.noOutputTimeoutSeconds ?? DEFAULT_NO_OUTPUT_TIMEOUT_SECONDS;
 
   return {
     name: "bash",
     label: "bash",
-    description: `Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
+    description: `Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Default timeout is ${configDefaultTimeout}s - provide a higher timeout for long builds or installations.`,
     parameters: bashSchema,
     execute: async (
       _toolCallId: string,
@@ -204,6 +233,9 @@ export function createBashTool(
       signal?: AbortSignal,
       onUpdate?,
     ) => {
+      // Apply default timeout when LLM does not specify one
+      const effectiveTimeout = timeout ?? (configDefaultTimeout > 0 ? configDefaultTimeout : undefined);
+
       // Apply command prefix if configured (e.g., "shopt -s expand_aliases" for alias support)
       const resolvedCommand = commandPrefix
         ? `${commandPrefix}\n${command}`
@@ -216,6 +248,21 @@ export function createBashTool(
         let tempFileStream: ReturnType<typeof createWriteStream> | undefined;
         let totalBytes = 0;
 
+        // No-output timeout: kill process if it goes silent
+        let noOutputTimer: NodeJS.Timeout | undefined;
+        let noOutputTriggered = false;
+        // Store kill function to call from no-output timeout
+        let killFn: (() => void) | undefined;
+
+        const resetNoOutputTimer = () => {
+          if (configNoOutputTimeout <= 0) return;
+          if (noOutputTimer) clearTimeout(noOutputTimer);
+          noOutputTimer = setTimeout(() => {
+            noOutputTriggered = true;
+            killFn?.();
+          }, configNoOutputTimeout * 1000);
+        };
+
         // Keep a rolling buffer of the last chunk for tail truncation
         const chunks: Buffer[] = [];
         let chunksBytes = 0;
@@ -224,6 +271,9 @@ export function createBashTool(
 
         const handleData = (data: Buffer) => {
           totalBytes += data.length;
+
+          // Reset no-output timer on every chunk of output
+          resetNoOutputTimer();
 
           // Start writing to temp file once we exceed the threshold
           if (totalBytes > DEFAULT_MAX_BYTES && !tempFilePath) {
@@ -265,14 +315,20 @@ export function createBashTool(
           }
         };
 
+        // Start the no-output timer (will fire if command produces no output at all)
+        resetNoOutputTimer();
+
         ops
           .exec(spawnContext.command, spawnContext.cwd, {
             onData: handleData,
             signal,
-            timeout,
+            timeout: effectiveTimeout,
             env: spawnContext.env,
+            onKillHandle: (kill) => { killFn = kill; },
           })
           .then(({ exitCode }) => {
+            if (noOutputTimer) clearTimeout(noOutputTimer);
+
             // Close temp file stream
             if (tempFileStream) {
               tempFileStream.end();
@@ -316,6 +372,14 @@ export function createBashTool(
               }
             }
 
+            // If killed by no-output timeout, report it clearly
+            if (noOutputTriggered) {
+              if (outputText) outputText += "\n\n";
+              outputText += `Process was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`;
+              reject(new Error(outputText));
+              return;
+            }
+
             if (exitCode !== 0 && exitCode !== null) {
               outputText += `\n\nCommand exited with code ${exitCode}`;
               reject(new Error(outputText));
@@ -327,6 +391,8 @@ export function createBashTool(
             }
           })
           .catch((err: Error) => {
+            if (noOutputTimer) clearTimeout(noOutputTimer);
+
             // Close temp file stream
             if (tempFileStream) {
               tempFileStream.end();
@@ -336,7 +402,11 @@ export function createBashTool(
             const fullBuffer = Buffer.concat(chunks);
             let output = fullBuffer.toString("utf-8");
 
-            if (err.message === "aborted") {
+            if (noOutputTriggered) {
+              if (output) output += "\n\n";
+              output += `Process was killed after ${configNoOutputTimeout}s of no output. If this is a long-running server or build, use a higher timeout or run the process in the background with '&' and redirect output.`;
+              reject(new Error(output));
+            } else if (err.message === "aborted") {
               if (output) output += "\n\n";
               output += "Command aborted";
               reject(new Error(output));
