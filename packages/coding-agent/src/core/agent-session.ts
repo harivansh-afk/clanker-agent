@@ -111,7 +111,7 @@ import {
 } from "./slash-commands.js";
 import { buildSystemPrompt } from "./system-prompt.js";
 import type { BashOperations } from "./tools/bash.js";
-import { createAllTools } from "./tools/index.js";
+import { createAllTools, defaultCodingToolNames } from "./tools/index.js";
 
 // ============================================================================
 // Skill Block Parsing
@@ -187,7 +187,7 @@ export interface AgentSessionConfig {
   customTools?: ToolDefinition[];
   /** Model registry for API key resolution and model discovery */
   modelRegistry: ModelRegistry;
-  /** Initial active built-in tool names. Default: [read, bash, edit, write] */
+  /** Initial active built-in tool names. Default: [read, bash, browser, edit, write] */
   initialActiveToolNames?: string[];
   /** Override base tools (useful for custom runtimes). */
   baseToolsOverride?: Record<string, AgentTool>;
@@ -2447,7 +2447,7 @@ export class AgentSession {
 
     const defaultActiveToolNames = this._baseToolsOverride
       ? Object.keys(this._baseToolsOverride)
-      : ["read", "bash", "edit", "write"];
+      : defaultCodingToolNames;
     const baseActiveToolNames =
       options.activeToolNames ?? defaultActiveToolNames;
     this._refreshToolRegistry({

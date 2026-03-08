@@ -9,6 +9,17 @@ export {
   createBashTool,
 } from "./bash.js";
 export {
+  type BrowserLoadState,
+  type BrowserOperations,
+  type BrowserSnapshotMode,
+  type BrowserToolAction,
+  type BrowserToolDetails,
+  type BrowserToolInput,
+  type BrowserToolOptions,
+  browserTool,
+  createBrowserTool,
+} from "./browser.js";
+export {
   createEditTool,
   type EditOperations,
   type EditToolDetails,
@@ -68,6 +79,11 @@ export {
 
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { type BashToolOptions, bashTool, createBashTool } from "./bash.js";
+import {
+  browserTool,
+  createBrowserTool,
+  type BrowserToolOptions,
+} from "./browser.js";
 import { createEditTool, editTool } from "./edit.js";
 import { createFindTool, findTool } from "./find.js";
 import { createGrepTool, grepTool } from "./grep.js";
@@ -78,9 +94,6 @@ import { createWriteTool, writeTool } from "./write.js";
 /** Tool type (AgentTool from pi-ai) */
 export type Tool = AgentTool<any>;
 
-// Default tools for full access mode (using process.cwd())
-export const codingTools: Tool[] = [readTool, bashTool, editTool, writeTool];
-
 // Read-only tools for exploration without modification (using process.cwd())
 export const readOnlyTools: Tool[] = [readTool, grepTool, findTool, lsTool];
 
@@ -88,6 +101,7 @@ export const readOnlyTools: Tool[] = [readTool, grepTool, findTool, lsTool];
 export const allTools = {
   read: readTool,
   bash: bashTool,
+  browser: browserTool,
   edit: editTool,
   write: writeTool,
   grep: grepTool,
@@ -97,11 +111,26 @@ export const allTools = {
 
 export type ToolName = keyof typeof allTools;
 
+export const defaultCodingToolNames: ToolName[] = [
+  "read",
+  "bash",
+  "browser",
+  "edit",
+  "write",
+];
+
+// Default tools for full access mode (using process.cwd())
+export const codingTools: Tool[] = defaultCodingToolNames.map(
+  (toolName) => allTools[toolName],
+);
+
 export interface ToolsOptions {
   /** Options for the read tool */
   read?: ReadToolOptions;
   /** Options for the bash tool */
   bash?: BashToolOptions;
+  /** Options for the browser tool */
+  browser?: BrowserToolOptions;
 }
 
 /**
@@ -111,6 +140,7 @@ export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
   return [
     createReadTool(cwd, options?.read),
     createBashTool(cwd, options?.bash),
+    createBrowserTool(cwd, options?.browser),
     createEditTool(cwd),
     createWriteTool(cwd),
   ];
@@ -141,6 +171,7 @@ export function createAllTools(
   return {
     read: createReadTool(cwd, options?.read),
     bash: createBashTool(cwd, options?.bash),
+    browser: createBrowserTool(cwd, options?.browser),
     edit: createEditTool(cwd),
     write: createWriteTool(cwd),
     grep: createGrepTool(cwd),
