@@ -4,11 +4,14 @@
 
 import { getDocsPath, getReadmePath } from "../config.js";
 import { formatSkillsForPrompt, type Skill } from "./skills.js";
+import { defaultCodingToolNames } from "./tools/index.js";
 
 /** Tool descriptions for system prompt */
 const toolDescriptions: Record<string, string> = {
   read: "Read file contents",
   bash: "Execute bash commands (ls, grep, find, etc.)",
+  browser:
+    "Open websites, inspect pages with snapshot, click/fill/wait, take screenshots, and save/load browser state",
   edit: "Make surgical edits to files (find exact text and replace)",
   write: "Create or overwrite files",
   grep: "Search file contents for patterns (respects .gitignore)",
@@ -19,7 +22,7 @@ const toolDescriptions: Record<string, string> = {
 export interface BuildSystemPromptOptions {
   /** Custom system prompt (replaces default). */
   customPrompt?: string;
-  /** Tools to include in prompt. Default: [read, bash, edit, write] */
+  /** Tools to include in prompt. Default: coding tools including browser */
   selectedTools?: string[];
   /** Optional one-line tool snippets keyed by tool name. */
   toolSnippets?: Record<string, string>;
@@ -123,7 +126,7 @@ export function buildSystemPrompt(
 
   // Build tools list based on selected tools.
   // Built-ins use toolDescriptions. Custom tools can provide one-line snippets.
-  const tools = selectedTools || ["read", "bash", "edit", "write"];
+  const tools = selectedTools ?? defaultCodingToolNames;
   const toolsList =
     tools.length > 0
       ? tools
@@ -147,6 +150,7 @@ export function buildSystemPrompt(
   };
 
   const hasBash = tools.includes("bash");
+  const hasBrowser = tools.includes("browser");
   const hasEdit = tools.includes("edit");
   const hasWrite = tools.includes("write");
   const hasGrep = tools.includes("grep");
@@ -178,6 +182,12 @@ export function buildSystemPrompt(
   // Write guideline
   if (hasWrite) {
     addGuideline("Use write only for new files or complete rewrites");
+  }
+
+  if (hasBrowser) {
+    addGuideline(
+      "Use browser for website tasks. Open the page, use snapshot to inspect interactive elements, then click, fill, wait, or screenshot as needed",
+    );
   }
 
   // Output guideline (only when actually writing or executing)

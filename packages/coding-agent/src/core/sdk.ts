@@ -25,8 +25,11 @@ import { time } from "./timings.js";
 import {
   allTools,
   bashTool,
+  browserTool,
   codingTools,
+  defaultCodingToolNames,
   createBashTool,
+  createBrowserTool,
   createCodingTools,
   createEditTool,
   createFindTool,
@@ -64,7 +67,7 @@ export interface CreateAgentSessionOptions {
   /** Models available for cycling (Ctrl+P in interactive mode) */
   scopedModels?: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
 
-  /** Built-in tools to use. Default: codingTools [read, bash, edit, write] */
+  /** Built-in tools to use. Default: codingTools [read, bash, browser, edit, write] */
   tools?: Tool[];
   /** Custom tools to register (in addition to built-in tools). */
   customTools?: ToolDefinition[];
@@ -109,6 +112,7 @@ export {
   // Pre-built tools (use process.cwd())
   readTool,
   bashTool,
+  browserTool,
   editTool,
   writeTool,
   grepTool,
@@ -122,6 +126,7 @@ export {
   createReadOnlyTools,
   createReadTool,
   createBashTool,
+  createBrowserTool,
   createEditTool,
   createWriteTool,
   createGrepTool,
@@ -262,7 +267,7 @@ export async function createAgentSession(
     thinkingLevel = "off";
   }
 
-  const defaultActiveToolNames: ToolName[] = ["read", "bash", "edit", "write"];
+  const defaultActiveToolNames: ToolName[] = [...defaultCodingToolNames];
   const initialActiveToolNames: ToolName[] = options.tools
     ? options.tools
         .map((t) => t.name)
