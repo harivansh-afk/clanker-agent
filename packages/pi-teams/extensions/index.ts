@@ -371,7 +371,7 @@ export default function (pi: ExtensionAPI) {
         "Initial prompt",
       );
 
-      const piBinary = process.argv[1] ? `node ${process.argv[1]}` : "pi";
+      const piBinary = "pi";
       let piCmd = piBinary;
 
       if (chosenModel) {
@@ -469,7 +469,7 @@ export default function (pi: ExtensionAPI) {
 
       const teamConfig = await teams.readConfig(safeTeamName);
       const cwd = params.cwd || process.cwd();
-      const piBinary = process.argv[1] ? `node ${process.argv[1]}` : "pi";
+      const piBinary = "pi";
       let piCmd = piBinary;
       if (teamConfig.defaultModel) {
         // Use the combined --model provider/model format
