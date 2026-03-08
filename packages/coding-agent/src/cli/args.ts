@@ -200,7 +200,7 @@ export function printHelp(): void {
   const defaultToolsText = defaultCodingToolNames.join(", ");
   const availableToolsText = Object.keys(allTools).join(", ");
 
-  console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, browser, edit, write tools
+  console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with ${defaultToolsText} tools
 
 ${chalk.bold("Usage:")}
   ${APP_NAME} [options] [@files...] [messages...]
