@@ -48,6 +48,11 @@ export interface GatewaySessionSnapshot {
   updatedAt: number;
 }
 
+export interface GatewaySessionState {
+  session: GatewaySessionSnapshot;
+  messages: HistoryMessage[];
+}
+
 export interface ModelInfo {
   provider: string;
   modelId: string;
