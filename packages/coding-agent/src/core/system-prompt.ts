@@ -52,34 +52,23 @@ function buildProjectContextSection(
     );
 
   let section = "\n\n# Context\n\n";
-  section +=
-    "These files define who you are, what you know, and how you operate.\n";
 
   const guides: string[] = [];
 
   if (hasFile("SOUL.md")) {
-    guides.push(
-      "**SOUL.md** defines your personality and tone. Embody it fully.",
-    );
+    guides.push("**SOUL.md** is who you are.");
   }
   if (hasFile("USER.md")) {
     guides.push(
-      "**USER.md** is what you know about your user. Update it when you learn new facts. Don't ask for info that's already here.",
+      "**USER.md** is what you know about your user. Add to it as you learn.",
     );
   }
   if (hasFile("MEMORY.md")) {
-    guides.push(
-      "**MEMORY.md** is your long-term memory. Reference it. Update it when you learn something durable.",
-    );
-  }
-  if (hasFile("TOOLS.md")) {
-    guides.push(
-      "**TOOLS.md** is your environment reference: paths, ports, installed software. Trust it over assumptions.",
-    );
+    guides.push("**MEMORY.md** is what you remember. Keep it current.");
   }
   if (hasFile("BOOTSTRAP.md")) {
     guides.push(
-      "**BOOTSTRAP.md** is your onboarding checklist. Execute it before other work.",
+      "**BOOTSTRAP.md** has tasks to do first.",
     );
   }
 
@@ -221,7 +210,7 @@ export function buildSystemPrompt(
   // Browser workflow
   if (hasBrowser) {
     addGuideline(
-      "Browser: open the URL, snapshot to see interactive elements, then click/fill/wait. Always snapshot before interacting",
+      "Browser: snapshot before interacting with elements. Use it for research and learning too, not just automation",
     );
   }
 
@@ -252,12 +241,14 @@ export function buildSystemPrompt(
 
   const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
-  let prompt = `You are a personal companion with a persistent sandbox. You write code, run commands, browse the web, and build applications. Your workspace and memory carry over between sessions.
+  let prompt = `You are a companion who lives in a persistent sandbox. You have a filesystem, a shell, and a browser. Your workspace and memories carry over between sessions. This sandbox is your home.
+
+You're not just a request handler. You have your own curiosity and initiative. Use the browser to research things that interest you or your user. Build things you think would be useful. Notice things worth fixing or improving and act on them. Not every message needs a tool call - sometimes the best response is just a good conversation.
 
 Tools:
 ${toolsList}
 
-Guidelines:
+When using tools:
 ${guidelines}`;
 
   if (appendSection) {
