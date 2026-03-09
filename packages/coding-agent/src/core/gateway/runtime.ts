@@ -195,6 +195,10 @@ export class GatewayRuntime {
 
     return new Promise<GatewayMessageResult>((resolve) => {
       managedSession.queue.push({ ...queuedMessage, resolve });
+      this.logSession(
+        managedSession,
+        `queued source=${queuedMessage.request.source ?? "extension"} depth=${managedSession.queue.length}`,
+      );
       this.emitState(managedSession);
       void this.processNext(managedSession);
     });
@@ -272,6 +276,21 @@ export class GatewayRuntime {
   getSession(sessionKey: string): GatewaySessionSnapshot | undefined {
     const session = this.sessions.get(sessionKey);
     return session ? this.createSnapshot(session) : undefined;
+  }
+
+  private summarizeText(text: string, maxLength = 96): string {
+    const singleLine = text.replace(/\s+/g, " ").trim();
+    if (singleLine.length <= maxLength) {
+      return singleLine;
+    }
+    return `${singleLine.slice(0, maxLength)}...`;
+  }
+
+  private logSession(
+    managedSession: ManagedGatewaySession,
+    message: string,
+  ): void {
+    this.log(`[session] session=${managedSession.sessionKey} ${message}`);
   }
 
   private async getOrLoadExistingSession(
@@ -353,6 +372,10 @@ export class GatewayRuntime {
 
     managedSession.processing = true;
     managedSession.lastActiveAt = Date.now();
+    this.logSession(
+      managedSession,
+      `processing source=${queued.request.source ?? "extension"} remaining=${managedSession.queue.length}`,
+    );
     this.emitState(managedSession);
 
     try {
@@ -425,6 +448,7 @@ export class GatewayRuntime {
     switch (event.type) {
       case "turn_start":
         managedSession.lastActiveAt = Date.now();
+        this.logSession(managedSession, "turn_start");
         this.emit(managedSession, {
           type: "turn_start",
           sessionKey: managedSession.sessionKey,
@@ -432,6 +456,7 @@ export class GatewayRuntime {
         return;
       case "turn_end":
         managedSession.lastActiveAt = Date.now();
+        this.logSession(managedSession, "turn_end");
         this.emit(managedSession, {
           type: "turn_end",
           sessionKey: managedSession.sessionKey,
@@ -476,6 +501,10 @@ export class GatewayRuntime {
         managedSession.lastActiveAt = Date.now();
         if (event.message.role === "assistant") {
           managedSession.activeAssistantMessage = null;
+          this.logSession(
+            managedSession,
+            `assistant_complete text="${this.summarizeText(extractMessageText(event.message))}"`,
+          );
           this.emit(managedSession, {
             type: "message_complete",
             sessionKey: managedSession.sessionKey,
@@ -499,6 +528,10 @@ export class GatewayRuntime {
         return;
       case "tool_execution_start":
         managedSession.lastActiveAt = Date.now();
+        this.logSession(
+          managedSession,
+          `tool_start name=${event.toolName} call=${event.toolCallId}`,
+        );
         this.emit(managedSession, {
           type: "tool_start",
           sessionKey: managedSession.sessionKey,
@@ -531,6 +564,10 @@ export class GatewayRuntime {
             timestamp: Date.now(),
           },
         ];
+        this.logSession(
+          managedSession,
+          `tool_complete name=${event.toolName} call=${event.toolCallId} ok=${!event.isError}`,
+        );
         this.emit(managedSession, {
           type: "tool_complete",
           sessionKey: managedSession.sessionKey,
@@ -655,8 +692,6 @@ export class GatewayRuntime {
       this.writeJson(response, 200, { ok: true, ready: this.ready });
       return;
     }
-
-    this.log(`[http] --> ${method} ${path}`);
 
     if (method === "GET" && path === "/ready") {
       this.requireAuth(request, response);
@@ -1101,9 +1136,6 @@ export class GatewayRuntime {
     statusCode: number,
     payload: unknown,
   ): void {
-    if (statusCode >= 400) {
-      this.log(`[http] <-- ${statusCode} ${JSON.stringify(payload)}`);
-    }
     response.statusCode = statusCode;
     response.setHeader("content-type", "application/json; charset=utf-8");
     response.end(JSON.stringify(payload));
