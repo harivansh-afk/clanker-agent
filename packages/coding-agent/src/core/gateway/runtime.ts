@@ -849,7 +849,7 @@ export class GatewayRuntime {
     }
 
     const sessionMatch = path.match(
-      /^\/sessions\/([^/]+)(?:\/(events|messages|abort|reset|chat|history|model|reload|state))?$/,
+      /^\/sessions\/([^/]+)(?:\/(events|messages|abort|reset|chat|history|model|reload|state|steer))?$/,
     );
     if (!sessionMatch) {
       this.writeJson(response, 404, { error: "Not found" });
@@ -907,6 +907,18 @@ export class GatewayRuntime {
     if (action === "abort" && method === "POST") {
       await this.requireExistingSession(sessionKey);
       this.writeJson(response, 200, { ok: this.abortSession(sessionKey) });
+      return;
+    }
+
+    if (action === "steer" && method === "POST") {
+      const body = await this.readJsonBody(request);
+      const text = extractUserText(body);
+      if (!text) {
+        this.writeJson(response, 400, { error: "Missing user message text" });
+        return;
+      }
+      const result = await this.handleSteer(sessionKey, text);
+      this.writeJson(response, 200, result);
       return;
     }
 
@@ -1097,6 +1109,47 @@ export class GatewayRuntime {
         errorVercelStream(response, message);
       }
     }
+  }
+
+  private async handleSteer(
+    sessionKey: string,
+    text: string,
+  ): Promise<{ ok: true; mode: "steer" | "queued"; sessionKey: string }> {
+    const managedSession = await this.requireExistingSession(sessionKey);
+    const preview = text.length > 80 ? `${text.slice(0, 80)}...` : text;
+
+    if (managedSession.processing) {
+      this.logSession(managedSession, `steer text="${preview}"`);
+      await managedSession.session.steer(text);
+      return { ok: true, mode: "steer", sessionKey };
+    }
+
+    if (managedSession.queue.length >= this.config.session.maxQueuePerSession) {
+      throw new HttpError(
+        409,
+        `Queue full (${this.config.session.maxQueuePerSession} pending).`,
+      );
+    }
+
+    this.logSession(
+      managedSession,
+      `steer-fallback queue text="${preview}" depth=${managedSession.queue.length + 1}`,
+    );
+    void this.enqueueManagedMessage({
+      request: {
+        sessionKey,
+        text,
+        source: "extension",
+      },
+    }).then((result) => {
+      if (!result.ok) {
+        this.log(
+          `[steer] session=${sessionKey} queued fallback failed: ${result.error ?? "Unknown error"}`,
+        );
+      }
+    });
+
+    return { ok: true, mode: "queued", sessionKey };
   }
 
   private requireAuth(
