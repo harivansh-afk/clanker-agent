@@ -99,20 +99,6 @@ describe("buildSystemPrompt", () => {
       expect(prompt).toContain("## /tmp/project/SOUL.md");
     });
 
-    test("adds bootstrap guidance when BOOTSTRAP.md is present", () => {
-      const prompt = buildSystemPrompt({
-        contextFiles: [
-          {
-            path: "/home/node/.pi/workspace/BOOTSTRAP.md",
-            content: "# Bootstrap\n\nDo the setup",
-          },
-        ],
-        skills: [],
-      });
-
-      expect(prompt).toContain("BOOTSTRAP.md** has tasks to do first");
-    });
-
     test("includes file contents in context section", () => {
       const prompt = buildSystemPrompt({
         contextFiles: [

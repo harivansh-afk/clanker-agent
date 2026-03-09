@@ -126,7 +126,6 @@ const companionContextFilenames = [
   "USER.md",
   "TOOLS.md",
   "MEMORY.md",
-  "BOOTSTRAP.md",
 ];
 
 function loadNamedContextFilesFromDir(

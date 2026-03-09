@@ -327,7 +327,6 @@ Content`,
       mkdirSync(appDir, { recursive: true });
       writeFileSync(join(workspaceDir, "IDENTITY.md"), "# Identity\n\nPi");
       writeFileSync(join(workspaceDir, "TOOLS.md"), "# Tools\n\nUse ~/.pi");
-      writeFileSync(join(workspaceDir, "BOOTSTRAP.md"), "# Bootstrap\n\nDo it");
 
       const loader = new DefaultResourceLoader({ cwd: appDir, agentDir });
       await loader.reload();
@@ -337,9 +336,6 @@ Content`,
         true,
       );
       expect(agentsFiles.some((f) => f.path.endsWith("TOOLS.md"))).toBe(true);
-      expect(agentsFiles.some((f) => f.path.endsWith("BOOTSTRAP.md"))).toBe(
-        true,
-      );
     });
 
     it("should discover SYSTEM.md from cwd/.pi", async () => {

@@ -66,11 +66,6 @@ function buildProjectContextSection(
   if (hasFile("MEMORY.md")) {
     guides.push("**MEMORY.md** is what you remember. Keep it current.");
   }
-  if (hasFile("BOOTSTRAP.md")) {
-    guides.push(
-      "**BOOTSTRAP.md** has tasks to do first.",
-    );
-  }
 
   if (guides.length > 0) {
     section += "\n" + guides.map((g) => `- ${g}`).join("\n") + "\n";
