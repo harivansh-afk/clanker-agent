@@ -282,11 +282,9 @@ describe("browser tool", () => {
   it("mentions browser in the default system prompt", () => {
     const prompt = buildSystemPrompt();
 
+    expect(prompt).toContain("- browser: Browse the web:");
     expect(prompt).toContain(
-      "- browser: Open websites, inspect pages with snapshot, click/fill/wait, take screenshots, and save/load browser state",
-    );
-    expect(prompt).toContain(
-      "Use browser for website tasks. Open the page, use snapshot to inspect interactive elements, then click, fill, wait, or screenshot as needed",
+      "Browser: snapshot before interacting with elements",
     );
   });
 });
