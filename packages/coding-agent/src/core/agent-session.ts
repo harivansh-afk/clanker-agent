@@ -291,6 +291,7 @@ export class AgentSession {
   private _unsubscribeAgent?: () => void;
   private _eventListeners: AgentSessionEventListener[] = [];
   private _agentEventQueue: Promise<void> = Promise.resolve();
+  private _agentEventFailure: Error | undefined = undefined;
 
   /** Tracks pending steering messages for UI display. Removed when delivered. */
   private _steeringMessages: string[] = [];
@@ -408,10 +409,12 @@ export class AgentSession {
     this._agentEventQueue = this._agentEventQueue.then(
       () => this._processAgentEvent(event),
       () => this._processAgentEvent(event),
-    );
-
-    // Keep queue alive if an event handler fails
-    this._agentEventQueue.catch(() => {});
+    ).catch((error: unknown) => {
+      if (!this._agentEventFailure) {
+        this._agentEventFailure =
+          error instanceof Error ? error : new Error(String(error));
+      }
+    });
   };
 
   private _createRetryPromiseForAgentEnd(event: AgentEvent): void {
@@ -914,10 +917,11 @@ export class AgentSession {
   }
 
   private async _awaitAgentEventProcessing(): Promise<void> {
-    try {
-      await this._agentEventQueue;
-    } catch {
-      // Agent event failures are surfaced through normal listener paths.
+    await this._agentEventQueue;
+    if (this._agentEventFailure) {
+      const error = this._agentEventFailure;
+      this._agentEventFailure = undefined;
+      throw error;
     }
   }
 
@@ -1167,6 +1171,7 @@ export class AgentSession {
       }
     }
 
+    this._agentEventFailure = undefined;
     await this.agent.prompt(messages);
     await this.waitForRetry();
     await this._awaitAgentEventProcessing();
@@ -1377,6 +1382,7 @@ export class AgentSession {
         this.agent.steer(appMessage);
       }
     } else if (options?.triggerTurn) {
+      this._agentEventFailure = undefined;
       await this.agent.prompt(appMessage);
       await this.waitForRetry();
       await this._awaitAgentEventProcessing();

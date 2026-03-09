@@ -129,7 +129,8 @@ export function createVercelStreamListener(
   };
 
   const emitTextDelta = (contentIndex: number, delta: string): void => {
-    if (delta.length === 0) {
+    const state = getTextState(contentIndex);
+    if (delta.length === 0 || state.ended) {
       return;
     }
     emitTextStart(contentIndex);
@@ -138,7 +139,7 @@ export function createVercelStreamListener(
       id: `text_${contentIndex}`,
       delta,
     });
-    getTextState(contentIndex).streamedText += delta;
+    state.streamedText += delta;
   };
 
   const emitTextEnd = (contentIndex: number): void => {
@@ -154,20 +155,36 @@ export function createVercelStreamListener(
     state.ended = true;
   };
 
+  const flushTextPart = (
+    contentIndex: number,
+    fullText: string,
+    close: boolean,
+  ): void => {
+    const state = getTextState(contentIndex);
+    if (state.ended) {
+      return;
+    }
+    if (!fullText.startsWith(state.streamedText)) {
+      if (close && state.started) {
+        emitTextEnd(contentIndex);
+      }
+      return;
+    }
+
+    const suffix = fullText.slice(state.streamedText.length);
+    if (suffix.length > 0) {
+      emitTextDelta(contentIndex, suffix);
+    }
+    if (close) {
+      emitTextEnd(contentIndex);
+    }
+  };
+
   const flushAssistantMessageText = (
     event: Extract<AgentSessionEvent, { type: "message_end" }>,
   ): void => {
     for (const part of getAssistantTextParts(event)) {
-      const state = getTextState(part.contentIndex);
-      if (!part.text.startsWith(state.streamedText)) {
-        continue;
-      }
-
-      const suffix = part.text.slice(state.streamedText.length);
-      if (suffix.length > 0) {
-        emitTextDelta(part.contentIndex, suffix);
-      }
-      emitTextEnd(part.contentIndex);
+      flushTextPart(part.contentIndex, part.text, true);
     }
   };
 
@@ -206,7 +223,7 @@ export function createVercelStreamListener(
             emitTextDelta(inner.contentIndex, inner.delta);
             return;
           case "text_end":
-            emitTextEnd(inner.contentIndex);
+            flushTextPart(inner.contentIndex, inner.content, true);
             return;
           case "toolcall_start": {
             const content = inner.partial.content[inner.contentIndex];

@@ -273,6 +273,84 @@ describe("createVercelStreamListener", () => {
     ]);
   });
 
+  it("flushes text_end content before closing the block", () => {
+    const response = createMockResponse();
+    const listener = createVercelStreamListener(response, "test-msg-id");
+
+    listener({ type: "agent_start" } as AgentSessionEvent);
+    listener({
+      type: "turn_start",
+      turnIndex: 0,
+      timestamp: Date.now(),
+    } as AgentSessionEvent);
+    listener(
+      createMessageUpdateEvent({
+        type: "text_start",
+        contentIndex: 0,
+        partial: createAssistantMessage(""),
+      }),
+    );
+    listener(
+      createMessageUpdateEvent({
+        type: "text_end",
+        contentIndex: 0,
+        content: "hello",
+        partial: createAssistantMessage("hello"),
+      }),
+    );
+    listener(createAssistantMessageEndEvent("hello"));
+    listener(createTurnEndEvent());
+
+    const parsed = parseChunks(response.chunks);
+    expect(parsed).toEqual([
+      { type: "start", messageId: "test-msg-id" },
+      { type: "start-step" },
+      { type: "text-start", id: "text_0" },
+      { type: "text-delta", id: "text_0", delta: "hello" },
+      { type: "text-end", id: "text_0" },
+      { type: "finish-step" },
+    ]);
+  });
+
+  it("closes an open text block when final text mismatches the streamed prefix", () => {
+    const response = createMockResponse();
+    const listener = createVercelStreamListener(response, "test-msg-id");
+
+    listener({ type: "agent_start" } as AgentSessionEvent);
+    listener({
+      type: "turn_start",
+      turnIndex: 0,
+      timestamp: Date.now(),
+    } as AgentSessionEvent);
+    listener(
+      createMessageUpdateEvent({
+        type: "text_start",
+        contentIndex: 0,
+        partial: createAssistantMessage(""),
+      }),
+    );
+    listener(
+      createMessageUpdateEvent({
+        type: "text_delta",
+        contentIndex: 0,
+        delta: "hello",
+        partial: createAssistantMessage("hello"),
+      }),
+    );
+    listener(createAssistantMessageEndEvent("goodbye"));
+    listener(createTurnEndEvent());
+
+    const parsed = parseChunks(response.chunks);
+    expect(parsed).toEqual([
+      { type: "start", messageId: "test-msg-id" },
+      { type: "start-step" },
+      { type: "text-start", id: "text_0" },
+      { type: "text-delta", id: "text_0", delta: "hello" },
+      { type: "text-end", id: "text_0" },
+      { type: "finish-step" },
+    ]);
+  });
+
   it("does not write after response has ended", () => {
     const response = createMockResponse();
     const listener = createVercelStreamListener(response, "test-msg-id");
