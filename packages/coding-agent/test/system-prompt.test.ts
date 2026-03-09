@@ -10,7 +10,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("Tools:\n(none)");
+      expect(prompt).toContain("# Tools\n\n(none)");
     });
 
     test("shows file paths guideline even with no tools", () => {
@@ -20,7 +20,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("Show file paths");
+      expect(prompt).toContain("Show file path");
     });
   });
 
@@ -95,7 +95,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("SOUL.md** is who you are");
+      expect(prompt).toContain("SOUL.md** is who you are. Embody it");
       expect(prompt).toContain("## /tmp/project/SOUL.md");
     });
 
@@ -110,7 +110,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("USER.md** is what you know about your user");
+      expect(prompt).toContain("USER.md** is what you know about your human");
       expect(prompt).toContain("Likes coffee.");
     });
   });
