@@ -7,8 +7,8 @@
  */
 process.title = "pi";
 
-import { setBedrockProviderModule } from "@mariozechner/pi-ai";
 import { bedrockProviderModule } from "@mariozechner/pi-ai/bedrock-provider";
+import { setBedrockProviderModule } from "@mariozechner/pi-ai";
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
 import { main } from "./main.js";
 

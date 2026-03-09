@@ -1,0 +1,35 @@
+{
+  "name": "pi-grind",
+  "version": "0.1.0",
+  "description": "Explicit grind mode for pi with durable follow-up continuation in daemon mode",
+  "type": "module",
+  "keywords": [
+    "pi-package"
+  ],
+  "license": "MIT",
+  "author": "Mario Zechner",
+  "main": "./src/index.ts",
+  "files": [
+    "src",
+    "test",
+    "package.json",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-agent-core": "*",
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "test": "vitest --run"
+  }
+}

@@ -3,7 +3,7 @@ import type { AgentSessionEvent } from "../src/core/agent-session.js";
 import {
   createVercelStreamListener,
   extractUserText,
-} from "../src/core/vercel-ai-stream.js";
+} from "../src/core/gateway/vercel-ai-stream.js";
 
 describe("extractUserText", () => {
   it("extracts text from useChat v5+ format with parts", () => {
