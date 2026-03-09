@@ -7,7 +7,7 @@
     "pi-package"
   ],
   "license": "MIT",
-  "author": "OpenAI",
+  "author": "Mario Zechner",
   "main": "./src/index.ts",
   "files": [
     "src",

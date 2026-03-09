@@ -25,7 +25,7 @@ export interface ParsedStopCondition {
 }
 
 export interface ParsedAutoActivation {
-	matchedCue: string | null;
+	matchedCue: string;
 	stopCondition: ParsedStopCondition;
 }
 
@@ -48,6 +48,5 @@ export interface GrindRunState {
 	lastNextAction: string | null;
 	pendingRepair: boolean;
 	consecutiveParseFailures: number;
-	consecutiveControllerFailures: number;
 	updatedAt: string;
 }

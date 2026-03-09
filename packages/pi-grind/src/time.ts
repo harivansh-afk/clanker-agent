@@ -47,6 +47,27 @@ function stripTrailingContinuation(text: string): string {
 		.trim();
 }
 
+function parseLocalDateOnly(candidate: string): Date | null {
+	const match = candidate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+	if (!match) {
+		return null;
+	}
+
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const local = new Date(year, month - 1, day, 0, 0, 0, 0);
+	if (
+		local.getFullYear() !== year ||
+		local.getMonth() !== month - 1 ||
+		local.getDate() !== day
+	) {
+		return null;
+	}
+
+	return local;
+}
+
 export function parseDeadline(raw: string, now: Date = new Date()): Date | null {
 	const candidate = raw.trim();
 	if (!candidate) {
@@ -85,6 +106,10 @@ export function parseDeadline(raw: string, now: Date = new Date()): Date | null 
 
 	const time = parseClockValue(stripTrailingContinuation(normalized));
 	if (!time) {
+		const localDateOnly = parseLocalDateOnly(candidate);
+		if (localDateOnly) {
+			return localDateOnly;
+		}
 		const direct = new Date(candidate);
 		if (!Number.isNaN(direct.getTime())) {
 			return direct;

@@ -30,6 +30,13 @@ describe("pi-grind parser", () => {
 		expect(result?.stopCondition.deadlineAt).toBe(new Date(2026, 2, 10, 17, 30, 0).toISOString());
 	});
 
+	it("parses bare ISO dates in local time instead of UTC midnight", () => {
+		const result = parseStopCondition("keep going until 2026-03-10", now);
+
+		expect(result.deadlineAt).toBe(new Date(2026, 2, 10, 0, 0, 0).toISOString());
+		expect(result.completionCriterion).toBeNull();
+	});
+
 	it("parses grind status trailers", () => {
 		const payload = parseGrindStatus(
 			'Work done.\n<grind_status>{"state":"continue","summary":"half done","nextAction":"finish tests"}</grind_status>',

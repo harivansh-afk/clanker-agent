@@ -52,7 +52,6 @@ export function createRunState(input: {
 		lastNextAction: null,
 		pendingRepair: false,
 		consecutiveParseFailures: 0,
-		consecutiveControllerFailures: 0,
 		updatedAt: now,
 	};
 }
@@ -75,7 +74,6 @@ export function isValidRunState(value: unknown): value is GrindRunState {
 		isNullableString(value.lastNextAction) &&
 		typeof value.pendingRepair === "boolean" &&
 		typeof value.consecutiveParseFailures === "number" &&
-		typeof value.consecutiveControllerFailures === "number" &&
 		typeof value.updatedAt === "string"
 	);
 }
@@ -114,19 +112,6 @@ export function withLoopStatus(state: GrindRunState, payload: GrindStatusPayload
 		lastNextAction: payload.nextAction ?? null,
 		pendingRepair: false,
 		consecutiveParseFailures: 0,
-		consecutiveControllerFailures: 0,
-		updatedAt: new Date().toISOString(),
-	};
-}
-
-export function withControllerFailure(state: GrindRunState, note: string): GrindRunState {
-	return {
-		...state,
-		status: "blocked",
-		lastCheckpoint: note,
-		lastNextAction: null,
-		pendingRepair: false,
-		consecutiveControllerFailures: state.consecutiveControllerFailures + 1,
 		updatedAt: new Date().toISOString(),
 	};
 }
