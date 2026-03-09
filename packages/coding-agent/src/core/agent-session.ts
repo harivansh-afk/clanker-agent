@@ -291,6 +291,7 @@ export class AgentSession {
   private _unsubscribeAgent?: () => void;
   private _eventListeners: AgentSessionEventListener[] = [];
   private _agentEventQueue: Promise<void> = Promise.resolve();
+  private _agentEventFailure: Error | undefined = undefined;
 
   /** Tracks pending steering messages for UI display. Removed when delivered. */
   private _steeringMessages: string[] = [];
@@ -408,10 +409,12 @@ export class AgentSession {
     this._agentEventQueue = this._agentEventQueue.then(
       () => this._processAgentEvent(event),
       () => this._processAgentEvent(event),
-    );
-
-    // Keep queue alive if an event handler fails
-    this._agentEventQueue.catch(() => {});
+    ).catch((error: unknown) => {
+      if (!this._agentEventFailure) {
+        this._agentEventFailure =
+          error instanceof Error ? error : new Error(String(error));
+      }
+    });
   };
 
   private _createRetryPromiseForAgentEnd(event: AgentEvent): void {
@@ -913,6 +916,15 @@ export class AgentSession {
     await this._memoryDisposePromise;
   }
 
+  private async _awaitAgentEventProcessing(): Promise<void> {
+    await this._agentEventQueue;
+    if (this._agentEventFailure) {
+      const error = this._agentEventFailure;
+      this._agentEventFailure = undefined;
+      throw error;
+    }
+  }
+
   private _enqueueMemoryPromotion(messages: AgentMessage[]): void {
     this._memoryWriteQueue = this._memoryWriteQueue
       .catch(() => undefined)
@@ -1159,8 +1171,10 @@ export class AgentSession {
       }
     }
 
+    this._agentEventFailure = undefined;
     await this.agent.prompt(messages);
     await this.waitForRetry();
+    await this._awaitAgentEventProcessing();
   }
 
   /**
@@ -1368,7 +1382,10 @@ export class AgentSession {
         this.agent.steer(appMessage);
       }
     } else if (options?.triggerTurn) {
+      this._agentEventFailure = undefined;
       await this.agent.prompt(appMessage);
+      await this.waitForRetry();
+      await this._awaitAgentEventProcessing();
     } else {
       this.agent.appendMessage(appMessage);
       this.sessionManager.appendCustomMessageEntry(

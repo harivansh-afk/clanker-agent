@@ -26,7 +26,6 @@ import type {
   GatewaySessionState,
   GatewaySessionSnapshot,
   HistoryMessage,
-  HistoryPart,
   ModelInfo,
 } from "./types.js";
 import {
@@ -54,9 +53,9 @@ export type {
   GatewaySessionState,
   GatewaySessionSnapshot,
   HistoryMessage,
-  HistoryPart,
   ModelInfo,
 } from "./types.js";
+export type { HistoryPart } from "./types.js";
 
 let activeGatewayRuntime: GatewayRuntime | null = null;
 

@@ -2,6 +2,43 @@ import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { AgentSessionEvent } from "../agent-session.js";
 
+type TextStreamState = {
+  started: boolean;
+  ended: boolean;
+  streamedText: string;
+};
+
+function isTextContent(
+  value: unknown,
+): value is { type: "text"; text: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    "text" in value &&
+    (value as { type: unknown }).type === "text" &&
+    typeof (value as { text: unknown }).text === "string"
+  );
+}
+
+function getAssistantTextParts(
+  event: Extract<AgentSessionEvent, { type: "message_end" }>,
+): Array<{ contentIndex: number; text: string }> {
+  if (event.message.role !== "assistant" || !Array.isArray(event.message.content)) {
+    return [];
+  }
+
+  const textParts: Array<{ contentIndex: number; text: string }> = [];
+  for (const [contentIndex, content] of event.message.content.entries()) {
+    if (!isTextContent(content) || content.text.length === 0) {
+      continue;
+    }
+    textParts.push({ contentIndex, text: content.text });
+  }
+
+  return textParts;
+}
+
 /**
  * Write a single Vercel AI SDK v5+ SSE chunk to the response.
  * Format: `data: <JSON>\n\n`
@@ -63,6 +100,93 @@ export function createVercelStreamListener(
   // so these guards only need to bound the stream to that prompt's event span.
   let active = false;
   const msgId = messageId ?? randomUUID();
+  let textStates = new Map<number, TextStreamState>();
+
+  const getTextState = (contentIndex: number): TextStreamState => {
+    const existing = textStates.get(contentIndex);
+    if (existing) {
+      return existing;
+    }
+    const initial: TextStreamState = {
+      started: false,
+      ended: false,
+      streamedText: "",
+    };
+    textStates.set(contentIndex, initial);
+    return initial;
+  };
+
+  const emitTextStart = (contentIndex: number): void => {
+    const state = getTextState(contentIndex);
+    if (state.started) {
+      return;
+    }
+    writeChunk(response, {
+      type: "text-start",
+      id: `text_${contentIndex}`,
+    });
+    state.started = true;
+  };
+
+  const emitTextDelta = (contentIndex: number, delta: string): void => {
+    const state = getTextState(contentIndex);
+    if (delta.length === 0 || state.ended) {
+      return;
+    }
+    emitTextStart(contentIndex);
+    writeChunk(response, {
+      type: "text-delta",
+      id: `text_${contentIndex}`,
+      delta,
+    });
+    state.streamedText += delta;
+  };
+
+  const emitTextEnd = (contentIndex: number): void => {
+    const state = getTextState(contentIndex);
+    if (state.ended) {
+      return;
+    }
+    emitTextStart(contentIndex);
+    writeChunk(response, {
+      type: "text-end",
+      id: `text_${contentIndex}`,
+    });
+    state.ended = true;
+  };
+
+  const flushTextPart = (
+    contentIndex: number,
+    fullText: string,
+    close: boolean,
+  ): void => {
+    const state = getTextState(contentIndex);
+    if (state.ended) {
+      return;
+    }
+    if (!fullText.startsWith(state.streamedText)) {
+      if (close && state.started) {
+        emitTextEnd(contentIndex);
+      }
+      return;
+    }
+
+    const suffix = fullText.slice(state.streamedText.length);
+    if (suffix.length > 0) {
+      emitTextDelta(contentIndex, suffix);
+    }
+    if (close) {
+      emitTextEnd(contentIndex);
+    }
+  };
+
+  const flushAssistantMessageText = (
+    event: Extract<AgentSessionEvent, { type: "message_end" }>,
+  ): void => {
+    for (const part of getAssistantTextParts(event)) {
+      flushTextPart(part.contentIndex, part.text, true);
+    }
+  };
 
   return (event: AgentSessionEvent) => {
     if (response.writableEnded) return;
@@ -85,6 +209,7 @@ export function createVercelStreamListener(
 
     switch (event.type) {
       case "turn_start":
+        textStates = new Map();
         writeChunk(response, { type: "start-step" });
         return;
 
@@ -92,23 +217,13 @@ export function createVercelStreamListener(
         const inner = event.assistantMessageEvent;
         switch (inner.type) {
           case "text_start":
-            writeChunk(response, {
-              type: "text-start",
-              id: `text_${inner.contentIndex}`,
-            });
+            emitTextStart(inner.contentIndex);
             return;
           case "text_delta":
-            writeChunk(response, {
-              type: "text-delta",
-              id: `text_${inner.contentIndex}`,
-              delta: inner.delta,
-            });
+            emitTextDelta(inner.contentIndex, inner.delta);
             return;
           case "text_end":
-            writeChunk(response, {
-              type: "text-end",
-              id: `text_${inner.contentIndex}`,
-            });
+            flushTextPart(inner.contentIndex, inner.content, true);
             return;
           case "toolcall_start": {
             const content = inner.partial.content[inner.contentIndex];
@@ -162,6 +277,12 @@ export function createVercelStreamListener(
         }
         return;
       }
+
+      case "message_end":
+        if (event.message.role === "assistant") {
+          flushAssistantMessageText(event);
+        }
+        return;
 
       case "turn_end":
         writeChunk(response, { type: "finish-step" });

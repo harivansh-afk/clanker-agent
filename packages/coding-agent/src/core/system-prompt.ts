@@ -68,7 +68,7 @@ function buildProjectContextSection(
   }
 
   if (guides.length > 0) {
-    section += "\n" + guides.map((g) => `- ${g}`).join("\n") + "\n";
+    section += `\n${guides.map((g) => `- ${g}`).join("\n")}\n`;
   }
 
   section += "\n";
