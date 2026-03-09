@@ -395,9 +395,12 @@ describe("resolveCliModel", () => {
 });
 
 describe("default model selection", () => {
-  test("openai defaults are gpt-5.4", () => {
+  test("openai default stays on gpt-5.4", () => {
     expect(defaultModelPerProvider.openai).toBe("gpt-5.4");
-    expect(defaultModelPerProvider["openai-codex"]).toBe("gpt-5.4");
+  });
+
+  test("openai-codex default is gpt-5.3-codex", () => {
+    expect(defaultModelPerProvider["openai-codex"]).toBe("gpt-5.3-codex");
   });
 
   test("ai-gateway default is opus 4.6", () => {
