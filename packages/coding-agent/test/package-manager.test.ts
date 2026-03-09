@@ -322,6 +322,38 @@ Content`,
         result.skills.some((r) => r.path === middleSkill && r.enabled),
       ).toBe(true);
     });
+
+    it("should include default workspace skills when cwd is outside the workspace root", async () => {
+      const workspaceSkill = join(
+        tempDir,
+        "workspace",
+        ".agents",
+        "skills",
+        "build-app",
+        "SKILL.md",
+      );
+      mkdirSync(join(tempDir, "workspace", ".agents", "skills", "build-app"), {
+        recursive: true,
+      });
+      writeFileSync(
+        workspaceSkill,
+        "---\nname: build-app\ndescription: Build apps\n---\n",
+      );
+
+      const appCwd = join(tempDir, "apps", "portfolio");
+      mkdirSync(appCwd, { recursive: true });
+
+      const pm = new DefaultPackageManager({
+        cwd: appCwd,
+        agentDir,
+        settingsManager,
+      });
+
+      const result = await pm.resolve();
+      expect(
+        result.skills.some((r) => r.path === workspaceSkill && r.enabled),
+      ).toBe(true);
+    });
   });
 
   describe("ignore files", () => {

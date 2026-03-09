@@ -320,6 +320,28 @@ Content`,
       expect(agentsFiles.some((f) => f.path.endsWith("SOUL.md"))).toBe(true);
     });
 
+    it("should discover companion context files from the default workspace", async () => {
+      const workspaceDir = join(tempDir, "workspace");
+      const appDir = join(tempDir, "apps", "todo-app");
+      mkdirSync(workspaceDir, { recursive: true });
+      mkdirSync(appDir, { recursive: true });
+      writeFileSync(join(workspaceDir, "IDENTITY.md"), "# Identity\n\nPi");
+      writeFileSync(join(workspaceDir, "TOOLS.md"), "# Tools\n\nUse ~/.pi");
+      writeFileSync(join(workspaceDir, "BOOTSTRAP.md"), "# Bootstrap\n\nDo it");
+
+      const loader = new DefaultResourceLoader({ cwd: appDir, agentDir });
+      await loader.reload();
+
+      const { agentsFiles } = loader.getAgentsFiles();
+      expect(agentsFiles.some((f) => f.path.endsWith("IDENTITY.md"))).toBe(
+        true,
+      );
+      expect(agentsFiles.some((f) => f.path.endsWith("TOOLS.md"))).toBe(true);
+      expect(agentsFiles.some((f) => f.path.endsWith("BOOTSTRAP.md"))).toBe(
+        true,
+      );
+    });
+
     it("should discover SYSTEM.md from cwd/.pi", async () => {
       const piDir = join(cwd, ".pi");
       mkdirSync(piDir, { recursive: true });

@@ -49,11 +49,41 @@ function buildProjectContextSection(
     ({ path }) =>
       path.replaceAll("\\", "/").endsWith("/SOUL.md") || path === "SOUL.md",
   );
+  const hasContextFile = (filename: string) =>
+    contextFiles.some(
+      ({ path }) =>
+        path.replaceAll("\\", "/").endsWith(`/${filename}`) ||
+        path === filename,
+    );
   let section = "\n\n# Project Context\n\n";
   section += "Project-specific instructions and guidelines:\n";
   if (hasSoulFile) {
     section +=
       "\nIf SOUL.md is present, embody its persona and tone. Avoid generic assistant filler and follow its guidance unless higher-priority instructions override it.\n";
+  }
+  if (hasContextFile("IDENTITY.md")) {
+    section +=
+      "\nIf IDENTITY.md is present, treat it as the agent's self-description and stay consistent with it.\n";
+  }
+  if (hasContextFile("USER.md")) {
+    section +=
+      "\nIf USER.md is present, use it as durable context about the user and avoid re-asking for facts already captured there.\n";
+  }
+  if (hasContextFile("MEMORY.md")) {
+    section +=
+      "\nIf MEMORY.md is present, use it as long-term memory and keep it aligned with durable user or project context when the task calls for it.\n";
+  }
+  if (hasContextFile("TOOLS.md")) {
+    section +=
+      "\nIf TOOLS.md is present, treat it as the source of truth for the current sandbox filesystem, app locations, and environment-specific workflow details.\n";
+  }
+  if (hasContextFile("HEARTBEAT.md")) {
+    section +=
+      "\nIf HEARTBEAT.md is present, honor it as recurring operational guidance for the agent.\n";
+  }
+  if (hasContextFile("BOOTSTRAP.md")) {
+    section +=
+      "\nIf BOOTSTRAP.md is present, treat it as an actionable onboarding task list and execute it before drifting into unrelated work.\n";
   }
   section += "\n";
   for (const { path: filePath, content } of contextFiles) {

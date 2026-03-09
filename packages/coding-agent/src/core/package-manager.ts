@@ -368,6 +368,47 @@ function collectAncestorAgentsSkillDirs(startDir: string): string[] {
   return skillDirs;
 }
 
+function collectCompanionWorkspaceSkillDirs(
+  startDir: string,
+  agentDir: string,
+): string[] {
+  const skillDirs: string[] = [];
+  const seen = new Set<string>();
+  const configDir = dirname(resolve(agentDir));
+  const defaultWorkspaceDir = join(configDir, "workspace");
+
+  const addDir = (dir: string): void => {
+    const skillDir = join(resolve(dir), ".agents", "skills");
+    if (seen.has(skillDir)) {
+      return;
+    }
+    skillDirs.push(skillDir);
+    seen.add(skillDir);
+  };
+
+  if (existsSync(defaultWorkspaceDir)) {
+    addDir(defaultWorkspaceDir);
+  }
+
+  let dir = resolve(startDir);
+  while (true) {
+    if (dirname(dir) === configDir) {
+      const dirName = basename(dir);
+      if (dirName === "workspace" || dirName.startsWith("workspace-")) {
+        addDir(dir);
+      }
+    }
+
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  return skillDirs;
+}
+
 function collectAutoPromptEntries(dir: string): string[] {
   const entries: string[] = [];
   if (!existsSync(dir)) return entries;
@@ -1897,6 +1938,10 @@ export class DefaultPackageManager implements PackageManager {
     };
     const userAgentsSkillsDir = join(homedir(), ".agents", "skills");
     const projectAgentsSkillDirs = collectAncestorAgentsSkillDirs(this.cwd);
+    const companionWorkspaceSkillDirs = collectCompanionWorkspaceSkillDirs(
+      this.cwd,
+      this.agentDir,
+    );
 
     const addResources = (
       resourceType: ResourceType,
@@ -1923,6 +1968,9 @@ export class DefaultPackageManager implements PackageManager {
       "skills",
       [
         ...collectAutoSkillEntries(projectDirs.skills),
+        ...companionWorkspaceSkillDirs.flatMap((dir) =>
+          collectAutoSkillEntries(dir),
+        ),
         ...projectAgentsSkillDirs.flatMap((dir) =>
           collectAutoSkillEntries(dir),
         ),

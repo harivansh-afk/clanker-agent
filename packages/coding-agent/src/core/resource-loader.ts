@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve, sep } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import chalk from "chalk";
 import { CONFIG_DIR_NAME, getAgentDir } from "../config.js";
 import {
@@ -120,6 +120,78 @@ function loadNamedContextFileFromDir(
   }
 }
 
+const companionContextFilenames = [
+  "IDENTITY.md",
+  "SOUL.md",
+  "USER.md",
+  "TOOLS.md",
+  "HEARTBEAT.md",
+  "MEMORY.md",
+  "BOOTSTRAP.md",
+];
+
+function loadNamedContextFilesFromDir(
+  dir: string,
+  filenames: string[],
+): Array<{ path: string; content: string }> {
+  const files: Array<{ path: string; content: string }> = [];
+  for (const filename of filenames) {
+    const file = loadNamedContextFileFromDir(dir, filename);
+    if (file) {
+      files.push(file);
+    }
+  }
+  return files;
+}
+
+function addContextFile(
+  contextFiles: Array<{ path: string; content: string }>,
+  seenPaths: Set<string>,
+  file: { path: string; content: string } | null,
+): void {
+  if (!file || seenPaths.has(file.path)) {
+    return;
+  }
+  contextFiles.push(file);
+  seenPaths.add(file.path);
+}
+
+function collectCompanionContextDirs(cwd: string, agentDir: string): string[] {
+  const contextDirs: string[] = [];
+  const seenDirs = new Set<string>();
+  const configDir = dirname(resolve(agentDir));
+  const defaultWorkspaceDir = join(configDir, "workspace");
+
+  const addDir = (dir: string): void => {
+    const resolvedDir = resolve(dir);
+    if (!existsSync(resolvedDir) || seenDirs.has(resolvedDir)) {
+      return;
+    }
+    contextDirs.push(resolvedDir);
+    seenDirs.add(resolvedDir);
+  };
+
+  addDir(defaultWorkspaceDir);
+
+  let currentDir = resolve(cwd);
+  while (true) {
+    if (dirname(currentDir) === configDir) {
+      const dirName = basename(currentDir);
+      if (dirName === "workspace" || dirName.startsWith("workspace-")) {
+        addDir(currentDir);
+      }
+    }
+
+    const parentDir = dirname(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
+    currentDir = parentDir;
+  }
+
+  return contextDirs;
+}
+
 function loadProjectContextFiles(
   options: { cwd?: string; agentDir?: string } = {},
 ): Array<{ path: string; content: string }> {
@@ -129,11 +201,11 @@ function loadProjectContextFiles(
   const contextFiles: Array<{ path: string; content: string }> = [];
   const seenPaths = new Set<string>();
 
-  const globalContext = loadContextFileFromDir(resolvedAgentDir);
-  if (globalContext) {
-    contextFiles.push(globalContext);
-    seenPaths.add(globalContext.path);
-  }
+  addContextFile(
+    contextFiles,
+    seenPaths,
+    loadContextFileFromDir(resolvedAgentDir),
+  );
 
   const ancestorContextFiles: Array<{ path: string; content: string }> = [];
 
@@ -156,17 +228,29 @@ function loadProjectContextFiles(
 
   contextFiles.push(...ancestorContextFiles);
 
-  const globalSoul = loadNamedContextFileFromDir(resolvedAgentDir, "SOUL.md");
-  if (globalSoul && !seenPaths.has(globalSoul.path)) {
-    contextFiles.push(globalSoul);
-    seenPaths.add(globalSoul.path);
+  addContextFile(
+    contextFiles,
+    seenPaths,
+    loadNamedContextFileFromDir(resolvedAgentDir, "SOUL.md"),
+  );
+
+  for (const companionDir of collectCompanionContextDirs(
+    resolvedCwd,
+    resolvedAgentDir,
+  )) {
+    for (const file of loadNamedContextFilesFromDir(
+      companionDir,
+      companionContextFilenames,
+    )) {
+      addContextFile(contextFiles, seenPaths, file);
+    }
   }
 
-  const projectSoul = loadNamedContextFileFromDir(resolvedCwd, "SOUL.md");
-  if (projectSoul && !seenPaths.has(projectSoul.path)) {
-    contextFiles.push(projectSoul);
-    seenPaths.add(projectSoul.path);
-  }
+  addContextFile(
+    contextFiles,
+    seenPaths,
+    loadNamedContextFileFromDir(resolvedCwd, "SOUL.md"),
+  );
 
   return contextFiles;
 }
