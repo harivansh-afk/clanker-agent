@@ -913,6 +913,14 @@ export class AgentSession {
     await this._memoryDisposePromise;
   }
 
+  private async _awaitAgentEventProcessing(): Promise<void> {
+    try {
+      await this._agentEventQueue;
+    } catch {
+      // Agent event failures are surfaced through normal listener paths.
+    }
+  }
+
   private _enqueueMemoryPromotion(messages: AgentMessage[]): void {
     this._memoryWriteQueue = this._memoryWriteQueue
       .catch(() => undefined)
@@ -1161,6 +1169,7 @@ export class AgentSession {
 
     await this.agent.prompt(messages);
     await this.waitForRetry();
+    await this._awaitAgentEventProcessing();
   }
 
   /**
@@ -1369,6 +1378,8 @@ export class AgentSession {
       }
     } else if (options?.triggerTurn) {
       await this.agent.prompt(appMessage);
+      await this.waitForRetry();
+      await this._awaitAgentEventProcessing();
     } else {
       this.agent.appendMessage(appMessage);
       this.sessionManager.appendCustomMessageEntry(
