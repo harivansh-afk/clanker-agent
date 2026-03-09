@@ -77,10 +77,6 @@ function buildProjectContextSection(
     section +=
       "\nIf TOOLS.md is present, treat it as the source of truth for the current sandbox filesystem, app locations, and environment-specific workflow details.\n";
   }
-  if (hasContextFile("HEARTBEAT.md")) {
-    section +=
-      "\nIf HEARTBEAT.md is present, honor it as recurring operational guidance for the agent.\n";
-  }
   if (hasContextFile("BOOTSTRAP.md")) {
     section +=
       "\nIf BOOTSTRAP.md is present, treat it as an actionable onboarding task list and execute it before drifting into unrelated work.\n";
