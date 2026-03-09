@@ -2,9 +2,6 @@
  * pi-channels — Adapter registry + route resolution.
  */
 
-import { createSlackAdapter } from "./adapters/slack.js";
-import { createTelegramAdapter } from "./adapters/telegram.js";
-import { createWebhookAdapter } from "./adapters/webhook.js";
 import type {
   AdapterConfig,
   AdapterDirection,
@@ -27,13 +24,29 @@ type AdapterFactory = (
   config: AdapterConfig,
   cwd?: string,
   log?: AdapterLogger,
-) => ChannelAdapter;
+) => ChannelAdapter | Promise<ChannelAdapter>;
 
-const builtinFactories: Record<string, AdapterFactory> = {
-  telegram: createTelegramAdapter,
-  webhook: createWebhookAdapter,
-  slack: createSlackAdapter,
+const builtinFactories: Record<string, () => Promise<{ default?: unknown } | Record<string, unknown>>> = {
+  telegram: () => import("./adapters/telegram.js"),
+  webhook: () => import("./adapters/webhook.js"),
+  slack: () => import("./adapters/slack.js"),
 };
+
+function getFactoryExport(
+  type: string,
+  mod: Record<string, unknown>,
+): AdapterFactory | null {
+  if (type === "telegram" && typeof mod.createTelegramAdapter === "function") {
+    return mod.createTelegramAdapter as AdapterFactory;
+  }
+  if (type === "webhook" && typeof mod.createWebhookAdapter === "function") {
+    return mod.createWebhookAdapter as AdapterFactory;
+  }
+  if (type === "slack" && typeof mod.createSlackAdapter === "function") {
+    return mod.createSlackAdapter as AdapterFactory;
+  }
+  return null;
+}
 
 // ── Registry ────────────────────────────────────────────────────
 
@@ -62,7 +75,7 @@ export class ChannelRegistry {
    * Load adapters + routes from config. Custom adapters (registered via events) are preserved.
    * @param cwd — working directory, passed to adapter factories for settings resolution.
    */
-  loadConfig(config: ChannelConfig, cwd?: string): void {
+  async loadConfig(config: ChannelConfig, cwd?: string): Promise<void> {
     this.errors = [];
 
     // Stop existing adapters
@@ -87,8 +100,8 @@ export class ChannelRegistry {
 
     // Create adapters from config
     for (const [name, adapterConfig] of Object.entries(config.adapters)) {
-      const factory = builtinFactories[adapterConfig.type];
-      if (!factory) {
+      const loader = builtinFactories[adapterConfig.type];
+      if (!loader) {
         this.errors.push({
           adapter: name,
           error: `Unknown adapter type: ${adapterConfig.type}`,
@@ -96,7 +109,16 @@ export class ChannelRegistry {
         continue;
       }
       try {
-        this.adapters.set(name, factory(adapterConfig, cwd, this.log));
+        const mod = await loader();
+        const factory = getFactoryExport(adapterConfig.type, mod);
+        if (!factory) {
+          this.errors.push({
+            adapter: name,
+            error: `Adapter module for type ${adapterConfig.type} did not export a valid factory`,
+          });
+          continue;
+        }
+        this.adapters.set(name, await factory(adapterConfig, cwd, this.log));
       } catch (err: any) {
         this.errors.push({ adapter: name, error: err.message });
       }
