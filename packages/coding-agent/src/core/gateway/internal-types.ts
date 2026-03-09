@@ -1,9 +1,11 @@
+import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AgentSession } from "../agent-session.js";
 import type {
   GatewayMessageRequest,
   GatewayMessageResult,
   GatewaySessionSnapshot,
 } from "./types.js";
+import type { GatewayTransientToolResult } from "./session-state.js";
 
 export interface GatewayQueuedMessage {
   request: GatewayMessageRequest;
@@ -60,6 +62,8 @@ export interface ManagedGatewaySession {
   session: AgentSession;
   queue: GatewayQueuedMessage[];
   processing: boolean;
+  activeAssistantMessage: AgentMessage | null;
+  pendingToolResults: GatewayTransientToolResult[];
   createdAt: number;
   lastActiveAt: number;
   listeners: Set<(event: GatewayEvent) => void>;

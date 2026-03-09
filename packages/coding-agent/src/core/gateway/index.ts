@@ -12,6 +12,7 @@ export type {
   GatewayMessageResult,
   GatewayRuntimeOptions,
   GatewaySessionFactory,
+  GatewaySessionState,
   GatewaySessionSnapshot,
   HistoryMessage,
   HistoryPart,
