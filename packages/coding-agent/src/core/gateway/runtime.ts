@@ -39,6 +39,7 @@ import {
   buildGatewaySessionStateMessages,
   messageContentToHistoryParts,
 } from "./session-state.js";
+import { findMostRecentSession } from "../session-manager.js";
 export {
   createGatewaySessionManager,
   sanitizeSessionKey,
@@ -204,7 +205,7 @@ export class GatewayRuntime {
     sessionKey: string,
     listener: (event: GatewayEvent) => void,
   ): Promise<() => void> {
-    const managedSession = await this.ensureSession(sessionKey);
+    const managedSession = await this.requireExistingSession(sessionKey);
     managedSession.listeners.add(listener);
     listener({
       type: "hello",
@@ -272,6 +273,32 @@ export class GatewayRuntime {
   getSession(sessionKey: string): GatewaySessionSnapshot | undefined {
     const session = this.sessions.get(sessionKey);
     return session ? this.createSnapshot(session) : undefined;
+  }
+
+  private async getOrLoadExistingSession(
+    sessionKey: string,
+  ): Promise<ManagedGatewaySession | null> {
+    const found = this.sessions.get(sessionKey);
+    if (found) {
+      found.lastActiveAt = Date.now();
+      return found;
+    }
+
+    if (!findMostRecentSession(this.getGatewaySessionDir(sessionKey))) {
+      return null;
+    }
+
+    return this.ensureSession(sessionKey);
+  }
+
+  private async requireExistingSession(
+    sessionKey: string,
+  ): Promise<ManagedGatewaySession> {
+    const managedSession = await this.getOrLoadExistingSession(sessionKey);
+    if (!managedSession) {
+      throw new HttpError(404, `Session not found: ${sessionKey}`);
+    }
+    return managedSession;
   }
 
   private async ensureSession(
@@ -375,14 +402,6 @@ export class GatewayRuntime {
         void this.processNext(managedSession);
       }
     }
-  }
-
-  private getManagedSessionOrThrow(sessionKey: string): ManagedGatewaySession {
-    const managedSession = this.sessions.get(sessionKey);
-    if (!managedSession) {
-      throw new HttpError(404, `Session not found: ${sessionKey}`);
-    }
-    return managedSession;
   }
 
   private rejectQueuedMessages(
@@ -807,7 +826,7 @@ export class GatewayRuntime {
     const action = sessionMatch[2];
 
     if (!action && method === "GET") {
-      const session = await this.ensureSession(sessionKey);
+      const session = await this.requireExistingSession(sessionKey);
       this.writeJson(response, 200, { session: this.createSnapshot(session) });
       return;
     }
@@ -852,13 +871,13 @@ export class GatewayRuntime {
     }
 
     if (action === "abort" && method === "POST") {
-      this.getManagedSessionOrThrow(sessionKey);
+      await this.requireExistingSession(sessionKey);
       this.writeJson(response, 200, { ok: this.abortSession(sessionKey) });
       return;
     }
 
     if (action === "reset" && method === "POST") {
-      this.getManagedSessionOrThrow(sessionKey);
+      await this.requireExistingSession(sessionKey);
       await this.resetSession(sessionKey);
       this.writeJson(response, 200, { ok: true });
       return;
@@ -875,7 +894,7 @@ export class GatewayRuntime {
     }
 
     if (action === "state" && method === "GET") {
-      const session = await this.ensureSession(sessionKey);
+      const session = await this.requireExistingSession(sessionKey);
       this.writeJson(response, 200, this.createSessionState(session));
       return;
     }
@@ -1121,7 +1140,7 @@ export class GatewayRuntime {
     provider: string,
     modelId: string,
   ): Promise<{ ok: true; model: { provider: string; modelId: string } }> {
-    const managed = await this.ensureSession(sessionKey);
+    const managed = await this.requireExistingSession(sessionKey);
     const found = managed.session.modelRegistry.find(provider, modelId);
     if (!found) {
       throw new HttpError(404, `Model not found: ${provider}/${modelId}`);
@@ -1137,7 +1156,7 @@ export class GatewayRuntime {
     if (limit !== undefined && (!Number.isFinite(limit) || limit < 1)) {
       throw new HttpError(400, "History limit must be a positive integer");
     }
-    const managed = await this.ensureSession(sessionKey);
+    const managed = await this.requireExistingSession(sessionKey);
     const rawMessages = managed.session.messages;
     const messages: HistoryMessage[] = [];
     for (const [index, msg] of rawMessages.entries()) {
@@ -1162,7 +1181,7 @@ export class GatewayRuntime {
     sessionKey: string,
     patch: { name?: string },
   ): Promise<void> {
-    const managed = await this.ensureSession(sessionKey);
+    const managed = await this.requireExistingSession(sessionKey);
     if (patch.name !== undefined) {
       // Labels in pi-mono are per-entry; we label the current leaf entry
       const leafId = managed.session.sessionManager.getLeafId();
@@ -1180,7 +1199,7 @@ export class GatewayRuntime {
     if (sessionKey === this.primarySessionKey) {
       throw new HttpError(400, "Cannot delete primary session");
     }
-    const managed = this.sessions.get(sessionKey);
+    const managed = await this.requireExistingSession(sessionKey);
     if (managed) {
       if (managed.processing) {
         await managed.session.abort();
@@ -1239,7 +1258,7 @@ export class GatewayRuntime {
   }
 
   private async handleReloadSession(sessionKey: string): Promise<void> {
-    const managed = await this.ensureSession(sessionKey);
+    const managed = await this.requireExistingSession(sessionKey);
     // Reloading config by calling settingsManager.reload() on the session
     managed.session.settingsManager.reload();
   }
