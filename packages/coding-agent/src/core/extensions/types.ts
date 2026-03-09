@@ -995,12 +995,15 @@ export interface RegisteredCommand {
 // Extension API
 // ============================================================================
 
+type ExtensionHandlerResult<R> = [R] extends [undefined]
+  ? Promise<void> | void
+  : Promise<R | undefined> | R | undefined;
+
 /** Handler function type for events */
-// biome-ignore lint/suspicious/noConfusingVoidType: void allows bare return statements
 export type ExtensionHandler<E, R = undefined> = (
   event: E,
   ctx: ExtensionContext,
-) => Promise<R | void> | R | void;
+) => ExtensionHandlerResult<R>;
 
 /**
  * ExtensionAPI passed to extension factory functions.

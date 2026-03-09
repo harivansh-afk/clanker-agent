@@ -9,10 +9,10 @@ import { join } from "node:path";
 import { URL } from "node:url";
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AgentSession, AgentSessionEvent } from "../agent-session.js";
+import type { Settings } from "../settings-manager.js";
 import { extractMessageText, getLastAssistantText } from "./helpers.js";
 import {
   type GatewayEvent,
-  type GatewayQueuedMessage,
   HttpError,
   type ManagedGatewaySession,
 } from "./internal-types.js";
@@ -29,7 +29,6 @@ import type {
   HistoryPart,
   ModelInfo,
 } from "./types.js";
-import type { Settings } from "../settings-manager.js";
 import {
   createVercelStreamListener,
   errorVercelStream,

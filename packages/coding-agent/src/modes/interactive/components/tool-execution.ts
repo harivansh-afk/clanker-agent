@@ -836,10 +836,10 @@ export class ToolExecutionComponent extends Container {
             .join("\n");
         if (remaining > 0) {
           text +=
-            theme.fg(
+            `${theme.fg(
               "muted",
               `\n... (${remaining} more lines, ${totalLines} total,`,
-            ) + ` ${keyHint("expandTools", "to expand")})`;
+            )} ${keyHint("expandTools", "to expand")})`;
         }
       }
 
