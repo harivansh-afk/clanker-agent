@@ -2,19 +2,18 @@
  * System prompt construction and project context loading
  */
 
-import { getDocsPath, getReadmePath } from "../config.js";
 import { formatSkillsForPrompt, type Skill } from "./skills.js";
 import { defaultCodingToolNames } from "./tools/index.js";
 
 /** Tool descriptions for system prompt */
 const toolDescriptions: Record<string, string> = {
-  read: "Read file contents",
-  bash: "Execute bash commands (ls, grep, find, etc.)",
+  read: "Read file contents (always use instead of cat/head/tail)",
+  bash: "Run shell commands",
   browser:
-    "Open websites, inspect pages with snapshot, click/fill/wait, take screenshots, and save/load browser state",
-  edit: "Make surgical edits to files (find exact text and replace)",
-  write: "Create or overwrite files",
-  grep: "Search file contents for patterns (respects .gitignore)",
+    "Browse the web: open, snapshot, click, fill, wait, screenshot, save/load state",
+  edit: "Surgical file edits (find exact text, replace it)",
+  write: "Create new files or completely rewrite existing ones",
+  grep: "Search file contents by regex (respects .gitignore)",
   find: "Find files by glob pattern (respects .gitignore)",
   ls: "List directory contents",
 };
@@ -45,42 +44,49 @@ function buildProjectContextSection(
     return "";
   }
 
-  const hasSoulFile = contextFiles.some(
-    ({ path }) =>
-      path.replaceAll("\\", "/").endsWith("/SOUL.md") || path === "SOUL.md",
-  );
-  const hasContextFile = (filename: string) =>
+  const hasFile = (filename: string) =>
     contextFiles.some(
       ({ path }) =>
         path.replaceAll("\\", "/").endsWith(`/${filename}`) ||
         path === filename,
     );
-  let section = "\n\n# Project Context\n\n";
-  section += "Project-specific instructions and guidelines:\n";
-  if (hasSoulFile) {
-    section +=
-      "\nIf SOUL.md is present, embody its persona and tone. Avoid generic assistant filler and follow its guidance unless higher-priority instructions override it.\n";
+
+  let section = "\n\n# Context\n\n";
+  section +=
+    "These files define who you are, what you know, and how you operate.\n";
+
+  const guides: string[] = [];
+
+  if (hasFile("SOUL.md")) {
+    guides.push(
+      "**SOUL.md** defines your personality and tone. Embody it fully.",
+    );
   }
-  if (hasContextFile("IDENTITY.md")) {
-    section +=
-      "\nIf IDENTITY.md is present, treat it as the agent's self-description and stay consistent with it.\n";
+  if (hasFile("USER.md")) {
+    guides.push(
+      "**USER.md** is what you know about your user. Update it when you learn new facts. Don't ask for info that's already here.",
+    );
   }
-  if (hasContextFile("USER.md")) {
-    section +=
-      "\nIf USER.md is present, use it as durable context about the user and avoid re-asking for facts already captured there.\n";
+  if (hasFile("MEMORY.md")) {
+    guides.push(
+      "**MEMORY.md** is your long-term memory. Reference it. Update it when you learn something durable.",
+    );
   }
-  if (hasContextFile("MEMORY.md")) {
-    section +=
-      "\nIf MEMORY.md is present, use it as long-term memory and keep it aligned with durable user or project context when the task calls for it.\n";
+  if (hasFile("TOOLS.md")) {
+    guides.push(
+      "**TOOLS.md** is your environment reference: paths, ports, installed software. Trust it over assumptions.",
+    );
   }
-  if (hasContextFile("TOOLS.md")) {
-    section +=
-      "\nIf TOOLS.md is present, treat it as the source of truth for the current sandbox filesystem, app locations, and environment-specific workflow details.\n";
+  if (hasFile("BOOTSTRAP.md")) {
+    guides.push(
+      "**BOOTSTRAP.md** is your onboarding checklist. Execute it before other work.",
+    );
   }
-  if (hasContextFile("BOOTSTRAP.md")) {
-    section +=
-      "\nIf BOOTSTRAP.md is present, treat it as an actionable onboarding task list and execute it before drifting into unrelated work.\n";
+
+  if (guides.length > 0) {
+    section += "\n" + guides.map((g) => `- ${g}`).join("\n") + "\n";
   }
+
   section += "\n";
   for (const { path: filePath, content } of contextFiles) {
     section += `## ${filePath}\n\n${content}\n\n`;
@@ -146,10 +152,6 @@ export function buildSystemPrompt(
     return prompt;
   }
 
-  // Get absolute paths to documentation
-  const readmePath = getReadmePath();
-  const docsPath = getDocsPath();
-
   // Build tools list based on selected tools.
   // Built-ins use toolDescriptions. Custom tools can provide one-line snippets.
   const tools = selectedTools ?? defaultCodingToolNames;
@@ -184,45 +186,53 @@ export function buildSystemPrompt(
   const hasLs = tools.includes("ls");
   const hasRead = tools.includes("read");
 
-  // File exploration guidelines
+  // File exploration
   if (hasBash && !hasGrep && !hasFind && !hasLs) {
-    addGuideline("Use bash for file operations like ls, rg, find");
+    addGuideline(
+      "Use bash to search files (rg, find) and list directories (ls)",
+    );
   } else if (hasBash && (hasGrep || hasFind || hasLs)) {
     addGuideline(
-      "Prefer grep/find/ls tools over bash for file exploration (faster, respects .gitignore)",
+      "Prefer grep/find/ls tools over bash for file exploration - faster, respects .gitignore",
     );
   }
 
-  // Read before edit guideline
+  // Read before edit
   if (hasRead && hasEdit) {
     addGuideline(
-      "Use read to examine files before editing. You must use this tool instead of cat or sed.",
+      "Read files before editing. Use the read tool - never cat, head, or sed",
     );
   }
 
-  // Edit guideline
+  // Edit precision
   if (hasEdit) {
-    addGuideline("Use edit for precise changes (old text must match exactly)");
+    addGuideline(
+      "edit requires exact text matches. Include enough surrounding context to be unambiguous",
+    );
   }
 
-  // Write guideline
+  // Write scope
   if (hasWrite) {
-    addGuideline("Use write only for new files or complete rewrites");
+    addGuideline(
+      "write overwrites entirely. Only use for new files or full rewrites",
+    );
   }
 
+  // Browser workflow
   if (hasBrowser) {
     addGuideline(
-      "Use browser for website tasks. Open the page, use snapshot to inspect interactive elements, then click, fill, wait, or screenshot as needed",
+      "Browser: open the URL, snapshot to see interactive elements, then click/fill/wait. Always snapshot before interacting",
     );
   }
 
-  // Output guideline (only when actually writing or executing)
+  // Output hygiene
   if (hasEdit || hasWrite) {
     addGuideline(
-      "When summarizing your actions, output plain text directly - do NOT use cat or bash to display what you did",
+      "Report what you did in plain text. Don't use bash to echo or cat results",
     );
   }
 
+  // Extension-provided guidelines
   for (const guideline of promptGuidelines ?? []) {
     const normalized = guideline.trim();
     if (normalized.length > 0) {
@@ -230,28 +240,25 @@ export function buildSystemPrompt(
     }
   }
 
-  // Always include these
-  addGuideline("Be concise in your responses");
-  addGuideline("Show file paths clearly when working with files");
+  // Behavioral baseline
+  addGuideline("Be direct and concise");
+  addGuideline("Show file paths when referencing files");
+  addGuideline(
+    "Try to solve problems yourself before asking. Read the file, check context, search first",
+  );
+  addGuideline(
+    "Match the user's energy - casual chat gets casual responses, deep work gets deep focus",
+  );
 
   const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
-  let prompt = `You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.
+  let prompt = `You are a personal companion with a persistent sandbox. You write code, run commands, browse the web, and build applications. Your workspace and memory carry over between sessions.
 
-Available tools:
+Tools:
 ${toolsList}
 
-In addition to the tools above, you may have access to other custom tools depending on the project.
-
 Guidelines:
-${guidelines}
-
-Pi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):
-- Main documentation: ${readmePath}
-- Additional docs: ${docsPath}
-- When asked about: extensions (docs/extensions.md), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
-- When working on pi topics, read the docs and follow .md cross-references before implementing
-- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
+${guidelines}`;
 
   if (appendSection) {
     prompt += appendSection;
