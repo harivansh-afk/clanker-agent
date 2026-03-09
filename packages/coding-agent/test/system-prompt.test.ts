@@ -10,7 +10,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("Available tools:\n(none)");
+      expect(prompt).toContain("Tools:\n(none)");
     });
 
     test("shows file paths guideline even with no tools", () => {
@@ -20,7 +20,7 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("Show file paths clearly");
+      expect(prompt).toContain("Show file paths");
     });
   });
 
@@ -95,19 +95,13 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain(
-        "If SOUL.md is present, embody its persona and tone.",
-      );
+      expect(prompt).toContain("SOUL.md** defines your personality and tone");
       expect(prompt).toContain("## /tmp/project/SOUL.md");
     });
 
-    test("adds companion context guidance for identity, tools, and bootstrap files", () => {
+    test("adds companion context guidance for tools and bootstrap files", () => {
       const prompt = buildSystemPrompt({
         contextFiles: [
-          {
-            path: "/home/node/.pi/workspace/IDENTITY.md",
-            content: "# Identity\n\nPi",
-          },
           {
             path: "/home/node/.pi/workspace/TOOLS.md",
             content: "# Tools\n\nUse ~/.pi/apps",
@@ -121,13 +115,10 @@ describe("buildSystemPrompt", () => {
       });
 
       expect(prompt).toContain(
-        "If IDENTITY.md is present, treat it as the agent's self-description",
+        "TOOLS.md** is your environment reference",
       );
       expect(prompt).toContain(
-        "If TOOLS.md is present, treat it as the source of truth for the current sandbox filesystem",
-      );
-      expect(prompt).toContain(
-        "If BOOTSTRAP.md is present, treat it as an actionable onboarding task list",
+        "BOOTSTRAP.md** is your onboarding checklist",
       );
     });
   });

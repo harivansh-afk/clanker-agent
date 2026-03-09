@@ -125,7 +125,6 @@ const companionContextFilenames = [
   "SOUL.md",
   "USER.md",
   "TOOLS.md",
-  "HEARTBEAT.md",
   "MEMORY.md",
   "BOOTSTRAP.md",
 ];
