@@ -83,8 +83,8 @@ describe("buildSystemPrompt", () => {
     });
   });
 
-  describe("SOUL.md context", () => {
-    test("adds persona guidance when SOUL.md is present", () => {
+  describe("context files", () => {
+    test("adds soul guidance when SOUL.md is present", () => {
       const prompt = buildSystemPrompt({
         contextFiles: [
           {
@@ -95,31 +95,23 @@ describe("buildSystemPrompt", () => {
         skills: [],
       });
 
-      expect(prompt).toContain("SOUL.md** defines your personality and tone");
+      expect(prompt).toContain("SOUL.md** is who you are");
       expect(prompt).toContain("## /tmp/project/SOUL.md");
     });
 
-    test("adds companion context guidance for tools and bootstrap files", () => {
+    test("includes file contents in context section", () => {
       const prompt = buildSystemPrompt({
         contextFiles: [
           {
-            path: "/home/node/.pi/workspace/TOOLS.md",
-            content: "# Tools\n\nUse ~/.pi/apps",
-          },
-          {
-            path: "/home/node/.pi/workspace/BOOTSTRAP.md",
-            content: "# Bootstrap\n\nDo the setup",
+            path: "/home/node/.pi/workspace/USER.md",
+            content: "# User\n\nLikes coffee.",
           },
         ],
         skills: [],
       });
 
-      expect(prompt).toContain(
-        "TOOLS.md** is your environment reference",
-      );
-      expect(prompt).toContain(
-        "BOOTSTRAP.md** is your onboarding checklist",
-      );
+      expect(prompt).toContain("USER.md** is what you know about your user");
+      expect(prompt).toContain("Likes coffee.");
     });
   });
 });
