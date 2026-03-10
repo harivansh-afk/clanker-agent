@@ -107,12 +107,12 @@ describe("GatewayRuntime steer handling", () => {
       sessionKey: "chat",
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
     expect(session.steer).not.toHaveBeenCalled();
-    expect(session.prompt).toHaveBeenCalledWith("pick this up next", {
-      images: undefined,
-      source: "extension",
+    await vi.waitFor(() => {
+      expect(session.prompt).toHaveBeenCalledWith("pick this up next", {
+        images: undefined,
+        source: "extension",
+      });
     });
   });
 });

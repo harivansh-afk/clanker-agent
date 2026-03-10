@@ -173,11 +173,19 @@ export class GatewayRuntime {
     return this.enqueueManagedMessage({ request });
   }
 
-  private async enqueueManagedMessage(queuedMessage: {
+  private async queueManagedMessage(queuedMessage: {
     request: GatewayMessageRequest;
     onStart?: () => void;
     onFinish?: () => void;
-  }): Promise<GatewayMessageResult> {
+  }):
+    Promise<
+      | { accepted: false; errorResult: GatewayMessageResult }
+      | {
+          accepted: true;
+          managedSession: ManagedGatewaySession;
+          completion: Promise<GatewayMessageResult>;
+        }
+    > {
     const managedSession = await this.ensureSession(
       queuedMessage.request.sessionKey,
     );
@@ -186,22 +194,39 @@ export class GatewayRuntime {
         `[queue] session=${queuedMessage.request.sessionKey} queue full (${this.config.session.maxQueuePerSession})`,
       );
       return {
-        ok: false,
-        response: "",
-        error: `Queue full (${this.config.session.maxQueuePerSession} pending).`,
-        sessionKey: queuedMessage.request.sessionKey,
+        accepted: false,
+        errorResult: {
+          ok: false,
+          response: "",
+          error: `Queue full (${this.config.session.maxQueuePerSession} pending).`,
+          sessionKey: queuedMessage.request.sessionKey,
+        },
       };
     }
 
-    return new Promise<GatewayMessageResult>((resolve) => {
+    const completion = new Promise<GatewayMessageResult>((resolve) => {
       managedSession.queue.push({ ...queuedMessage, resolve });
-      this.logSession(
-        managedSession,
-        `queued source=${queuedMessage.request.source ?? "extension"} depth=${managedSession.queue.length}`,
-      );
-      this.emitState(managedSession);
-      void this.processNext(managedSession);
     });
+    this.logSession(
+      managedSession,
+      `queued source=${queuedMessage.request.source ?? "extension"} depth=${managedSession.queue.length}`,
+    );
+    this.emitState(managedSession);
+    void this.processNext(managedSession);
+
+    return { accepted: true, managedSession, completion };
+  }
+
+  private async enqueueManagedMessage(queuedMessage: {
+    request: GatewayMessageRequest;
+    onStart?: () => void;
+    onFinish?: () => void;
+  }): Promise<GatewayMessageResult> {
+    const queued = await this.queueManagedMessage(queuedMessage);
+    if (!queued.accepted) {
+      return queued.errorResult;
+    }
+    return queued.completion;
   }
 
   async addSubscriber(
@@ -1124,24 +1149,24 @@ export class GatewayRuntime {
       return { ok: true, mode: "steer", sessionKey };
     }
 
-    if (managedSession.queue.length >= this.config.session.maxQueuePerSession) {
-      throw new HttpError(
-        409,
-        `Queue full (${this.config.session.maxQueuePerSession} pending).`,
-      );
-    }
-
-    this.logSession(
-      managedSession,
-      `steer-fallback queue text="${preview}" depth=${managedSession.queue.length + 1}`,
-    );
-    void this.enqueueManagedMessage({
+    const queued = await this.queueManagedMessage({
       request: {
         sessionKey,
         text,
         source: "extension",
       },
-    }).then((result) => {
+    });
+    if (!queued.accepted) {
+      throw new HttpError(
+        409,
+        queued.errorResult.error ?? "Failed to queue message.",
+      );
+    }
+    this.logSession(
+      queued.managedSession,
+      `steer-fallback queued text="${preview}"`,
+    );
+    void queued.completion.then((result) => {
       if (!result.ok) {
         this.log(
           `[steer] session=${sessionKey} queued fallback failed: ${result.error ?? "Unknown error"}`,
