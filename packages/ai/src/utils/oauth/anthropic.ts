@@ -55,15 +55,15 @@ export async function loginAnthropic(
   const tokenResponse = await fetch(TOKEN_URL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify({
+    body: new URLSearchParams({
       grant_type: "authorization_code",
       client_id: CLIENT_ID,
-      code: code,
-      state: state,
+      code: code ?? "",
       redirect_uri: REDIRECT_URI,
       code_verifier: verifier,
+      ...(state ? { state } : {}),
     }),
   });
 
@@ -97,8 +97,8 @@ export async function refreshAnthropicToken(
 ): Promise<OAuthCredentials> {
   const response = await fetch(TOKEN_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
       grant_type: "refresh_token",
       client_id: CLIENT_ID,
       refresh_token: refreshToken,
