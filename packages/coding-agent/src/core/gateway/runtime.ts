@@ -177,15 +177,14 @@ export class GatewayRuntime {
     request: GatewayMessageRequest;
     onStart?: () => void;
     onFinish?: () => void;
-  }):
-    Promise<
-      | { accepted: false; errorResult: GatewayMessageResult }
-      | {
-          accepted: true;
-          managedSession: ManagedGatewaySession;
-          completion: Promise<GatewayMessageResult>;
-        }
-    > {
+  }): Promise<
+    | { accepted: false; errorResult: GatewayMessageResult }
+    | {
+        accepted: true;
+        managedSession: ManagedGatewaySession;
+        completion: Promise<GatewayMessageResult>;
+      }
+  > {
     const managedSession = await this.ensureSession(
       queuedMessage.request.sessionKey,
     );
@@ -640,6 +639,7 @@ export class GatewayRuntime {
     managedSession: ManagedGatewaySession,
   ): GatewaySessionSnapshot {
     const messages = managedSession.session.messages;
+    const name = managedSession.session.sessionName?.trim() || undefined;
     let lastMessagePreview: string | undefined;
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
@@ -676,6 +676,7 @@ export class GatewayRuntime {
       lastActiveAt: managedSession.lastActiveAt,
       createdAt: managedSession.createdAt,
       updatedAt: managedSession.lastActiveAt,
+      name,
       lastMessagePreview,
     };
   }
@@ -1292,15 +1293,13 @@ export class GatewayRuntime {
   ): Promise<void> {
     const managed = await this.requireExistingSession(sessionKey);
     if (patch.name !== undefined) {
-      // Labels in pi-mono are per-entry; we label the current leaf entry
-      const leafId = managed.session.sessionManager.getLeafId();
-      if (!leafId) {
-        throw new HttpError(
-          409,
-          `Cannot rename session without an active leaf entry: ${sessionKey}`,
-        );
+      const name = patch.name.trim();
+      if (!name) {
+        throw new HttpError(400, "Session name cannot be empty");
       }
-      managed.session.sessionManager.appendLabelChange(leafId, patch.name);
+      managed.session.sessionManager.appendSessionInfo(name);
+      managed.lastActiveAt = Date.now();
+      this.emitState(managed);
     }
   }
 

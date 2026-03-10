@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { GatewayRuntime } from "../src/core/gateway/runtime.js";
 
-function createMockSession() {
+function createMockSession(options?: { sessionName?: string }) {
   return {
     sessionId: "session-1",
-    sessionName: undefined,
+    sessionName: options?.sessionName,
     messages: [],
     prompt: vi.fn().mockResolvedValue(undefined),
     steer: vi.fn().mockResolvedValue(undefined),
@@ -13,6 +13,8 @@ function createMockSession() {
     subscribe: vi.fn(() => () => {}),
     sessionManager: {
       getSessionDir: () => "/tmp/pi-gateway-test",
+      appendSessionInfo: vi.fn(),
+      appendLabelChange: vi.fn(),
     },
   };
 }
@@ -41,13 +43,12 @@ function addManagedSession(
   runtime: GatewayRuntime,
   sessionKey: string,
   session: ReturnType<typeof createMockSession>,
-  processing: boolean,
 ) {
   const managedSession = {
     sessionKey,
     session,
     queue: [],
-    processing,
+    processing: false,
     activeAssistantMessage: null,
     pendingToolResults: [],
     createdAt: Date.now(),
@@ -64,64 +65,37 @@ function addManagedSession(
   return managedSession;
 }
 
-describe("GatewayRuntime steer handling", () => {
-  it("steers the active session instead of queueing a second prompt", async () => {
-    const session = createMockSession();
+describe("GatewayRuntime session titles", () => {
+  it("includes the session name in snapshots", () => {
+    const session = createMockSession({ sessionName: "Generated title" });
     const runtime = createRuntime(session);
-    addManagedSession(runtime, "chat", session, true);
+    addManagedSession(runtime, "chat", session);
 
-    const result = await (
-      runtime as unknown as {
-        handleSteer: (
-          sessionKey: string,
-          text: string,
-        ) => Promise<{
-          ok: true;
-          mode: "steer" | "queued";
-          sessionKey: string;
-        }>;
-      }
-    ).handleSteer("chat", "keep going");
-
-    expect(result).toEqual({
-      ok: true,
-      mode: "steer",
-      sessionKey: "chat",
-    });
-    expect(session.steer).toHaveBeenCalledWith("keep going");
-    expect(session.prompt).not.toHaveBeenCalled();
+    expect(runtime.listSessions()).toEqual([
+      expect.objectContaining({
+        sessionKey: "chat",
+        name: "Generated title",
+      }),
+    ]);
   });
 
-  it("queues a prompt immediately when steer races an idle session", async () => {
+  it("persists renamed sessions via session_info entries", async () => {
     const session = createMockSession();
     const runtime = createRuntime(session);
-    addManagedSession(runtime, "chat", session, false);
+    addManagedSession(runtime, "chat", session);
 
-    const result = await (
+    await (
       runtime as unknown as {
-        handleSteer: (
+        handlePatchSession: (
           sessionKey: string,
-          text: string,
-        ) => Promise<{
-          ok: true;
-          mode: "steer" | "queued";
-          sessionKey: string;
-        }>;
+          patch: { name?: string },
+        ) => Promise<void>;
       }
-    ).handleSteer("chat", "pick this up next");
+    ).handlePatchSession("chat", { name: "Renamed title" });
 
-    expect(result).toEqual({
-      ok: true,
-      mode: "queued",
-      sessionKey: "chat",
-    });
-
-    expect(session.steer).not.toHaveBeenCalled();
-    await vi.waitFor(() => {
-      expect(session.prompt).toHaveBeenCalledWith("pick this up next", {
-        images: undefined,
-        source: "extension",
-      });
-    });
+    expect(session.sessionManager.appendSessionInfo).toHaveBeenCalledWith(
+      "Renamed title",
+    );
+    expect(session.sessionManager.appendLabelChange).not.toHaveBeenCalled();
   });
 });
