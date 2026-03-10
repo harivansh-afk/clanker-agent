@@ -83,6 +83,8 @@ export interface ChannelStatus {
   id: string;
   name: string;
   connected: boolean;
+  running?: boolean;
+  configured?: boolean;
   error?: string;
 }
 
