@@ -59,6 +59,39 @@ export type { HistoryPart } from "./types.js";
 
 let activeGatewayRuntime: GatewayRuntime | null = null;
 
+type JsonRecord = Record<string, unknown>;
+
+type PiChannelsSettings = JsonRecord & {
+  adapters?: Record<string, JsonRecord>;
+  bridge?: JsonRecord;
+  slack?: JsonRecord;
+};
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function mergeRecords(base: JsonRecord, overrides: JsonRecord): JsonRecord {
+  const merged: JsonRecord = { ...base };
+  for (const [key, value] of Object.entries(overrides)) {
+    const existing = merged[key];
+    if (isRecord(existing) && isRecord(value)) {
+      merged[key] = mergeRecords(existing, value);
+      continue;
+    }
+    merged[key] = value;
+  }
+  return merged;
+}
+
+function readString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export function setActiveGatewayRuntime(runtime: GatewayRuntime | null): void {
   activeGatewayRuntime = runtime;
 }
@@ -1355,10 +1388,118 @@ export class GatewayRuntime {
     this.primarySession.settingsManager.applyOverrides(patch as Settings);
   }
 
+  private getPiChannelsSettings(): PiChannelsSettings {
+    const globalSettings = this.primarySession.settingsManager.getGlobalSettings();
+    const projectSettings =
+      this.primarySession.settingsManager.getProjectSettings();
+    const mergedSettings = mergeRecords(
+      isRecord(globalSettings) ? globalSettings : {},
+      isRecord(projectSettings) ? projectSettings : {},
+    );
+    const piChannels = mergedSettings["pi-channels"];
+    return isRecord(piChannels) ? (piChannels as PiChannelsSettings) : {};
+  }
+
+  private buildSlackChannelStatus(
+    config: PiChannelsSettings,
+    bridgeEnabled: boolean,
+  ): ChannelStatus {
+    const adapters = isRecord(config.adapters) ? config.adapters : {};
+    const adapter = isRecord(adapters.slack) ? adapters.slack : undefined;
+    const slackSettings = isRecord(config.slack) ? config.slack : undefined;
+    const appToken = readString(slackSettings?.appToken);
+    const botToken = readString(slackSettings?.botToken);
+
+    const hasConfig =
+      adapter !== undefined || appToken !== undefined || botToken !== undefined;
+    const adapterType = readString(adapter?.type);
+
+    let configured = false;
+    let error: string | undefined;
+
+    if (hasConfig) {
+      if (!adapter) {
+        error = 'Slack requires `pi-channels.adapters.slack = { "type": "slack" }`.';
+      } else if (adapterType !== "slack") {
+        error = 'Slack adapter type must be "slack".';
+      } else if (!appToken) {
+        error = "Slack requires pi-channels.slack.appToken.";
+      } else if (!botToken) {
+        error = "Slack requires pi-channels.slack.botToken.";
+      } else {
+        configured = true;
+      }
+    }
+
+    if (configured && !bridgeEnabled) {
+      error =
+        "Slack is configured, but pi-channels.bridge.enabled is false, so messages will not reach the agent.";
+    }
+
+    return {
+      id: "slack",
+      name: "Slack",
+      configured,
+      running: configured,
+      connected: configured && bridgeEnabled,
+      error,
+    };
+  }
+
+  private buildTelegramChannelStatus(
+    config: PiChannelsSettings,
+    bridgeEnabled: boolean,
+  ): ChannelStatus {
+    const adapters = isRecord(config.adapters) ? config.adapters : {};
+    const adapter = isRecord(adapters.telegram) ? adapters.telegram : undefined;
+    const botToken = readString(adapter?.botToken);
+    const pollingEnabled = adapter?.polling === true;
+
+    const hasConfig = adapter !== undefined || botToken !== undefined;
+    const adapterType = readString(adapter?.type);
+
+    let configured = false;
+    let error: string | undefined;
+
+    if (hasConfig) {
+      if (!adapter) {
+        error =
+          'Telegram requires `pi-channels.adapters.telegram = { "type": "telegram", "botToken": "...", "polling": true }`.';
+      } else if (adapterType !== "telegram") {
+        error = 'Telegram adapter type must be "telegram".';
+      } else if (!botToken) {
+        error = "Telegram requires pi-channels.adapters.telegram.botToken.";
+      } else if (!pollingEnabled) {
+        error =
+          "Telegram requires pi-channels.adapters.telegram.polling = true.";
+      } else {
+        configured = true;
+      }
+    }
+
+    if (configured && !bridgeEnabled) {
+      error =
+        "Telegram is configured, but pi-channels.bridge.enabled is false, so messages will not reach the agent.";
+    }
+
+    return {
+      id: "telegram",
+      name: "Telegram",
+      configured,
+      running: configured,
+      connected: configured && bridgeEnabled,
+      error,
+    };
+  }
+
   private handleGetChannelsStatus(): ChannelStatus[] {
-    // Extension channel status is not currently exposed as a public API on AgentSession.
-    // Return empty array as a safe default.
-    return [];
+    const config = this.getPiChannelsSettings();
+    const bridgeEnabled = config.bridge?.enabled === true;
+
+    return [
+      this.buildSlackChannelStatus(config, bridgeEnabled),
+      this.buildTelegramChannelStatus(config, bridgeEnabled),
+    ];
   }
 
   private handleGetLogs(): string[] {
