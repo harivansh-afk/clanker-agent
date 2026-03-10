@@ -1,4 +1,4 @@
-import type { Transport } from "@mariozechner/pi-ai";
+import type { Transport } from "@mariozechner/companion-ai";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -944,7 +944,7 @@ export class SettingsManager {
     if (this.settings.terminal?.clearOnShrink !== undefined) {
       return this.settings.terminal.clearOnShrink;
     }
-    return process.env.PI_CLEAR_ON_SHRINK === "1";
+    return process.env.COMPANION_CLEAR_ON_SHRINK === "1";
   }
 
   setClearOnShrink(enabled: boolean): void {
@@ -1023,7 +1023,7 @@ export class SettingsManager {
 
   getShowHardwareCursor(): boolean {
     return (
-      this.settings.showHardwareCursor ?? process.env.PI_HARDWARE_CURSOR === "1"
+      this.settings.showHardwareCursor ?? process.env.COMPANION_HARDWARE_CURSOR === "1"
     );
   }
 

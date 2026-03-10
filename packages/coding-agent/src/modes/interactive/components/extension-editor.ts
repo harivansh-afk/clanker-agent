@@ -16,7 +16,7 @@ import {
   Spacer,
   Text,
   type TUI,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import type { KeybindingsManager } from "../../../core/keybindings.js";
 import { getEditorTheme, theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
@@ -121,7 +121,7 @@ export class ExtensionEditorComponent extends Container implements Focusable {
     const currentText = this.editor.getText();
     const tmpFile = path.join(
       os.tmpdir(),
-      `pi-extension-editor-${Date.now()}.md`,
+      `companion-extension-editor-${Date.now()}.md`,
     );
 
     try {

@@ -2,34 +2,34 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { build } from "esbuild";
 
-const sourceRoot = process.env.PI_BUILTIN_EXTENSIONS_SRC
-  ? path.resolve(process.env.PI_BUILTIN_EXTENSIONS_SRC)
+const sourceRoot = process.env.COMPANION_BUILTIN_EXTENSIONS_SRC
+  ? path.resolve(process.env.COMPANION_BUILTIN_EXTENSIONS_SRC)
   : path.resolve(process.cwd(), "packages");
-const outputRoot = process.env.PI_BUILTIN_EXTENSIONS_OUT
-  ? path.resolve(process.env.PI_BUILTIN_EXTENSIONS_OUT)
+const outputRoot = process.env.COMPANION_BUILTIN_EXTENSIONS_OUT
+  ? path.resolve(process.env.COMPANION_BUILTIN_EXTENSIONS_OUT)
   : path.resolve(process.cwd(), ".tmp/builtins");
 
 const entries = [
   {
-    name: "pi-channels",
-    entry: path.join(sourceRoot, "pi-channels", "src", "index.ts"),
+    name: "companion-channels",
+    entry: path.join(sourceRoot, "companion-channels", "src", "index.ts"),
   },
   {
-    name: "pi-teams",
-    entry: path.join(sourceRoot, "pi-teams", "extensions", "index.ts"),
+    name: "companion-teams",
+    entry: path.join(sourceRoot, "companion-teams", "extensions", "index.ts"),
   },
   {
-    name: "pi-grind",
-    entry: path.join(sourceRoot, "pi-grind", "src", "index.ts"),
+    name: "companion-grind",
+    entry: path.join(sourceRoot, "companion-grind", "src", "index.ts"),
   },
 ];
 
 const external = [
-  "@mariozechner/pi-agent-core",
-  "@mariozechner/pi-ai",
-  "@mariozechner/pi-ai/oauth",
-  "@mariozechner/pi-coding-agent",
-  "@mariozechner/pi-tui",
+  "@mariozechner/companion-agent-core",
+  "@mariozechner/companion-ai",
+  "@mariozechner/companion-ai/oauth",
+  "@mariozechner/companion-coding-agent",
+  "@mariozechner/companion-tui",
   "@sinclair/typebox",
 ];
 

@@ -5,13 +5,13 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Agent } from "@mariozechner/pi-agent-core";
+import { Agent } from "@mariozechner/companion-agent-core";
 import {
   type AssistantMessage,
   type AssistantMessageEvent,
   EventStream,
   getModel,
-} from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-ai";
 import { Type } from "@sinclair/typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AgentSession } from "../src/core/agent-session.js";
@@ -63,7 +63,7 @@ describe("AgentSession concurrent prompt guard", () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = join(tmpdir(), `pi-concurrent-test-${Date.now()}`);
+    tempDir = join(tmpdir(), `companion-concurrent-test-${Date.now()}`);
     mkdirSync(tempDir, { recursive: true });
   });
 

@@ -77,7 +77,7 @@ export {
   writeTool,
 } from "./write.js";
 
-import type { AgentTool } from "@mariozechner/pi-agent-core";
+import type { AgentTool } from "@mariozechner/companion-agent-core";
 import { type BashToolOptions, bashTool, createBashTool } from "./bash.js";
 import {
   browserTool,
@@ -91,7 +91,7 @@ import { createLsTool, lsTool } from "./ls.js";
 import { createReadTool, type ReadToolOptions, readTool } from "./read.js";
 import { createWriteTool, writeTool } from "./write.js";
 
-/** Tool type (AgentTool from pi-ai) */
+/** Tool type (AgentTool from companion-ai) */
 export type Tool = AgentTool<any>;
 
 // Read-only tools for exploration without modification (using process.cwd())

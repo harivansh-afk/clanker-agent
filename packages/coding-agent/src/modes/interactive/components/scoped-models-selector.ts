@@ -1,4 +1,4 @@
-import type { Model } from "@mariozechner/pi-ai";
+import type { Model } from "@mariozechner/companion-ai";
 import {
   Container,
   type Focusable,
@@ -9,7 +9,7 @@ import {
   matchesKey,
   Spacer,
   Text,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

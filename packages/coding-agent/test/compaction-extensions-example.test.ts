@@ -12,8 +12,8 @@ import type {
 describe("Documentation example", () => {
   it("custom compaction example should type-check correctly", () => {
     // This is the example from extensions.md - verify it compiles
-    const exampleExtension = (pi: ExtensionAPI) => {
-      pi.on(
+    const exampleExtension = (companion: ExtensionAPI) => {
+      companion.on(
         "session_before_compact",
         async (event: SessionBeforeCompactEvent, ctx) => {
           // All these should be accessible on the event
@@ -63,8 +63,8 @@ describe("Documentation example", () => {
   });
 
   it("compact event should have correct fields", () => {
-    const checkCompactEvent = (pi: ExtensionAPI) => {
-      pi.on("session_compact", async (event: SessionCompactEvent) => {
+    const checkCompactEvent = (companion: ExtensionAPI) => {
+      companion.on("session_compact", async (event: SessionCompactEvent) => {
         // These should all be accessible
         const entry = event.compactionEntry;
         const fromExtension = event.fromExtension;

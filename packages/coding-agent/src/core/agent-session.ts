@@ -22,20 +22,20 @@ import type {
   AgentState,
   AgentTool,
   ThinkingLevel,
-} from "@mariozechner/pi-agent-core";
+} from "@mariozechner/companion-agent-core";
 import type {
   AssistantMessage,
   ImageContent,
   Message,
   Model,
   TextContent,
-} from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-ai";
 import {
   isContextOverflow,
   modelsAreEqual,
   resetApiProviders,
   supportsXhigh,
-} from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-ai";
 import { getDocsPath } from "../config.js";
 import { theme } from "../modes/interactive/theme/theme.js";
 import { stripFrontmatter } from "../utils/frontmatter.js";
@@ -1023,7 +1023,7 @@ export class AgentSession {
 
   /**
    * Send a prompt to the agent.
-   * - Handles extension commands (registered via pi.registerCommand) immediately, even during streaming
+   * - Handles extension commands (registered via companion.registerCommand) immediately, even during streaming
    * - Expands file-based prompt templates by default
    * - During streaming, queues via steer() or followUp() based on streamingBehavior option
    * - Validates model and API key before sending (when not streaming)
@@ -1034,7 +1034,7 @@ export class AgentSession {
     const expandPromptTemplates = options?.expandPromptTemplates ?? true;
 
     // Handle extension commands first (execute immediately, even during streaming)
-    // Extension commands manage their own LLM interaction via pi.sendMessage()
+    // Extension commands manage their own LLM interaction via companion.sendMessage()
     if (expandPromptTemplates && text.startsWith("/")) {
       const handled = await this._tryExecuteExtensionCommand(text);
       if (handled) {

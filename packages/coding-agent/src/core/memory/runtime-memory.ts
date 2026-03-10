@@ -9,17 +9,17 @@ import {
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
+import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import {
   completeSimple,
   type Model,
   type TextContent,
-} from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-ai";
 import { parseFrontmatter } from "../../utils/frontmatter.js";
 import type { SettingsManager } from "../settings-manager.js";
 import type { ReadonlySessionManager } from "../session-manager.js";
 
-const DEFAULT_STORAGE_DIR = join(homedir(), ".pi", "memory");
+const DEFAULT_STORAGE_DIR = join(homedir(), ".companion", "memory");
 const MAX_EPISODE_CHARS = 4_000;
 const MAX_EPISODES = 5_000;
 const DEFAULT_CORE_TOKEN_BUDGET = 700;
@@ -1487,9 +1487,9 @@ function resolveLegacyProjectDir(
   cwd: string,
 ): string | null {
   const settings = asRecord(settingsManager.getGlobalSettings()) ?? {};
-  const legacySettings = asRecord(settings["pi-memory-md"]) ?? {};
+  const legacySettings = asRecord(settings["companion-memory-md"]) ?? {};
   const configuredRoot =
-    asString(legacySettings.localPath) ?? join(homedir(), ".pi", "memory-md");
+    asString(legacySettings.localPath) ?? join(homedir(), ".companion", "memory-md");
   const legacyRoot = expandHomePath(configuredRoot);
   const legacyProjectDir = join(legacyRoot, basename(cwd));
   if (existsSync(legacyProjectDir)) {

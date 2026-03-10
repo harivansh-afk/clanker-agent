@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
+import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import type { AgentSession } from "../agent-session.js";
 import type {
   GatewayMessageRequest,

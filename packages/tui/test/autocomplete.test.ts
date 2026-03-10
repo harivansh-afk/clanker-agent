@@ -139,7 +139,7 @@ describe("CombinedAutocompleteProvider", () => {
     let outsideDir = "";
 
     beforeEach(() => {
-      rootDir = mkdtempSync(join(tmpdir(), "pi-autocomplete-root-"));
+      rootDir = mkdtempSync(join(tmpdir(), "companion-autocomplete-root-"));
       baseDir = join(rootDir, "cwd");
       outsideDir = join(rootDir, "outside");
       mkdirSync(baseDir, { recursive: true });
@@ -339,9 +339,9 @@ describe("CombinedAutocompleteProvider", () => {
 
     test("includes hidden paths but excludes .git", () => {
       setupFolder(baseDir, {
-        dirs: [".pi", ".github", ".git"],
+        dirs: [".companion", ".github", ".git"],
         files: {
-          ".pi/config.json": "{}",
+          ".companion/config.json": "{}",
           ".github/workflows/ci.yml": "name: ci",
           ".git/config": "[core]",
         },
@@ -356,7 +356,7 @@ describe("CombinedAutocompleteProvider", () => {
       const result = provider.getSuggestions([line], 0, line.length);
 
       const values = result?.items.map((item) => item.value) ?? [];
-      assert.ok(values.includes("@.pi/"));
+      assert.ok(values.includes("@.companion/"));
       assert.ok(values.includes("@.github/"));
       assert.ok(
         !values.some(
@@ -432,7 +432,7 @@ describe("CombinedAutocompleteProvider", () => {
     let baseDir = "";
 
     beforeEach(() => {
-      baseDir = mkdtempSync(join(tmpdir(), "pi-autocomplete-"));
+      baseDir = mkdtempSync(join(tmpdir(), "companion-autocomplete-"));
     });
 
     afterEach(() => {

@@ -3,7 +3,7 @@ import {
   type EditorOptions,
   type EditorTheme,
   type TUI,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import type {
   AppAction,
   KeybindingsManager,

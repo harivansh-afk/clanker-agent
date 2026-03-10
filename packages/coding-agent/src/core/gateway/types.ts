@@ -1,4 +1,4 @@
-import type { ImageContent } from "@mariozechner/pi-ai";
+import type { ImageContent } from "@mariozechner/companion-ai";
 import type { AgentSession } from "../agent-session.js";
 
 export interface GatewayConfig {

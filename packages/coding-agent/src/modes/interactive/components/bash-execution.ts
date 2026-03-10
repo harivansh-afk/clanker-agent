@@ -8,7 +8,7 @@ import {
   Spacer,
   Text,
   type TUI,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import stripAnsi from "strip-ansi";
 import {
   DEFAULT_MAX_BYTES,

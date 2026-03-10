@@ -1,10 +1,10 @@
-> pi can create TUI components. Ask it to build one for your use case.
+> companion can create TUI components. Ask it to build one for your use case.
 
 # TUI Components
 
 Extensions and custom tools can render custom TUI components for interactive user interfaces. This page covers the component system and available building blocks.
 
-**Source:** [`@mariozechner/pi-tui`](https://github.com/badlogic/pi-mono/tree/main/packages/tui)
+**Source:** [`@mariozechner/companion-tui`](https://github.com/badlogic/companion-mono/tree/main/packages/tui)
 
 ## Component Interface
 
@@ -37,7 +37,7 @@ import {
   CURSOR_MARKER,
   type Component,
   type Focusable,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 
 class MyInput implements Component, Focusable {
   focused: boolean = false; // Set by TUI when focus changes
@@ -66,7 +66,7 @@ This enables IME candidate windows to appear at the correct position for CJK inp
 When a container component (dialog, selector, etc.) contains an `Input` or `Editor` child, the container must implement `Focusable` and propagate the focus state to the child. Otherwise, the hardware cursor won't be positioned correctly for IME input.
 
 ```typescript
-import { Container, type Focusable, Input } from "@mariozechner/pi-tui";
+import { Container, type Focusable, Input } from "@mariozechner/companion-tui";
 
 class SearchDialog extends Container implements Focusable {
   private searchInput: Input;
@@ -96,18 +96,18 @@ Without this propagation, typing with an IME (Chinese, Japanese, Korean, etc.) w
 **In extensions** via `ctx.ui.custom()`:
 
 ```typescript
-pi.on("session_start", async (_event, ctx) => {
+companion.on("session_start", async (_event, ctx) => {
   const handle = ctx.ui.custom(myComponent);
   // handle.requestRender() - trigger re-render
   // handle.close() - restore normal UI
 });
 ```
 
-**In custom tools** via `pi.ui.custom()`:
+**In custom tools** via `companion.ui.custom()`:
 
 ```typescript
 async execute(toolCallId, params, onUpdate, ctx, signal) {
-  const handle = pi.ui.custom(myComponent);
+  const handle = companion.ui.custom(myComponent);
   // ...
   handle.close();
 }
@@ -191,10 +191,10 @@ See [overlay-qa-tests.ts](../examples/extensions/overlay-qa-tests.ts) for compre
 
 ## Built-in Components
 
-Import from `@mariozechner/pi-tui`:
+Import from `@mariozechner/companion-tui`:
 
 ```typescript
-import { Text, Box, Container, Spacer, Markdown } from "@mariozechner/pi-tui";
+import { Text, Box, Container, Spacer, Markdown } from "@mariozechner/companion-tui";
 ```
 
 ### Text
@@ -276,7 +276,7 @@ const image = new Image(
 Use `matchesKey()` for key detection:
 
 ```typescript
-import { matchesKey, Key } from "@mariozechner/pi-tui";
+import { matchesKey, Key } from "@mariozechner/companion-tui";
 
 handleInput(data: string) {
   if (matchesKey(data, Key.up)) {
@@ -303,7 +303,7 @@ handleInput(data: string) {
 **Critical:** Each line from `render()` must not exceed the `width` parameter.
 
 ```typescript
-import { visibleWidth, truncateToWidth } from "@mariozechner/pi-tui";
+import { visibleWidth, truncateToWidth } from "@mariozechner/companion-tui";
 
 render(width: number): string[] {
   // Truncate long lines
@@ -327,7 +327,7 @@ import {
   Key,
   truncateToWidth,
   visibleWidth,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 
 class MySelector {
   private items: string[];
@@ -382,7 +382,7 @@ class MySelector {
 Usage in an extension:
 
 ```typescript
-pi.registerCommand("pick", {
+companion.registerCommand("pick", {
   description: "Pick an item",
   handler: async (args, ctx) => {
     const items = ["Option A", "Option B", "Option C"];
@@ -444,8 +444,8 @@ renderResult(result, options, theme) {
 **For Markdown**, use `getMarkdownTheme()`:
 
 ```typescript
-import { getMarkdownTheme } from "@mariozechner/pi-coding-agent";
-import { Markdown } from "@mariozechner/pi-tui";
+import { getMarkdownTheme } from "@mariozechner/companion-coding-agent";
+import { Markdown } from "@mariozechner/companion-tui";
 
 renderResult(result, options, theme) {
   const mdTheme = getMarkdownTheme();
@@ -464,10 +464,10 @@ interface MyTheme {
 
 ## Debug logging
 
-Set `PI_TUI_WRITE_LOG` to capture the raw ANSI stream written to stdout.
+Set `COMPANION_TUI_WRITE_LOG` to capture the raw ANSI stream written to stdout.
 
 ```bash
-PI_TUI_WRITE_LOG=/tmp/tui-ansi.log npx tsx packages/tui/test/chat-simple.ts
+COMPANION_TUI_WRITE_LOG=/tmp/tui-ansi.log npx tsx packages/tui/test/chat-simple.ts
 ```
 
 ## Performance
@@ -606,19 +606,19 @@ These patterns cover the most common UI needs in extensions. **Copy these patter
 
 ### Pattern 1: Selection Dialog (SelectList)
 
-For letting users pick from a list of options. Use `SelectList` from `@mariozechner/pi-tui` with `DynamicBorder` for framing.
+For letting users pick from a list of options. Use `SelectList` from `@mariozechner/companion-tui` with `DynamicBorder` for framing.
 
 ```typescript
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { DynamicBorder } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/companion-coding-agent";
+import { DynamicBorder } from "@mariozechner/companion-coding-agent";
 import {
   Container,
   type SelectItem,
   SelectList,
   Text,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 
-pi.registerCommand("pick", {
+companion.registerCommand("pick", {
   handler: async (_args, ctx) => {
     const items: SelectItem[] = [
       { value: "opt1", label: "Option 1", description: "First option" },
@@ -691,9 +691,9 @@ pi.registerCommand("pick", {
 For operations that take time and should be cancellable. `BorderedLoader` shows a spinner and handles escape to cancel.
 
 ```typescript
-import { BorderedLoader } from "@mariozechner/pi-coding-agent";
+import { BorderedLoader } from "@mariozechner/companion-coding-agent";
 
-pi.registerCommand("fetch", {
+companion.registerCommand("fetch", {
   handler: async (_args, ctx) => {
     const result = await ctx.ui.custom<string | null>(
       (tui, theme, _kb, done) => {
@@ -722,18 +722,18 @@ pi.registerCommand("fetch", {
 
 ### Pattern 3: Settings/Toggles (SettingsList)
 
-For toggling multiple settings. Use `SettingsList` from `@mariozechner/pi-tui` with `getSettingsListTheme()`.
+For toggling multiple settings. Use `SettingsList` from `@mariozechner/companion-tui` with `getSettingsListTheme()`.
 
 ```typescript
-import { getSettingsListTheme } from "@mariozechner/pi-coding-agent";
+import { getSettingsListTheme } from "@mariozechner/companion-coding-agent";
 import {
   Container,
   type SettingItem,
   SettingsList,
   Text,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 
-pi.registerCommand("settings", {
+companion.registerCommand("settings", {
   handler: async (_args, ctx) => {
     const items: SettingItem[] = [
       {
@@ -854,8 +854,8 @@ Token stats available via `ctx.sessionManager.getBranch()` and `ctx.model`.
 Replace the main input editor with a custom implementation. Useful for modal editing (vim), different keybindings (emacs), or specialized input handling.
 
 ```typescript
-import { CustomEditor, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { matchesKey, truncateToWidth } from "@mariozechner/pi-tui";
+import { CustomEditor, type ExtensionAPI } from "@mariozechner/companion-coding-agent";
+import { matchesKey, truncateToWidth } from "@mariozechner/companion-tui";
 
 type Mode = "normal" | "insert";
 
@@ -917,8 +917,8 @@ class VimEditor extends CustomEditor {
   }
 }
 
-export default function (pi: ExtensionAPI) {
-  pi.on("session_start", (_event, ctx) => {
+export default function (companion: ExtensionAPI) {
+  companion.on("session_start", (_event, ctx) => {
     // Factory receives theme and keybindings from the app
     ctx.ui.setEditorComponent(
       (tui, theme, keybindings) => new VimEditor(theme, keybindings),

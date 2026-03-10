@@ -1,5 +1,5 @@
 {
-  "name": "@mariozechner/pi-ai",
+  "name": "@mariozechner/companion-ai",
   "version": "0.56.2",
   "description": "Unified LLM API with automatic model discovery and provider configuration",
   "type": "module",
@@ -20,7 +20,7 @@
     }
   },
   "bin": {
-    "pi-ai": "./dist/cli.js"
+    "companion-ai": "./dist/cli.js"
   },
   "files": [
     "dist",

@@ -13,7 +13,7 @@ import type {
   AgentToolResult,
   AgentToolUpdateCallback,
   ThinkingLevel,
-} from "@mariozechner/pi-agent-core";
+} from "@mariozechner/companion-agent-core";
 import type {
   Api,
   AssistantMessageEvent,
@@ -26,7 +26,7 @@ import type {
   SimpleStreamOptions,
   TextContent,
   ToolResultMessage,
-} from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-ai";
 import type {
   AutocompleteItem,
   Component,
@@ -36,7 +36,7 @@ import type {
   OverlayHandle,
   OverlayOptions,
   TUI,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import type { Static, TSchema } from "@sinclair/typebox";
 import type { Theme } from "../../modes/interactive/theme/theme.js";
 import type { BashResult } from "../bash-executor.js";
@@ -223,12 +223,12 @@ export interface ExtensionUIContext {
    * - `keybindings`: KeybindingsManager for app-level keybindings
    *
    * For full app keybinding support (escape, ctrl+d, model switching, etc.),
-   * extend `CustomEditor` from `@mariozechner/pi-coding-agent` and call
+   * extend `CustomEditor` from `@mariozechner/companion-coding-agent` and call
    * `super.handleInput(data)` for keys you don't handle.
    *
    * @example
    * ```ts
-   * import { CustomEditor } from "@mariozechner/pi-coding-agent";
+   * import { CustomEditor } from "@mariozechner/companion-coding-agent";
    *
    * class VimEditor extends CustomEditor {
    *   private mode: "normal" | "insert" = "insert";
@@ -316,7 +316,7 @@ export interface ExtensionContext {
   abort(): void;
   /** Whether there are queued messages waiting */
   hasPendingMessages(): boolean;
-  /** Gracefully shutdown pi and exit. Available in all contexts. */
+  /** Gracefully shutdown companion and exit. Available in all contexts. */
   shutdown(): void;
   /** Get current context usage for the active model. */
   getContextUsage(): ContextUsage | undefined;
@@ -1251,7 +1251,7 @@ export interface ExtensionAPI {
    *
    * @example
    * // Register a new provider with custom models
-   * pi.registerProvider("my-proxy", {
+   * companion.registerProvider("my-proxy", {
    *   baseUrl: "https://proxy.example.com",
    *   apiKey: "PROXY_API_KEY",
    *   api: "anthropic-messages",
@@ -1270,13 +1270,13 @@ export interface ExtensionAPI {
    *
    * @example
    * // Override baseUrl for an existing provider
-   * pi.registerProvider("anthropic", {
+   * companion.registerProvider("anthropic", {
    *   baseUrl: "https://proxy.example.com"
    * });
    *
    * @example
    * // Register provider with OAuth support
-   * pi.registerProvider("corporate-ai", {
+   * companion.registerProvider("corporate-ai", {
    *   baseUrl: "https://ai.corp.com",
    *   api: "openai-responses",
    *   models: [...],
@@ -1301,7 +1301,7 @@ export interface ExtensionAPI {
    * the initial load phase.
    *
    * @example
-   * pi.unregisterProvider("my-proxy");
+   * companion.unregisterProvider("my-proxy");
    */
   unregisterProvider(name: string): void;
 
@@ -1313,7 +1313,7 @@ export interface ExtensionAPI {
 // Provider Registration Types
 // ============================================================================
 
-/** Configuration for registering a provider via pi.registerProvider(). */
+/** Configuration for registering a provider via companion.registerProvider(). */
 export interface ProviderConfig {
   /** Base URL for the API endpoint. Required when defining models. */
   baseUrl?: string;
@@ -1381,7 +1381,7 @@ export interface ProviderModelConfig {
 }
 
 /** Extension factory function type. Supports both sync and async initialization. */
-export type ExtensionFactory = (pi: ExtensionAPI) => void | Promise<void>;
+export type ExtensionFactory = (companion: ExtensionAPI) => void | Promise<void>;
 
 // ============================================================================
 // Loaded Extension Types
@@ -1480,7 +1480,7 @@ export interface ExtensionRuntimeState {
 }
 
 /**
- * Action implementations for pi.* API methods.
+ * Action implementations for companion.* API methods.
  * Provided to runner.initialize(), copied into the shared runtime.
  */
 export interface ExtensionActions {

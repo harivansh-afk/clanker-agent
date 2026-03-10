@@ -1,6 +1,6 @@
 # Providers
 
-Pi supports subscription-based providers via OAuth and API key providers via environment variables or auth file. For each provider, pi knows all available models. The list is updated with every pi release.
+Companion supports subscription-based providers via OAuth and API key providers via environment variables or auth file. For each provider, companion knows all available models. The list is updated with every companion release.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ Use `/login` in interactive mode, then select a provider:
 - Google Gemini CLI
 - Google Antigravity
 
-Use `/logout` to clear credentials. Tokens are stored in `~/.pi/agent/auth.json` and auto-refresh when expired.
+Use `/logout` to clear credentials. Tokens are stored in `~/.companion/agent/auth.json` and auto-refresh when expired.
 
 ### GitHub Copilot
 
@@ -48,7 +48,7 @@ Set via environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-pi
+companion
 ```
 
 | Provider               | Environment Variable   | `auth.json` key          |
@@ -71,11 +71,11 @@ pi
 | MiniMax                | `MINIMAX_API_KEY`      | `minimax`                |
 | MiniMax (China)        | `MINIMAX_CN_API_KEY`   | `minimax-cn`             |
 
-Reference for environment variables and `auth.json` keys: [`const envMap`](https://github.com/badlogic/pi-mono/blob/main/packages/ai/src/env-api-keys.ts) in [`packages/ai/src/env-api-keys.ts`](https://github.com/badlogic/pi-mono/blob/main/packages/ai/src/env-api-keys.ts).
+Reference for environment variables and `auth.json` keys: [`const envMap`](https://github.com/badlogic/companion-mono/blob/main/packages/ai/src/env-api-keys.ts) in [`packages/ai/src/env-api-keys.ts`](https://github.com/badlogic/companion-mono/blob/main/packages/ai/src/env-api-keys.ts).
 
 #### Auth File
 
-Store credentials in `~/.pi/agent/auth.json`:
+Store credentials in `~/.companion/agent/auth.json`:
 
 ```json
 {
@@ -144,7 +144,7 @@ export AWS_REGION=us-west-2
 Also supports ECS task roles (`AWS_CONTAINER_CREDENTIALS_*`) and IRSA (`AWS_WEB_IDENTITY_TOKEN_FILE`).
 
 ```bash
-pi --provider amazon-bedrock --model us.anthropic.claude-sonnet-4-20250514-v1:0
+companion --provider amazon-bedrock --model us.anthropic.claude-sonnet-4-20250514-v1:0
 ```
 
 If you are connecting to a Bedrock API proxy, the following environment variables can be used:

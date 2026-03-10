@@ -10,8 +10,8 @@
 
 ### Fixed
 
-- Fixed `Input` component not accepting typed characters when Kitty keyboard protocol is active (e.g., VS Code 1.110+), causing model selector filter to ignore keystrokes ([#1857](https://github.com/badlogic/pi-mono/issues/1857))
-- Fixed editor/footer visibility drift during terminal resize by forcing full redraws when terminal width or height changes ([#1844](https://github.com/badlogic/pi-mono/pull/1844) by [@ghoulr](https://github.com/ghoulr)).
+- Fixed `Input` component not accepting typed characters when Kitty keyboard protocol is active (e.g., VS Code 1.110+), causing model selector filter to ignore keystrokes ([#1857](https://github.com/badlogic/companion-mono/issues/1857))
+- Fixed editor/footer visibility drift during terminal resize by forcing full redraws when terminal width or height changes ([#1844](https://github.com/badlogic/companion-mono/pull/1844) by [@ghoulr](https://github.com/ghoulr)).
 
 ## [0.56.1] - 2026-03-05
 
@@ -24,10 +24,10 @@
 ### Fixed
 
 - Fixed TUI width calculation for regional indicator symbols (e.g. partial flag sequences like `🇨` during streaming) to prevent wrap drift and stale character artifacts in differential rendering.
-- Fixed Kitty CSI-u handling to ignore unsupported modifiers so modifier-only events do not insert stray printable characters ([#1807](https://github.com/badlogic/pi-mono/issues/1807))
-- Fixed single-line paste performance by inserting pasted text atomically instead of character-by-character, preventing repeated `@` autocomplete scans during paste ([#1812](https://github.com/badlogic/pi-mono/issues/1812))
-- Fixed `visibleWidth()` to ignore generic OSC escape sequences (including OSC 133 semantic prompt markers), preventing width drift when terminals emit semantic zone markers ([#1805](https://github.com/badlogic/pi-mono/issues/1805))
-- Fixed markdown blockquotes dropping nested list content by rendering blockquote children as block-level tokens ([#1787](https://github.com/badlogic/pi-mono/issues/1787))
+- Fixed Kitty CSI-u handling to ignore unsupported modifiers so modifier-only events do not insert stray printable characters ([#1807](https://github.com/badlogic/companion-mono/issues/1807))
+- Fixed single-line paste performance by inserting pasted text atomically instead of character-by-character, preventing repeated `@` autocomplete scans during paste ([#1812](https://github.com/badlogic/companion-mono/issues/1812))
+- Fixed `visibleWidth()` to ignore generic OSC escape sequences (including OSC 133 semantic prompt markers), preventing width drift when terminals emit semantic zone markers ([#1805](https://github.com/badlogic/companion-mono/issues/1805))
+- Fixed markdown blockquotes dropping nested list content by rendering blockquote children as block-level tokens ([#1787](https://github.com/badlogic/companion-mono/issues/1787))
 
 ## [0.55.4] - 2026-03-02
 
@@ -39,7 +39,7 @@
 
 ### Fixed
 
-- Fixed Windows VT input initialization in ESM by loading `koffi` via `createRequire`, restoring VT input mode while keeping `koffi` externalized from compiled binaries ([#1627](https://github.com/badlogic/pi-mono/pull/1627) by [@kaste](https://github.com/kaste))
+- Fixed Windows VT input initialization in ESM by loading `koffi` via `createRequire`, restoring VT input mode while keeping `koffi` externalized from compiled binaries ([#1627](https://github.com/badlogic/companion-mono/pull/1627) by [@kaste](https://github.com/kaste))
 
 ## [0.55.0] - 2026-02-24
 
@@ -69,7 +69,7 @@
 
 ### Fixed
 
-- Fixed `@` autocomplete fuzzy matching to score against path segments and prefixes, reducing irrelevant matches for nested paths ([#1423](https://github.com/badlogic/pi-mono/issues/1423))
+- Fixed `@` autocomplete fuzzy matching to score against path segments and prefixes, reducing irrelevant matches for nested paths ([#1423](https://github.com/badlogic/companion-mono/issues/1423))
 
 ## [0.52.9] - 2026-02-08
 
@@ -77,8 +77,8 @@
 
 ### Added
 
-- Added `pasteToEditor` to `EditorComponent` API for programmatic paste support ([#1351](https://github.com/badlogic/pi-mono/pull/1351) by [@kaofelix](https://github.com/kaofelix))
-- Added kill ring (ctrl+k/ctrl+y/alt+y) and undo (ctrl+z) support to the Input component ([#1373](https://github.com/badlogic/pi-mono/pull/1373) by [@Perlence](https://github.com/Perlence))
+- Added `pasteToEditor` to `EditorComponent` API for programmatic paste support ([#1351](https://github.com/badlogic/companion-mono/pull/1351) by [@kaofelix](https://github.com/kaofelix))
+- Added kill ring (ctrl+k/ctrl+y/alt+y) and undo (ctrl+z) support to the Input component ([#1373](https://github.com/badlogic/companion-mono/pull/1373) by [@Perlence](https://github.com/Perlence))
 
 ## [0.52.7] - 2026-02-06
 
@@ -100,11 +100,11 @@
 
 ### Changed
 
-- Slash command menu now triggers on the first line even when other lines have content, allowing commands to be prepended to existing text ([#1227](https://github.com/badlogic/pi-mono/pull/1227) by [@aliou](https://github.com/aliou))
+- Slash command menu now triggers on the first line even when other lines have content, allowing commands to be prepended to existing text ([#1227](https://github.com/badlogic/companion-mono/pull/1227) by [@aliou](https://github.com/aliou))
 
 ### Fixed
 
-- Fixed `/settings` crashing in narrow terminals by handling small widths in the settings list ([#1246](https://github.com/badlogic/pi-mono/pull/1246) by [@haoqixu](https://github.com/haoqixu))
+- Fixed `/settings` crashing in narrow terminals by handling small widths in the settings list ([#1246](https://github.com/badlogic/companion-mono/pull/1246) by [@haoqixu](https://github.com/haoqixu))
 
 ## [0.51.5] - 2026-02-04
 
@@ -112,7 +112,7 @@
 
 ### Fixed
 
-- Fixed input scrolling to avoid splitting emoji sequences ([#1228](https://github.com/badlogic/pi-mono/pull/1228) by [@haoqixu](https://github.com/haoqixu))
+- Fixed input scrolling to avoid splitting emoji sequences ([#1228](https://github.com/badlogic/companion-mono/pull/1228) by [@haoqixu](https://github.com/haoqixu))
 
 ## [0.51.3] - 2026-02-03
 
@@ -124,7 +124,7 @@
 
 ### Fixed
 
-- Fixed Kitty key release events leaking to parent shell over slow SSH connections by draining stdin for up to 1s ([#1204](https://github.com/badlogic/pi-mono/issues/1204))
+- Fixed Kitty key release events leaking to parent shell over slow SSH connections by draining stdin for up to 1s ([#1204](https://github.com/badlogic/companion-mono/issues/1204))
 - Fixed legacy newline handling in the editor to preserve previous newline behavior
 - Fixed @ autocomplete to include hidden paths
 - Fixed submit fallback to honor configured keybindings
@@ -133,19 +133,19 @@
 
 ### Added
 
-- Added `PI_DEBUG_REDRAW=1` env var for debugging full redraws (logs triggers to `~/.pi/agent/pi-debug.log`)
+- Added `COMPANION_DEBUG_REDRAW=1` env var for debugging full redraws (logs triggers to `~/.companion/agent/companion-debug.log`)
 
 ### Changed
 
 - Terminal height changes no longer trigger full redraws, reducing flicker on resize
-- `clearOnShrink` now defaults to `false` (use `PI_CLEAR_ON_SHRINK=1` or `setClearOnShrink(true)` to enable)
+- `clearOnShrink` now defaults to `false` (use `COMPANION_CLEAR_ON_SHRINK=1` or `setClearOnShrink(true)` to enable)
 
 ### Fixed
 
-- Fixed emoji cursor positioning in Input component ([#1183](https://github.com/badlogic/pi-mono/pull/1183) by [@haoqixu](https://github.com/haoqixu))
+- Fixed emoji cursor positioning in Input component ([#1183](https://github.com/badlogic/companion-mono/pull/1183) by [@haoqixu](https://github.com/haoqixu))
 
 - Fixed unnecessary full redraws when appending many lines after content had previously shrunk (viewport check now uses actual previous content size instead of stale maximum)
-- Fixed Ctrl+D exit closing the parent SSH session due to stdin buffer race condition ([#1185](https://github.com/badlogic/pi-mono/issues/1185))
+- Fixed Ctrl+D exit closing the parent SSH session due to stdin buffer race condition ([#1185](https://github.com/badlogic/companion-mono/issues/1185))
 
 ## [0.51.0] - 2026-02-01
 
@@ -155,11 +155,11 @@
 
 ### Added
 
-- Added sticky column tracking for vertical cursor navigation so the editor restores the preferred column when moving across short lines. ([#1120](https://github.com/badlogic/pi-mono/pull/1120) by [@Perlence](https://github.com/Perlence))
+- Added sticky column tracking for vertical cursor navigation so the editor restores the preferred column when moving across short lines. ([#1120](https://github.com/badlogic/companion-mono/pull/1120) by [@Perlence](https://github.com/Perlence))
 
 ### Fixed
 
-- Fixed Kitty keyboard protocol base layout fallback so non-QWERTY layouts do not trigger wrong shortcuts ([#1096](https://github.com/badlogic/pi-mono/pull/1096) by [@rytswd](https://github.com/rytswd))
+- Fixed Kitty keyboard protocol base layout fallback so non-QWERTY layouts do not trigger wrong shortcuts ([#1096](https://github.com/badlogic/companion-mono/pull/1096) by [@rytswd](https://github.com/rytswd))
 
 ## [0.50.7] - 2026-01-31
 
@@ -171,31 +171,31 @@
 
 ### Fixed
 
-- Fixed empty rows appearing below footer when content shrinks (e.g., closing `/tree`, clearing multi-line editor) ([#1095](https://github.com/badlogic/pi-mono/pull/1095) by [@marckrenn](https://github.com/marckrenn))
-- Fixed terminal cursor remaining hidden after exiting TUI via `stop()` when a render was pending ([#1099](https://github.com/badlogic/pi-mono/pull/1099) by [@haoqixu](https://github.com/haoqixu))
+- Fixed empty rows appearing below footer when content shrinks (e.g., closing `/tree`, clearing multi-line editor) ([#1095](https://github.com/badlogic/companion-mono/pull/1095) by [@marckrenn](https://github.com/marckrenn))
+- Fixed terminal cursor remaining hidden after exiting TUI via `stop()` when a render was pending ([#1099](https://github.com/badlogic/companion-mono/pull/1099) by [@haoqixu](https://github.com/haoqixu))
 
 ## [0.50.5] - 2026-01-30
 
 ### Fixed
 
-- Fixed `isImageLine()` to check for image escape sequences anywhere in a line, not just at the start. This prevents TUI crashes when rendering lines containing image data. ([#1091](https://github.com/badlogic/pi-mono/pull/1091) by [@zedrdave](https://github.com/zedrdave))
+- Fixed `isImageLine()` to check for image escape sequences anywhere in a line, not just at the start. This prevents TUI crashes when rendering lines containing image data. ([#1091](https://github.com/badlogic/companion-mono/pull/1091) by [@zedrdave](https://github.com/zedrdave))
 
 ## [0.50.4] - 2026-01-30
 
 ### Added
 
-- Added Ctrl+B and Ctrl+F as alternative keybindings for cursor word left/right navigation ([#1053](https://github.com/badlogic/pi-mono/pull/1053) by [@ninlds](https://github.com/ninlds))
-- Added character jump navigation: Ctrl+] jumps forward to next character, Ctrl+Alt+] jumps backward ([#1074](https://github.com/badlogic/pi-mono/pull/1074) by [@Perlence](https://github.com/Perlence))
-- Editor now jumps to line start when pressing Up at first visual line, and line end when pressing Down at last visual line ([#1050](https://github.com/badlogic/pi-mono/pull/1050) by [@4h9fbZ](https://github.com/4h9fbZ))
+- Added Ctrl+B and Ctrl+F as alternative keybindings for cursor word left/right navigation ([#1053](https://github.com/badlogic/companion-mono/pull/1053) by [@ninlds](https://github.com/ninlds))
+- Added character jump navigation: Ctrl+] jumps forward to next character, Ctrl+Alt+] jumps backward ([#1074](https://github.com/badlogic/companion-mono/pull/1074) by [@Perlence](https://github.com/Perlence))
+- Editor now jumps to line start when pressing Up at first visual line, and line end when pressing Down at last visual line ([#1050](https://github.com/badlogic/companion-mono/pull/1050) by [@4h9fbZ](https://github.com/4h9fbZ))
 
 ### Changed
 
-- Optimized image line detection and box rendering cache for better performance ([#1084](https://github.com/badlogic/pi-mono/pull/1084) by [@can1357](https://github.com/can1357))
+- Optimized image line detection and box rendering cache for better performance ([#1084](https://github.com/badlogic/companion-mono/pull/1084) by [@can1357](https://github.com/can1357))
 
 ### Fixed
 
-- Fixed autocomplete for paths with spaces by supporting quoted path tokens ([#1077](https://github.com/badlogic/pi-mono/issues/1077))
-- Fixed quoted path completions to avoid duplicating closing quotes during autocomplete ([#1077](https://github.com/badlogic/pi-mono/issues/1077))
+- Fixed autocomplete for paths with spaces by supporting quoted path tokens ([#1077](https://github.com/badlogic/companion-mono/issues/1077))
+- Fixed quoted path completions to avoid duplicating closing quotes during autocomplete ([#1077](https://github.com/badlogic/companion-mono/issues/1077))
 
 ## [0.50.3] - 2026-01-29
 
@@ -203,19 +203,19 @@
 
 ### Added
 
-- Added `autocompleteMaxVisible` option to `EditorOptions` with getter/setter methods for configurable autocomplete dropdown height ([#972](https://github.com/badlogic/pi-mono/pull/972) by [@masonc15](https://github.com/masonc15))
-- Added `alt+b` and `alt+f` as alternative keybindings for word navigation (`cursorWordLeft`, `cursorWordRight`) and `ctrl+d` for `deleteCharForward` ([#1043](https://github.com/badlogic/pi-mono/issues/1043) by [@jasonish](https://github.com/jasonish))
-- Editor auto-applies single suggestion when force file autocomplete triggers with exactly one match ([#993](https://github.com/badlogic/pi-mono/pull/993) by [@Perlence](https://github.com/Perlence))
+- Added `autocompleteMaxVisible` option to `EditorOptions` with getter/setter methods for configurable autocomplete dropdown height ([#972](https://github.com/badlogic/companion-mono/pull/972) by [@masonc15](https://github.com/masonc15))
+- Added `alt+b` and `alt+f` as alternative keybindings for word navigation (`cursorWordLeft`, `cursorWordRight`) and `ctrl+d` for `deleteCharForward` ([#1043](https://github.com/badlogic/companion-mono/issues/1043) by [@jasonish](https://github.com/jasonish))
+- Editor auto-applies single suggestion when force file autocomplete triggers with exactly one match ([#993](https://github.com/badlogic/companion-mono/pull/993) by [@Perlence](https://github.com/Perlence))
 
 ### Changed
 
-- Improved `extractCursorPosition` performance: scans lines in reverse order, early-outs when cursor is above viewport, and limits scan to bottom terminal height ([#1004](https://github.com/badlogic/pi-mono/pull/1004) by [@can1357](https://github.com/can1357))
-- Autocomplete improvements: better handling of partial matches and edge cases ([#1024](https://github.com/badlogic/pi-mono/pull/1024) by [@Perlence](https://github.com/Perlence))
+- Improved `extractCursorPosition` performance: scans lines in reverse order, early-outs when cursor is above viewport, and limits scan to bottom terminal height ([#1004](https://github.com/badlogic/companion-mono/pull/1004) by [@can1357](https://github.com/can1357))
+- Autocomplete improvements: better handling of partial matches and edge cases ([#1024](https://github.com/badlogic/companion-mono/pull/1024) by [@Perlence](https://github.com/Perlence))
 
 ### Fixed
 
-- Fixed backslash input buffering causing delayed character display in editor and input components ([#1037](https://github.com/badlogic/pi-mono/pull/1037) by [@Perlence](https://github.com/Perlence))
-- Fixed markdown table rendering with proper row dividers and minimum column width ([#997](https://github.com/badlogic/pi-mono/pull/997) by [@tmustier](https://github.com/tmustier))
+- Fixed backslash input buffering causing delayed character display in editor and input components ([#1037](https://github.com/badlogic/companion-mono/pull/1037) by [@Perlence](https://github.com/Perlence))
+- Fixed markdown table rendering with proper row dividers and minimum column width ([#997](https://github.com/badlogic/companion-mono/pull/997) by [@tmustier](https://github.com/tmustier))
 
 ## [0.50.1] - 2026-01-26
 
@@ -224,34 +224,34 @@
 ### Added
 
 - Added `fullRedraws` readonly property to TUI class for tracking full screen redraws
-- Added `PI_TUI_WRITE_LOG` environment variable to capture raw ANSI output for debugging
+- Added `COMPANION_TUI_WRITE_LOG` environment variable to capture raw ANSI output for debugging
 
 ### Fixed
 
-- Fixed appended lines not being committed to scrollback, causing earlier content to be overwritten when viewport fills ([#954](https://github.com/badlogic/pi-mono/issues/954))
-- Slash command menu now only triggers when the editor input is otherwise empty ([#904](https://github.com/badlogic/pi-mono/issues/904))
-- Center-anchored overlays now stay vertically centered when resizing the terminal taller after a shrink ([#950](https://github.com/badlogic/pi-mono/pull/950) by [@nicobailon](https://github.com/nicobailon))
-- Fixed editor multi-line insertion handling and lastAction tracking ([#945](https://github.com/badlogic/pi-mono/pull/945) by [@Perlence](https://github.com/Perlence))
-- Fixed editor word wrapping to reserve a cursor column ([#934](https://github.com/badlogic/pi-mono/pull/934) by [@Perlence](https://github.com/Perlence))
-- Fixed editor word wrapping to use single-pass backtracking for whitespace handling ([#924](https://github.com/badlogic/pi-mono/pull/924) by [@Perlence](https://github.com/Perlence))
+- Fixed appended lines not being committed to scrollback, causing earlier content to be overwritten when viewport fills ([#954](https://github.com/badlogic/companion-mono/issues/954))
+- Slash command menu now only triggers when the editor input is otherwise empty ([#904](https://github.com/badlogic/companion-mono/issues/904))
+- Center-anchored overlays now stay vertically centered when resizing the terminal taller after a shrink ([#950](https://github.com/badlogic/companion-mono/pull/950) by [@nicobailon](https://github.com/nicobailon))
+- Fixed editor multi-line insertion handling and lastAction tracking ([#945](https://github.com/badlogic/companion-mono/pull/945) by [@Perlence](https://github.com/Perlence))
+- Fixed editor word wrapping to reserve a cursor column ([#934](https://github.com/badlogic/companion-mono/pull/934) by [@Perlence](https://github.com/Perlence))
+- Fixed editor word wrapping to use single-pass backtracking for whitespace handling ([#924](https://github.com/badlogic/companion-mono/pull/924) by [@Perlence](https://github.com/Perlence))
 - Fixed Kitty image ID allocation and cleanup to prevent image ID collisions between modules
 
 ## [0.49.3] - 2026-01-22
 
 ### Added
 
-- `codeBlockIndent` property on `MarkdownTheme` to customize code block content indentation (default: 2 spaces) ([#855](https://github.com/badlogic/pi-mono/pull/855) by [@terrorobe](https://github.com/terrorobe))
-- Added Alt+Delete as hotkey for delete word forwards ([#878](https://github.com/badlogic/pi-mono/pull/878) by [@Perlence](https://github.com/Perlence))
+- `codeBlockIndent` property on `MarkdownTheme` to customize code block content indentation (default: 2 spaces) ([#855](https://github.com/badlogic/companion-mono/pull/855) by [@terrorobe](https://github.com/terrorobe))
+- Added Alt+Delete as hotkey for delete word forwards ([#878](https://github.com/badlogic/companion-mono/pull/878) by [@Perlence](https://github.com/Perlence))
 
 ### Changed
 
-- Fuzzy matching now scores consecutive matches higher and penalizes gaps more heavily for better relevance ([#860](https://github.com/badlogic/pi-mono/pull/860) by [@mitsuhiko](https://github.com/mitsuhiko))
+- Fuzzy matching now scores consecutive matches higher and penalizes gaps more heavily for better relevance ([#860](https://github.com/badlogic/companion-mono/pull/860) by [@mitsuhiko](https://github.com/mitsuhiko))
 
 ### Fixed
 
-- Autolinked emails no longer display redundant `(mailto:...)` suffix in markdown output ([#888](https://github.com/badlogic/pi-mono/pull/888) by [@terrorobe](https://github.com/terrorobe))
+- Autolinked emails no longer display redundant `(mailto:...)` suffix in markdown output ([#888](https://github.com/badlogic/companion-mono/pull/888) by [@terrorobe](https://github.com/terrorobe))
 - Fixed viewport tracking and cursor positioning for overlays and content shrink scenarios
-- Autocomplete now allows searches with `/` characters (e.g., `folder1/folder2`) ([#882](https://github.com/badlogic/pi-mono/pull/882) by [@richardgill](https://github.com/richardgill))
+- Autocomplete now allows searches with `/` characters (e.g., `folder1/folder2`) ([#882](https://github.com/badlogic/companion-mono/pull/882) by [@richardgill](https://github.com/richardgill))
 - Directory completions for `@` file attachments no longer add trailing space, allowing continued autocomplete into subdirectories
 
 ## [0.49.2] - 2026-01-19
@@ -260,56 +260,56 @@
 
 ### Added
 
-- Added undo support to Editor with Ctrl+- hotkey. Undo coalesces consecutive word characters into one unit (fish-style). ([#831](https://github.com/badlogic/pi-mono/pull/831) by [@Perlence](https://github.com/Perlence))
-- Added legacy terminal support for Ctrl+symbol keys (Ctrl+\, Ctrl+], Ctrl+-) and their Ctrl+Alt variants. ([#831](https://github.com/badlogic/pi-mono/pull/831) by [@Perlence](https://github.com/Perlence))
+- Added undo support to Editor with Ctrl+- hotkey. Undo coalesces consecutive word characters into one unit (fish-style). ([#831](https://github.com/badlogic/companion-mono/pull/831) by [@Perlence](https://github.com/Perlence))
+- Added legacy terminal support for Ctrl+symbol keys (Ctrl+\, Ctrl+], Ctrl+-) and their Ctrl+Alt variants. ([#831](https://github.com/badlogic/companion-mono/pull/831) by [@Perlence](https://github.com/Perlence))
 
 ## [0.49.0] - 2026-01-17
 
 ### Added
 
-- Added `showHardwareCursor` getter and setter to control cursor visibility while keeping IME positioning active. ([#800](https://github.com/badlogic/pi-mono/pull/800) by [@ghoulr](https://github.com/ghoulr))
-- Added Emacs-style kill ring editing with yank and yank-pop keybindings. ([#810](https://github.com/badlogic/pi-mono/pull/810) by [@Perlence](https://github.com/Perlence))
-- Added legacy Alt+letter handling and Alt+D delete word forward support in the editor keymap. ([#810](https://github.com/badlogic/pi-mono/pull/810) by [@Perlence](https://github.com/Perlence))
+- Added `showHardwareCursor` getter and setter to control cursor visibility while keeping IME positioning active. ([#800](https://github.com/badlogic/companion-mono/pull/800) by [@ghoulr](https://github.com/ghoulr))
+- Added Emacs-style kill ring editing with yank and yank-pop keybindings. ([#810](https://github.com/badlogic/companion-mono/pull/810) by [@Perlence](https://github.com/Perlence))
+- Added legacy Alt+letter handling and Alt+D delete word forward support in the editor keymap. ([#810](https://github.com/badlogic/companion-mono/pull/810) by [@Perlence](https://github.com/Perlence))
 
 ## [0.48.0] - 2026-01-16
 
 ### Added
 
-- `EditorOptions` with optional `paddingX` for horizontal content padding, plus `getPaddingX()`/`setPaddingX()` methods ([#791](https://github.com/badlogic/pi-mono/pull/791) by [@ferologics](https://github.com/ferologics))
+- `EditorOptions` with optional `paddingX` for horizontal content padding, plus `getPaddingX()`/`setPaddingX()` methods ([#791](https://github.com/badlogic/companion-mono/pull/791) by [@ferologics](https://github.com/ferologics))
 
 ### Changed
 
-- Hardware cursor is now disabled by default for better terminal compatibility. Set `PI_HARDWARE_CURSOR=1` to enable (replaces `PI_NO_HARDWARE_CURSOR=1` which disabled it).
+- Hardware cursor is now disabled by default for better terminal compatibility. Set `COMPANION_HARDWARE_CURSOR=1` to enable (replaces `COMPANION_NO_HARDWARE_CURSOR=1` which disabled it).
 
 ### Fixed
 
-- Decode Kitty CSI-u printable sequences in the editor so shifted symbol keys (e.g., `@`, `?`) work in terminals that enable Kitty keyboard protocol ([#779](https://github.com/badlogic/pi-mono/pull/779) by [@iamd3vil](https://github.com/iamd3vil))
+- Decode Kitty CSI-u printable sequences in the editor so shifted symbol keys (e.g., `@`, `?`) work in terminals that enable Kitty keyboard protocol ([#779](https://github.com/badlogic/companion-mono/pull/779) by [@iamd3vil](https://github.com/iamd3vil))
 
 ## [0.47.0] - 2026-01-16
 
 ### Breaking Changes
 
-- `Editor` constructor now requires `TUI` as first parameter: `new Editor(tui, theme)`. This enables automatic vertical scrolling when content exceeds terminal height. ([#732](https://github.com/badlogic/pi-mono/issues/732))
+- `Editor` constructor now requires `TUI` as first parameter: `new Editor(tui, theme)`. This enables automatic vertical scrolling when content exceeds terminal height. ([#732](https://github.com/badlogic/companion-mono/issues/732))
 
 ### Added
 
-- Hardware cursor positioning for IME support in `Editor` and `Input` components. The terminal cursor now follows the text cursor position, enabling proper IME candidate window placement for CJK input. ([#719](https://github.com/badlogic/pi-mono/pull/719))
+- Hardware cursor positioning for IME support in `Editor` and `Input` components. The terminal cursor now follows the text cursor position, enabling proper IME candidate window placement for CJK input. ([#719](https://github.com/badlogic/companion-mono/pull/719))
 - `Focusable` interface for components that need hardware cursor positioning. Implement `focused: boolean` and emit `CURSOR_MARKER` in render output when focused.
 - `CURSOR_MARKER` constant and `isFocusable()` type guard exported from the package
-- Editor now supports Page Up/Down keys (Fn+Up/Down on MacBook) for scrolling through large content ([#732](https://github.com/badlogic/pi-mono/issues/732))
-- Expanded keymap coverage for terminal compatibility: added support for Home/End keys in tmux, additional modifier combinations, and improved key sequence parsing ([#752](https://github.com/badlogic/pi-mono/pull/752) by [@richardgill](https://github.com/richardgill))
+- Editor now supports Page Up/Down keys (Fn+Up/Down on MacBook) for scrolling through large content ([#732](https://github.com/badlogic/companion-mono/issues/732))
+- Expanded keymap coverage for terminal compatibility: added support for Home/End keys in tmux, additional modifier combinations, and improved key sequence parsing ([#752](https://github.com/badlogic/companion-mono/pull/752) by [@richardgill](https://github.com/richardgill))
 
 ### Fixed
 
-- Editor no longer corrupts terminal display when text exceeds screen height. Content now scrolls vertically with indicators showing lines above/below the viewport. Max height is 30% of terminal (minimum 5 lines). ([#732](https://github.com/badlogic/pi-mono/issues/732))
+- Editor no longer corrupts terminal display when text exceeds screen height. Content now scrolls vertically with indicators showing lines above/below the viewport. Max height is 30% of terminal (minimum 5 lines). ([#732](https://github.com/badlogic/companion-mono/issues/732))
 - `visibleWidth()` and `extractAnsiCode()` now handle APC escape sequences (`ESC _ ... BEL`), fixing width calculation and string slicing for strings containing cursor markers
-- SelectList now handles multi-line descriptions by replacing newlines with spaces ([#728](https://github.com/badlogic/pi-mono/pull/728) by [@richardgill](https://github.com/richardgill))
+- SelectList now handles multi-line descriptions by replacing newlines with spaces ([#728](https://github.com/badlogic/companion-mono/pull/728) by [@richardgill](https://github.com/richardgill))
 
 ## [0.46.0] - 2026-01-15
 
 ### Fixed
 
-- Keyboard shortcuts (Ctrl+C, Ctrl+D, etc.) now work on non-Latin keyboard layouts (Russian, Ukrainian, Bulgarian, etc.) in terminals supporting Kitty keyboard protocol with alternate key reporting ([#718](https://github.com/badlogic/pi-mono/pull/718) by [@dannote](https://github.com/dannote))
+- Keyboard shortcuts (Ctrl+C, Ctrl+D, etc.) now work on non-Latin keyboard layouts (Russian, Ukrainian, Bulgarian, etc.) in terminals supporting Kitty keyboard protocol with alternate key reporting ([#718](https://github.com/badlogic/companion-mono/pull/718) by [@dannote](https://github.com/dannote))
 
 ## [0.45.7] - 2026-01-13
 
@@ -317,15 +317,15 @@
 
 ### Added
 
-- `OverlayOptions` API for overlay positioning and sizing with CSS-like values: `width`, `maxHeight`, `row`, `col` accept numbers (absolute) or percentage strings (e.g., `"50%"`). Also supports `minWidth`, `anchor`, `offsetX`, `offsetY`, `margin`. ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
-- `OverlayOptions.visible` callback for responsive overlays - receives terminal dimensions, return false to hide ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
-- `showOverlay()` now returns `OverlayHandle` with `hide()`, `setHidden(boolean)`, `isHidden()` for programmatic visibility control ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
-- New exported types: `OverlayAnchor`, `OverlayHandle`, `OverlayMargin`, `OverlayOptions`, `SizeValue` ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
-- `truncateToWidth()` now accepts optional `pad` parameter to pad result with spaces to exactly `maxWidth` ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- `OverlayOptions` API for overlay positioning and sizing with CSS-like values: `width`, `maxHeight`, `row`, `col` accept numbers (absolute) or percentage strings (e.g., `"50%"`). Also supports `minWidth`, `anchor`, `offsetX`, `offsetY`, `margin`. ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- `OverlayOptions.visible` callback for responsive overlays - receives terminal dimensions, return false to hide ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- `showOverlay()` now returns `OverlayHandle` with `hide()`, `setHidden(boolean)`, `isHidden()` for programmatic visibility control ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- New exported types: `OverlayAnchor`, `OverlayHandle`, `OverlayMargin`, `OverlayOptions`, `SizeValue` ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- `truncateToWidth()` now accepts optional `pad` parameter to pad result with spaces to exactly `maxWidth` ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
 
 ### Fixed
 
-- Overlay compositing crash when rendered lines exceed terminal width due to complex ANSI/OSC sequences (e.g., hyperlinks in subagent output) ([#667](https://github.com/badlogic/pi-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
+- Overlay compositing crash when rendered lines exceed terminal width due to complex ANSI/OSC sequences (e.g., hyperlinks in subagent output) ([#667](https://github.com/badlogic/companion-mono/pull/667) by [@nicobailon](https://github.com/nicobailon))
 
 ## [0.45.5] - 2026-01-13
 
@@ -343,12 +343,12 @@
 
 ### Added
 
-- `SettingsListOptions` with `enableSearch` for fuzzy filtering in `SettingsList` ([#643](https://github.com/badlogic/pi-mono/pull/643) by [@ninlds](https://github.com/ninlds))
-- `pageUp` and `pageDown` key support with `selectPageUp`/`selectPageDown` editor actions ([#662](https://github.com/badlogic/pi-mono/pull/662) by [@aliou](https://github.com/aliou))
+- `SettingsListOptions` with `enableSearch` for fuzzy filtering in `SettingsList` ([#643](https://github.com/badlogic/companion-mono/pull/643) by [@ninlds](https://github.com/ninlds))
+- `pageUp` and `pageDown` key support with `selectPageUp`/`selectPageDown` editor actions ([#662](https://github.com/badlogic/companion-mono/pull/662) by [@aliou](https://github.com/aliou))
 
 ### Fixed
 
-- Numbered list items showing "1." for all items when code blocks break list continuity ([#660](https://github.com/badlogic/pi-mono/pull/660) by [@ogulcancelik](https://github.com/ogulcancelik))
+- Numbered list items showing "1." for all items when code blocks break list continuity ([#660](https://github.com/badlogic/companion-mono/pull/660) by [@ogulcancelik](https://github.com/ogulcancelik))
 
 ## [0.43.0] - 2026-01-11
 
@@ -359,17 +359,17 @@
 
 ### Fixed
 
-- Cursor now moves to end of content on exit, preventing status line from being overwritten ([#629](https://github.com/badlogic/pi-mono/pull/629) by [@tallshort](https://github.com/tallshort))
+- Cursor now moves to end of content on exit, preventing status line from being overwritten ([#629](https://github.com/badlogic/companion-mono/pull/629) by [@tallshort](https://github.com/tallshort))
 - Reset ANSI styles after each rendered line to prevent style leakage
 
 ## [0.42.5] - 2026-01-11
 
 ### Fixed
 
-- Reduced flicker by only re-rendering changed lines ([#617](https://github.com/badlogic/pi-mono/pull/617) by [@ogulcancelik](https://github.com/ogulcancelik))
+- Reduced flicker by only re-rendering changed lines ([#617](https://github.com/badlogic/companion-mono/pull/617) by [@ogulcancelik](https://github.com/ogulcancelik))
 - Cursor position tracking when content shrinks with unchanged remaining lines
-- TUI renders with wrong dimensions after suspend/resume if terminal was resized while suspended ([#599](https://github.com/badlogic/pi-mono/issues/599))
-- Pasted content containing Kitty key release patterns (e.g., `:3F` in MAC addresses) was incorrectly filtered out ([#623](https://github.com/badlogic/pi-mono/pull/623) by [@ogulcancelik](https://github.com/ogulcancelik))
+- TUI renders with wrong dimensions after suspend/resume if terminal was resized while suspended ([#599](https://github.com/badlogic/companion-mono/issues/599))
+- Pasted content containing Kitty key release patterns (e.g., `:3F` in MAC addresses) was incorrectly filtered out ([#623](https://github.com/badlogic/companion-mono/pull/623) by [@ogulcancelik](https://github.com/ogulcancelik))
 
 ## [0.42.4] - 2026-01-10
 
@@ -393,7 +393,7 @@
 
 ### Added
 
-- **Experimental:** Overlay compositing for `ctx.ui.custom()` with `{ overlay: true }` option ([#558](https://github.com/badlogic/pi-mono/pull/558) by [@nicobailon](https://github.com/nicobailon))
+- **Experimental:** Overlay compositing for `ctx.ui.custom()` with `{ overlay: true }` option ([#558](https://github.com/badlogic/companion-mono/pull/558) by [@nicobailon](https://github.com/nicobailon))
 
 ## [0.38.0] - 2026-01-08
 
@@ -404,7 +404,7 @@
 
 ### Fixed
 
-- Key presses no longer dropped when batched with other events over SSH ([#538](https://github.com/badlogic/pi-mono/pull/538))
+- Key presses no longer dropped when batched with other events over SSH ([#538](https://github.com/badlogic/companion-mono/pull/538))
 
 ## [0.37.8] - 2026-01-07
 
@@ -442,7 +442,7 @@
 
 ### Fixed
 
-- Crash when pasting text with trailing whitespace exceeding terminal width through Markdown rendering ([#457](https://github.com/badlogic/pi-mono/pull/457) by [@robinwander](https://github.com/robinwander))
+- Crash when pasting text with trailing whitespace exceeding terminal width through Markdown rendering ([#457](https://github.com/badlogic/companion-mono/pull/457) by [@robinwander](https://github.com/robinwander))
 
 ## [0.36.0] - 2026-01-05
 
@@ -454,24 +454,24 @@
 
 ### Added
 
-- Symbol key support in keybinding system: `SymbolKey` type with 32 symbol keys, `Key` constants (e.g., `Key.backtick`, `Key.comma`), updated `matchesKey()` and `parseKey()` to handle symbol input ([#450](https://github.com/badlogic/pi-mono/pull/450) by [@kaofelix](https://github.com/kaofelix))
+- Symbol key support in keybinding system: `SymbolKey` type with 32 symbol keys, `Key` constants (e.g., `Key.backtick`, `Key.comma`), updated `matchesKey()` and `parseKey()` to handle symbol input ([#450](https://github.com/badlogic/companion-mono/pull/450) by [@kaofelix](https://github.com/kaofelix))
 
 ## [0.34.0] - 2026-01-04
 
 ### Added
 
-- `Editor.getExpandedText()` method that returns text with paste markers expanded to their actual content ([#444](https://github.com/badlogic/pi-mono/pull/444) by [@aliou](https://github.com/aliou))
+- `Editor.getExpandedText()` method that returns text with paste markers expanded to their actual content ([#444](https://github.com/badlogic/companion-mono/pull/444) by [@aliou](https://github.com/aliou))
 
 ## [0.33.0] - 2026-01-04
 
 ### Breaking Changes
 
-- **Key detection functions removed**: All `isXxx()` key detection functions (`isEnter()`, `isEscape()`, `isCtrlC()`, etc.) have been removed. Use `matchesKey(data, keyId)` instead (e.g., `matchesKey(data, "enter")`, `matchesKey(data, "ctrl+c")`). This affects hooks and custom tools that use `ctx.ui.custom()` with keyboard input handling. ([#405](https://github.com/badlogic/pi-mono/pull/405))
+- **Key detection functions removed**: All `isXxx()` key detection functions (`isEnter()`, `isEscape()`, `isCtrlC()`, etc.) have been removed. Use `matchesKey(data, keyId)` instead (e.g., `matchesKey(data, "enter")`, `matchesKey(data, "ctrl+c")`). This affects hooks and custom tools that use `ctx.ui.custom()` with keyboard input handling. ([#405](https://github.com/badlogic/companion-mono/pull/405))
 
 ### Added
 
-- `Editor.insertTextAtCursor(text)` method for programmatic text insertion ([#419](https://github.com/badlogic/pi-mono/issues/419))
-- `EditorKeybindingsManager` for configurable editor keybindings. Components now use `matchesKey()` and keybindings manager instead of individual `isXxx()` functions. ([#405](https://github.com/badlogic/pi-mono/pull/405) by [@hjanuschka](https://github.com/hjanuschka))
+- `Editor.insertTextAtCursor(text)` method for programmatic text insertion ([#419](https://github.com/badlogic/companion-mono/issues/419))
+- `EditorKeybindingsManager` for configurable editor keybindings. Components now use `matchesKey()` and keybindings manager instead of individual `isXxx()` functions. ([#405](https://github.com/badlogic/companion-mono/pull/405) by [@hjanuschka](https://github.com/hjanuschka))
 
 ### Changed
 
@@ -483,7 +483,7 @@
 
 ### Fixed
 
-- Slash command autocomplete now triggers for commands starting with `.`, `-`, or `_` (e.g., `/.land`, `/-foo`) ([#422](https://github.com/badlogic/pi-mono/issues/422))
+- Slash command autocomplete now triggers for commands starting with `.`, `-`, or `_` (e.g., `/.land`, `/-foo`) ([#422](https://github.com/badlogic/companion-mono/issues/422))
 
 ## [0.32.1] - 2026-01-03
 
@@ -491,17 +491,17 @@
 
 ### Changed
 
-- Editor component now uses word wrapping instead of character-level wrapping for better readability ([#382](https://github.com/badlogic/pi-mono/pull/382) by [@nickseelert](https://github.com/nickseelert))
+- Editor component now uses word wrapping instead of character-level wrapping for better readability ([#382](https://github.com/badlogic/companion-mono/pull/382) by [@nickseelert](https://github.com/nickseelert))
 
 ### Fixed
 
-- Shift+Space, Shift+Backspace, and Shift+Delete now work correctly in Kitty-protocol terminals (Kitty, WezTerm, etc.) instead of being silently ignored ([#411](https://github.com/badlogic/pi-mono/pull/411) by [@nathyong](https://github.com/nathyong))
+- Shift+Space, Shift+Backspace, and Shift+Delete now work correctly in Kitty-protocol terminals (Kitty, WezTerm, etc.) instead of being silently ignored ([#411](https://github.com/badlogic/companion-mono/pull/411) by [@nathyong](https://github.com/nathyong))
 
 ## [0.31.1] - 2026-01-02
 
 ### Fixed
 
-- `visibleWidth()` now strips OSC 8 hyperlink sequences, fixing text wrapping for clickable links ([#396](https://github.com/badlogic/pi-mono/pull/396) by [@Cursivez](https://github.com/Cursivez))
+- `visibleWidth()` now strips OSC 8 hyperlink sequences, fixing text wrapping for clickable links ([#396](https://github.com/badlogic/companion-mono/pull/396) by [@Cursivez](https://github.com/Cursivez))
 
 ## [0.31.0] - 2026-01-02
 
@@ -515,22 +515,22 @@
 ### Changed
 
 - README.md completely rewritten with accurate component documentation, theme interfaces, and examples
-- `visibleWidth()` reimplemented with grapheme-based width calculation, 10x faster on Bun and ~15% faster on Node ([#369](https://github.com/badlogic/pi-mono/pull/369) by [@nathyong](https://github.com/nathyong))
+- `visibleWidth()` reimplemented with grapheme-based width calculation, 10x faster on Bun and ~15% faster on Node ([#369](https://github.com/badlogic/companion-mono/pull/369) by [@nathyong](https://github.com/nathyong))
 
 ### Fixed
 
-- Markdown component now renders HTML tags as plain text instead of silently dropping them ([#359](https://github.com/badlogic/pi-mono/issues/359))
-- Crash in `visibleWidth()` and grapheme iteration when encountering undefined code points ([#372](https://github.com/badlogic/pi-mono/pull/372) by [@HACKE-RC](https://github.com/HACKE-RC))
-- ZWJ emoji sequences (rainbow flag, family, etc.) now render with correct width instead of being split into multiple characters ([#369](https://github.com/badlogic/pi-mono/pull/369) by [@nathyong](https://github.com/nathyong))
+- Markdown component now renders HTML tags as plain text instead of silently dropping them ([#359](https://github.com/badlogic/companion-mono/issues/359))
+- Crash in `visibleWidth()` and grapheme iteration when encountering undefined code points ([#372](https://github.com/badlogic/companion-mono/pull/372) by [@HACKE-RC](https://github.com/HACKE-RC))
+- ZWJ emoji sequences (rainbow flag, family, etc.) now render with correct width instead of being split into multiple characters ([#369](https://github.com/badlogic/companion-mono/pull/369) by [@nathyong](https://github.com/nathyong))
 
 ## [0.29.0] - 2025-12-25
 
 ### Added
 
-- **Auto-space before pasted file paths**: When pasting a file path (starting with `/`, `~`, or `.`) and the cursor is after a word character, a space is automatically prepended for better readability. Useful when dragging screenshots from macOS. ([#307](https://github.com/badlogic/pi-mono/pull/307) by [@mitsuhiko](https://github.com/mitsuhiko))
-- **Word navigation for Input component**: Added Ctrl+Left/Right and Alt+Left/Right support for word-by-word cursor movement. ([#306](https://github.com/badlogic/pi-mono/pull/306) by [@kim0](https://github.com/kim0))
-- **Full Unicode input**: Input component now accepts Unicode characters beyond ASCII. ([#306](https://github.com/badlogic/pi-mono/pull/306) by [@kim0](https://github.com/kim0))
+- **Auto-space before pasted file paths**: When pasting a file path (starting with `/`, `~`, or `.`) and the cursor is after a word character, a space is automatically prepended for better readability. Useful when dragging screenshots from macOS. ([#307](https://github.com/badlogic/companion-mono/pull/307) by [@mitsuhiko](https://github.com/mitsuhiko))
+- **Word navigation for Input component**: Added Ctrl+Left/Right and Alt+Left/Right support for word-by-word cursor movement. ([#306](https://github.com/badlogic/companion-mono/pull/306) by [@kim0](https://github.com/kim0))
+- **Full Unicode input**: Input component now accepts Unicode characters beyond ASCII. ([#306](https://github.com/badlogic/companion-mono/pull/306) by [@kim0](https://github.com/kim0))
 
 ### Fixed
 
-- **Readline-style Ctrl+W**: Now skips trailing whitespace before deleting the preceding word, matching standard readline behavior. ([#306](https://github.com/badlogic/pi-mono/pull/306) by [@kim0](https://github.com/kim0))
+- **Readline-style Ctrl+W**: Now skips trailing whitespace before deleting the preceding word, matching standard readline behavior. ([#306](https://github.com/badlogic/companion-mono/pull/306) by [@kim0](https://github.com/kim0))

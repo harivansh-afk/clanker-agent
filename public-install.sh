@@ -3,18 +3,18 @@
 set -euo pipefail
 
 # Defaults
-REPO="${PI_REPO:-${CO_MONO_REPO:-getcompanion-ai/co-mono}}"
-VERSION="${PI_VERSION:-${CO_MONO_VERSION:-latest}}"
-INSTALL_DIR="${PI_INSTALL_DIR:-${CO_MONO_INSTALL_DIR:-$HOME/.pi}}"
-BIN_DIR="${PI_BIN_DIR:-${CO_MONO_BIN_DIR:-$HOME/.local/bin}}"
-AGENT_DIR="${PI_AGENT_DIR:-${CO_MONO_AGENT_DIR:-$INSTALL_DIR/agent}}"
-SERVICE_NAME="${PI_SERVICE_NAME:-${CO_MONO_SERVICE_NAME:-pi}}"
-FALLBACK_TO_SOURCE="${PI_FALLBACK_TO_SOURCE:-${CO_MONO_FALLBACK_TO_SOURCE:-1}}"
-SKIP_REINSTALL="${PI_SKIP_REINSTALL:-${CO_MONO_SKIP_REINSTALL:-0}}"
-RUN_INSTALL_PACKAGES="${PI_INSTALL_PACKAGES:-${CO_MONO_INSTALL_PACKAGES:-1}}"
-SETUP_DAEMON="${PI_SETUP_DAEMON:-${CO_MONO_SETUP_DAEMON:-0}}"
-START_DAEMON="${PI_START_DAEMON:-${CO_MONO_START_DAEMON:-0}}"
-SKIP_SERVICE="${PI_SKIP_SERVICE:-${CO_MONO_SKIP_SERVICE:-0}}"
+REPO="${COMPANION_REPO:-${CO_MONO_REPO:-getcompanion-ai/co-mono}}"
+VERSION="${COMPANION_VERSION:-${CO_MONO_VERSION:-latest}}"
+INSTALL_DIR="${COMPANION_INSTALL_DIR:-${CO_MONO_INSTALL_DIR:-$HOME/.companion}}"
+BIN_DIR="${COMPANION_BIN_DIR:-${CO_MONO_BIN_DIR:-$HOME/.local/bin}}"
+AGENT_DIR="${COMPANION_AGENT_DIR:-${CO_MONO_AGENT_DIR:-$INSTALL_DIR/agent}}"
+SERVICE_NAME="${COMPANION_SERVICE_NAME:-${CO_MONO_SERVICE_NAME:-companion}}"
+FALLBACK_TO_SOURCE="${COMPANION_FALLBACK_TO_SOURCE:-${CO_MONO_FALLBACK_TO_SOURCE:-1}}"
+SKIP_REINSTALL="${COMPANION_SKIP_REINSTALL:-${CO_MONO_SKIP_REINSTALL:-0}}"
+RUN_INSTALL_PACKAGES="${COMPANION_INSTALL_PACKAGES:-${CO_MONO_INSTALL_PACKAGES:-1}}"
+SETUP_DAEMON="${COMPANION_SETUP_DAEMON:-${CO_MONO_SETUP_DAEMON:-0}}"
+START_DAEMON="${COMPANION_START_DAEMON:-${CO_MONO_START_DAEMON:-0}}"
+SKIP_SERVICE="${COMPANION_SKIP_SERVICE:-${CO_MONO_SKIP_SERVICE:-0}}"
 SERVICE_MANAGER=""
 SERVICE_UNIT_PATH=""
 SERVICE_LABEL=""
@@ -22,8 +22,8 @@ SERVICE_STDOUT_LOG=""
 SERVICE_STDERR_LOG=""
 
 DEFAULT_PACKAGES=(
-  "npm:@e9n/pi-channels"
-  "npm:pi-teams"
+  "npm:@e9n/companion-channels"
+  "npm:companion-teams"
 )
 
 declare -a EXTRA_PACKAGES=()
@@ -51,8 +51,8 @@ Usage:
 Options:
   --repo <owner/repo>         Override GitHub repo for install (default: getcompanion-ai/co-mono)
   --version <tag>|latest      Release tag to install (default: latest)
-  --install-dir <path>        Target directory for release contents (default: ~/.pi)
-  --bin-dir <path>            Directory for pi launcher (default: ~/.local/bin)
+  --install-dir <path>        Target directory for release contents (default: ~/.companion)
+  --bin-dir <path>            Directory for companion launcher (default: ~/.local/bin)
   --agent-dir <path>          Agent config directory (default: <install-dir>/agent)
   --package <pkg>             Add package to installation list (repeatable)
   --no-default-packages        Skip default packages list
@@ -65,12 +65,12 @@ Options:
   --help
 
 Env vars:
-  PI_INSTALL_PACKAGES=0/1
-  PI_SETUP_DAEMON=0/1
-  PI_START_DAEMON=0/1
-  PI_FALLBACK_TO_SOURCE=0/1
-  PI_SKIP_REINSTALL=1
-  PI_SERVICE_NAME=<name>
+  COMPANION_INSTALL_PACKAGES=0/1
+  COMPANION_SETUP_DAEMON=0/1
+  COMPANION_START_DAEMON=0/1
+  COMPANION_FALLBACK_TO_SOURCE=0/1
+  COMPANION_SKIP_REINSTALL=1
+  COMPANION_SERVICE_NAME=<name>
 EOF
 }
 
@@ -154,7 +154,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "$FALLBACK_TO_SOURCE" != "0" && "$FALLBACK_TO_SOURCE" != "1" ]]; then
-  fail "PI_FALLBACK_TO_SOURCE must be 0 or 1"
+  fail "COMPANION_FALLBACK_TO_SOURCE must be 0 or 1"
 fi
 
 if [[ -d "$INSTALL_DIR" && "$SKIP_REINSTALL" != "1" ]]; then
@@ -162,7 +162,7 @@ if [[ -d "$INSTALL_DIR" && "$SKIP_REINSTALL" != "1" ]]; then
 fi
 
 if [[ -z "${SERVICE_NAME:-}" ]]; then
-  SERVICE_NAME="pi"
+  SERVICE_NAME="companion"
 fi
 
 download_file() {
@@ -235,9 +235,9 @@ resolve_release_tag() {
 
 platform_assets() {
   if [[ "$PLATFORM" == "windows"* ]]; then
-    echo "pi-${PLATFORM}.zip"
+    echo "companion-${PLATFORM}.zip"
   else
-    echo "pi-${PLATFORM}.tar.gz"
+    echo "companion-${PLATFORM}.tar.gz"
   fi
 }
 
@@ -275,7 +275,7 @@ write_launcher() {
 #!/usr/bin/env bash
 set -euo pipefail
 
-export PI_CODING_AGENT_DIR="${AGENT_DIR}"
+export COMPANION_CODING_AGENT_DIR="${AGENT_DIR}"
 export CO_MONO_AGENT_DIR="${AGENT_DIR}"
 
 exec "${runtime_dir}" "\$@"
@@ -333,7 +333,7 @@ install_packages() {
 
   while IFS= read -r package; do
     [[ -z "$package" ]] && continue
-    if "$BIN_DIR/pi" install "$package" >/dev/null 2>&1; then
+    if "$BIN_DIR/companion" install "$package" >/dev/null 2>&1; then
       log "Installed package: $package"
     else
       log "Could not install ${package} now. It will install on first run when available."
@@ -366,14 +366,14 @@ write_service_file() {
   <string>${label}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>${BIN_DIR}/pi</string>
+    <string>${BIN_DIR}/companion</string>
     <string>daemon</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
     <key>CO_MONO_AGENT_DIR</key>
     <string>${AGENT_DIR}</string>
-    <key>PI_CODING_AGENT_DIR</key>
+    <key>COMPANION_CODING_AGENT_DIR</key>
     <string>${AGENT_DIR}</string>
   </dict>
   <key>KeepAlive</key>
@@ -408,14 +408,14 @@ EOF
   local service_path="$HOME/.config/systemd/user/${SERVICE_NAME}.service"
   cat > "$service_path" <<EOF
 [Unit]
-Description=pi daemon
+Description=companion daemon
 After=network-online.target
 
 [Service]
 Type=simple
 Environment=CO_MONO_AGENT_DIR=${AGENT_DIR}
-Environment=PI_CODING_AGENT_DIR=${AGENT_DIR}
-ExecStart=${BIN_DIR}/pi daemon
+Environment=COMPANION_CODING_AGENT_DIR=${AGENT_DIR}
+ExecStart=${BIN_DIR}/companion daemon
 Restart=always
 RestartSec=5
 
@@ -450,13 +450,13 @@ start_daemon_service() {
 print_next_steps() {
   echo
   log "Installed to: $INSTALL_DIR"
-  log "Launcher: $BIN_DIR/pi"
+  log "Launcher: $BIN_DIR/companion"
   echo
   echo "Run in terminal:"
-  echo "  pi"
+  echo "  companion"
   echo
   echo "Run always-on:"
-  echo "  pi daemon"
+  echo "  companion daemon"
   echo
   if [[ "$SETUP_DAEMON" == "1" ]] && [[ "$SKIP_SERVICE" == "0" ]]; then
     if [[ "$SERVICE_MANAGER" == "launchd" ]]; then
@@ -505,15 +505,15 @@ bootstrap_from_source() {
   (
     cd "$source_dir"
     CO_MONO_AGENT_DIR="$AGENT_DIR" \
-    PI_CODING_AGENT_DIR="$AGENT_DIR" \
+    COMPANION_CODING_AGENT_DIR="$AGENT_DIR" \
       ./install.sh
   )
 
-  if [[ ! -x "$source_dir/pi" ]]; then
-    fail "pi executable not found in source checkout."
+  if [[ ! -x "$source_dir/companion" ]]; then
+    fail "companion executable not found in source checkout."
   fi
 
-  write_launcher "$BIN_DIR/pi" "$source_dir/pi"
+  write_launcher "$BIN_DIR/companion" "$source_dir/companion"
   ensure_agent_settings
   install_packages
 }
@@ -547,9 +547,9 @@ install_from_release() {
 
   local release_dir
   local install_binary
-  if [[ -d "$workdir/pi" ]]; then
-    release_dir="$workdir/pi"
-  elif [[ -f "$workdir/pi" ]]; then
+  if [[ -d "$workdir/companion" ]]; then
+    release_dir="$workdir/companion"
+  elif [[ -f "$workdir/companion" ]]; then
     release_dir="$workdir"
   fi
 
@@ -561,19 +561,19 @@ install_from_release() {
   rm -rf "$INSTALL_DIR"/*
   cp -R "$release_dir/." "$INSTALL_DIR/"
 
-  if [[ -x "$INSTALL_DIR/pi" ]]; then
-    install_binary="$INSTALL_DIR/pi"
+  if [[ -x "$INSTALL_DIR/companion" ]]; then
+    install_binary="$INSTALL_DIR/companion"
   else
     return 1
   fi
 
   # Runtime launcher with fixed agent dir env.
   local launcher_target="$install_binary"
-  if [[ "$install_binary" != "$INSTALL_DIR/pi" ]]; then
-    write_launcher "$INSTALL_DIR/pi" "$install_binary"
-    launcher_target="$INSTALL_DIR/pi"
+  if [[ "$install_binary" != "$INSTALL_DIR/companion" ]]; then
+    write_launcher "$INSTALL_DIR/companion" "$install_binary"
+    launcher_target="$INSTALL_DIR/companion"
   fi
-  write_launcher "$BIN_DIR/pi" "$launcher_target"
+  write_launcher "$BIN_DIR/companion" "$launcher_target"
   ensure_agent_settings
   install_packages
   rm -rf "$workdir"

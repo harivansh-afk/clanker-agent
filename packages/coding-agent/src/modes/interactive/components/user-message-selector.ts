@@ -5,7 +5,7 @@ import {
   Spacer,
   Text,
   truncateToWidth,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

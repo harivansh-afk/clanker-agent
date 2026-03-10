@@ -5,10 +5,10 @@
  *
  * Test with: npx tsx src/cli-new.ts [args...]
  */
-process.title = "pi";
+process.title = "companion";
 
-import { bedrockProviderModule } from "@mariozechner/pi-ai/bedrock-provider";
-import { setBedrockProviderModule } from "@mariozechner/pi-ai";
+import { bedrockProviderModule } from "@mariozechner/companion-ai/bedrock-provider";
+import { setBedrockProviderModule } from "@mariozechner/companion-ai";
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
 import { main } from "./main.js";
 
