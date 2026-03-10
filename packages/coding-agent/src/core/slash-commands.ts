@@ -40,5 +40,5 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
     name: "reload",
     description: "Reload extensions, skills, prompts, and themes",
   },
-  { name: "quit", description: "Quit pi" },
+  { name: "quit", description: "Quit companion" },
 ];

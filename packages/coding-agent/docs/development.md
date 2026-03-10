@@ -5,8 +5,8 @@ See [AGENTS.md](../../../AGENTS.md) for additional guidelines.
 ## Setup
 
 ```bash
-git clone https://github.com/badlogic/pi-mono
-cd pi-mono
+git clone https://github.com/badlogic/companion-mono
+cd companion-mono
 npm install
 npm run build
 ```
@@ -14,7 +14,7 @@ npm run build
 Run from source:
 
 ```bash
-./pi-test.sh
+./companion-test.sh
 ```
 
 ## Forking / Rebranding
@@ -23,9 +23,9 @@ Configure via `package.json`:
 
 ```json
 {
-  "piConfig": {
-    "name": "pi",
-    "configDir": ".pi"
+  "companionConfig": {
+    "name": "companion",
+    "configDir": ".companion"
   }
 }
 ```
@@ -46,7 +46,7 @@ Never use `__dirname` directly for package assets.
 
 ## Debug Command
 
-`/debug` (hidden) writes to `~/.pi/agent/pi-debug.log`:
+`/debug` (hidden) writes to `~/.companion/agent/companion-debug.log`:
 
 - Rendered TUI lines with ANSI codes
 - Last messages sent to the LLM

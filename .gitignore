@@ -23,13 +23,13 @@ packages/*/dist-firefox/
 .npm/
 coverage/
 .nyc_output/
-.pi_config/
+.companion_config/
 tui-debug.log
 compaction-results/
 .opencode/
 syntax.jsonl
 out.jsonl
-pi-*.html
+companion-*.html
 out.html
 packages/coding-agent/binaries/
 todo.md

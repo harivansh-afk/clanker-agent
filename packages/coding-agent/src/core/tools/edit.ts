@@ -1,4 +1,4 @@
-import type { AgentTool } from "@mariozechner/pi-agent-core";
+import type { AgentTool } from "@mariozechner/companion-agent-core";
 import { type Static, Type } from "@sinclair/typebox";
 import { constants } from "fs";
 import {

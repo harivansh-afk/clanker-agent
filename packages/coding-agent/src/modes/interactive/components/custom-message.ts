@@ -1,5 +1,5 @@
-import type { TextContent } from "@mariozechner/pi-ai";
-import type { Component } from "@mariozechner/pi-tui";
+import type { TextContent } from "@mariozechner/companion-ai";
+import type { Component } from "@mariozechner/companion-tui";
 import {
   Box,
   Container,
@@ -7,7 +7,7 @@ import {
   type MarkdownTheme,
   Spacer,
   Text,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import type { MessageRenderer } from "../../../core/extensions/types.js";
 import type { CustomMessage } from "../../../core/messages.js";
 import { getMarkdownTheme, theme } from "../theme/theme.js";

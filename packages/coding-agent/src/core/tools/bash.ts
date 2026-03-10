@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTool } from "@mariozechner/pi-agent-core";
+import type { AgentTool } from "@mariozechner/companion-agent-core";
 import { type Static, Type } from "@sinclair/typebox";
 import { spawn } from "child_process";
 import {
@@ -23,7 +23,7 @@ import {
  */
 function getTempFilePath(): string {
   const id = randomBytes(8).toString("hex");
-  return join(tmpdir(), `pi-bash-${id}.log`);
+  return join(tmpdir(), `companion-bash-${id}.log`);
 }
 
 /**

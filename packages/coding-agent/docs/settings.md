@@ -1,11 +1,11 @@
 # Settings
 
-Pi uses JSON settings files with project settings overriding global settings.
+Companion uses JSON settings files with project settings overriding global settings.
 
 | Location                    | Scope                       |
 | --------------------------- | --------------------------- |
-| `~/.pi/agent/settings.json` | Global (all projects)       |
-| `.pi/settings.json`         | Project (current directory) |
+| `~/.companion/agent/settings.json` | Global (all projects)       |
+| `.companion/settings.json`         | Project (current directory) |
 
 Edit directly or use `/settings` for common options.
 
@@ -140,7 +140,7 @@ When a provider requests a retry delay longer than `maxDelayMs` (e.g., Google's 
 
 These settings define where to load extensions, skills, prompts, and themes from.
 
-Paths in `~/.pi/agent/settings.json` resolve relative to `~/.pi/agent`. Paths in `.pi/settings.json` resolve relative to `.pi`. Absolute paths and `~` are supported.
+Paths in `~/.companion/agent/settings.json` resolve relative to `~/.companion/agent`. Paths in `.companion/settings.json` resolve relative to `.companion`. Absolute paths and `~` are supported.
 
 | Setting               | Type     | Default | Description                                |
 | --------------------- | -------- | ------- | ------------------------------------------ |
@@ -159,7 +159,7 @@ String form loads all resources from a package:
 
 ```json
 {
-  "packages": ["pi-skills", "@org/my-extension"]
+  "packages": ["companion-skills", "@org/my-extension"]
 }
 ```
 
@@ -169,7 +169,7 @@ Object form filters which resources to load:
 {
   "packages": [
     {
-      "source": "pi-skills",
+      "source": "companion-skills",
       "skills": ["brave-search", "transcribe"],
       "extensions": []
     }
@@ -197,22 +197,22 @@ See [packages.md](packages.md) for package management details.
     "maxRetries": 3
   },
   "enabledModels": ["claude-*", "gpt-4o"],
-  "packages": ["pi-skills"]
+  "packages": ["companion-skills"]
 }
 ```
 
 ## Project Overrides
 
-Project settings (`.pi/settings.json`) override global settings. Nested objects are merged:
+Project settings (`.companion/settings.json`) override global settings. Nested objects are merged:
 
 ```json
-// ~/.pi/agent/settings.json (global)
+// ~/.companion/agent/settings.json (global)
 {
   "theme": "dark",
   "compaction": { "enabled": true, "reserveTokens": 16384 }
 }
 
-// .pi/settings.json (project)
+// .companion/settings.json (project)
 {
   "compaction": { "reserveTokens": 8192 }
 }

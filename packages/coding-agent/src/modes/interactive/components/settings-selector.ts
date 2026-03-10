@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@mariozechner/pi-agent-core";
-import type { Transport } from "@mariozechner/pi-ai";
+import type { ThinkingLevel } from "@mariozechner/companion-agent-core";
+import type { Transport } from "@mariozechner/companion-ai";
 import {
   Container,
   getCapabilities,
@@ -9,7 +9,7 @@ import {
   SettingsList,
   Spacer,
   Text,
-} from "@mariozechner/pi-tui";
+} from "@mariozechner/companion-tui";
 import {
   getSelectListTheme,
   getSettingsListTheme,

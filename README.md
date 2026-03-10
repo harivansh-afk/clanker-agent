@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://shittycodingagent.ai">
-    <img src="https://shittycodingagent.ai/logo.svg" alt="pi logo" width="128">
+    <img src="https://shittycodingagent.ai/logo.svg" alt="companion logo" width="128">
   </a>
 </p>
 <p align="center">
@@ -8,26 +8,26 @@
   <a href="https://github.com/getcompanion-ai/co-mono/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/getcompanion-ai/co-mono/ci.yml?style=flat-square&branch=main" /></a>
 </p>
 <p align="center">
-  <a href="https://pi.dev">pi.dev</a> domain graciously donated by
+  <a href="https://companion.dev">companion.dev</a> domain graciously donated by
   <br /><br />
   <a href="https://exe.dev"><img src="packages/coding-agent/docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
 
-# pi
+# companion
 
-> **Looking for the pi coding agent?** See **[packages/coding-agent](packages/coding-agent)** for installation and usage.
+> **Looking for the companion coding agent?** See **[packages/coding-agent](packages/coding-agent)** for installation and usage.
 
-Tools for building AI agents and running the pi coding agent.
+Tools for building AI agents and running the companion coding agent.
 
 ## Packages
 
 | Package                                                    | Description                                                      |
 | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| **[@mariozechner/pi-ai](packages/ai)**                     | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@mariozechner/pi-agent-core](packages/agent)**          | Agent runtime with tool calling and state management             |
-| **[@mariozechner/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI                                     |
-| **[@mariozechner/pi-tui](packages/tui)**                   | Terminal UI library with differential rendering                  |
-| **[@mariozechner/pi-web-ui](packages/web-ui)**             | Web components for AI chat interfaces                            |
+| **[@mariozechner/companion-ai](packages/ai)**                     | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
+| **[@mariozechner/companion-agent-core](packages/agent)**          | Agent runtime with tool calling and state management             |
+| **[@mariozechner/companion-coding-agent](packages/coding-agent)** | Interactive coding agent CLI                                     |
+| **[@mariozechner/companion-tui](packages/tui)**                   | Terminal UI library with differential rendering                  |
+| **[@mariozechner/companion-web-ui](packages/web-ui)**             | Web components for AI chat interfaces                            |
 
 ## Contributing
 
@@ -52,15 +52,15 @@ curl -fsSL https://raw.githubusercontent.com/getcompanion-ai/co-mono/main/public
 This installer:
 
 - Downloads the latest release (or falls back to source when needed),
-- writes `~/.local/bin/pi` launcher,
-- populates `~/.pi/agent/settings.json` with package list,
+- writes `~/.local/bin/companion` launcher,
+- populates `~/.companion/agent/settings.json` with package list,
 - installs packages (if `npm` is available),
-- and can install a user service for `pi daemon` so it stays alive (`systemd` on Linux, `launchd` on macOS).
+- and can install a user service for `companion daemon` so it stays alive (`systemd` on Linux, `launchd` on macOS).
 
 Preinstalled package sources are:
 
 ```json
-["npm:@e9n/pi-channels", "npm:pi-teams"]
+["npm:@e9n/companion-channels", "npm:companion-teams"]
 ```
 
 If `npm` is available, it also installs these packages during install.
@@ -68,7 +68,7 @@ If `npm` is available, it also installs these packages during install.
 If no release asset is found, the installer falls back to source.
 
 ```bash
-PI_FALLBACK_TO_SOURCE=0 \
+COMPANION_FALLBACK_TO_SOURCE=0 \
   curl -fsSL https://raw.githubusercontent.com/getcompanion-ai/co-mono/main/public-install.sh | bash -s -- --daemon --start
 ```
 
@@ -89,27 +89,27 @@ cd co-mono
 Run:
 
 ```bash
-./pi
+./companion
 ```
 
 Run in background with extensions active:
 
 ```bash
-./pi daemon
+./companion daemon
 ```
 
-For a user systemd setup, create `~/.config/systemd/user/pi.service` with:
+For a user systemd setup, create `~/.config/systemd/user/companion.service` with:
 
 ```ini
 [Unit]
-Description=pi daemon
+Description=companion daemon
 After=network-online.target
 
 [Service]
 Type=simple
-Environment=CO_MONO_AGENT_DIR=%h/.pi/agent
-Environment=PI_CODING_AGENT_DIR=%h/.pi/agent
-ExecStart=/absolute/path/to/repo/pi daemon
+Environment=CO_MONO_AGENT_DIR=%h/.companion/agent
+Environment=COMPANION_CODING_AGENT_DIR=%h/.companion/agent
+ExecStart=/absolute/path/to/repo/companion daemon
 Restart=always
 RestartSec=5
 
@@ -121,7 +121,7 @@ Then enable:
 
 ```bash
 systemctl --user daemon-reload
-systemctl --user enable --now pi
+systemctl --user enable --now companion
 ```
 
 On macOS, `public-install.sh --daemon --start` now provisions a per-user `launchd` agent automatically.
@@ -140,7 +140,7 @@ npm install          # Install all dependencies
 npm run build        # Build all packages
 npm run check        # Lint, format, and type check
 ./test.sh            # Run tests (skips LLM-dependent tests without API keys)
-./pi-test.sh         # Run pi from sources (must be run from repo root)
+./companion-test.sh         # Run companion from sources (must be run from repo root)
 ```
 
 > **Note:** `npm run check` requires `npm run build` to be run first. The web-ui package uses `tsc` which needs compiled `.d.ts` files from dependencies.

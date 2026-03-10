@@ -61,7 +61,7 @@ let activeGatewayRuntime: GatewayRuntime | null = null;
 
 type JsonRecord = Record<string, unknown>;
 
-type PiChannelsSettings = JsonRecord & {
+type CompanionChannelsSettings = JsonRecord & {
   adapters?: Record<string, JsonRecord>;
   bridge?: JsonRecord;
   slack?: JsonRecord;
@@ -1031,7 +1031,7 @@ export class GatewayRuntime {
       path.slice(this.config.webhook.basePath.length).replace(/^\/+/, "") ||
       "default";
     if (this.config.webhook.secret) {
-      const presentedSecret = request.headers["x-pi-webhook-secret"];
+      const presentedSecret = request.headers["x-companion-webhook-secret"];
       if (presentedSecret !== this.config.webhook.secret) {
         this.writeJson(response, 401, { error: "Invalid webhook secret" });
         return;
@@ -1388,7 +1388,7 @@ export class GatewayRuntime {
     this.primarySession.settingsManager.applyOverrides(patch as Settings);
   }
 
-  private getPiChannelsSettings(): PiChannelsSettings {
+  private getCompanionChannelsSettings(): CompanionChannelsSettings {
     const globalSettings = this.primarySession.settingsManager.getGlobalSettings();
     const projectSettings =
       this.primarySession.settingsManager.getProjectSettings();
@@ -1396,12 +1396,12 @@ export class GatewayRuntime {
       isRecord(globalSettings) ? globalSettings : {},
       isRecord(projectSettings) ? projectSettings : {},
     );
-    const piChannels = mergedSettings["pi-channels"];
-    return isRecord(piChannels) ? (piChannels as PiChannelsSettings) : {};
+    const piChannels = mergedSettings["companion-channels"];
+    return isRecord(piChannels) ? (piChannels as CompanionChannelsSettings) : {};
   }
 
   private buildSlackChannelStatus(
-    config: PiChannelsSettings,
+    config: CompanionChannelsSettings,
     bridgeEnabled: boolean,
   ): ChannelStatus {
     const adapters = isRecord(config.adapters) ? config.adapters : {};
@@ -1419,13 +1419,13 @@ export class GatewayRuntime {
 
     if (hasConfig) {
       if (!adapter) {
-        error = 'Slack requires `pi-channels.adapters.slack = { "type": "slack" }`.';
+        error = 'Slack requires `companion-channels.adapters.slack = { "type": "slack" }`.';
       } else if (adapterType !== "slack") {
         error = 'Slack adapter type must be "slack".';
       } else if (!appToken) {
-        error = "Slack requires pi-channels.slack.appToken.";
+        error = "Slack requires companion-channels.slack.appToken.";
       } else if (!botToken) {
-        error = "Slack requires pi-channels.slack.botToken.";
+        error = "Slack requires companion-channels.slack.botToken.";
       } else {
         configured = true;
       }
@@ -1433,7 +1433,7 @@ export class GatewayRuntime {
 
     if (configured && !bridgeEnabled) {
       error =
-        "Slack is configured, but pi-channels.bridge.enabled is false, so messages will not reach the agent.";
+        "Slack is configured, but companion-channels.bridge.enabled is false, so messages will not reach the agent.";
     }
 
     return {
@@ -1447,7 +1447,7 @@ export class GatewayRuntime {
   }
 
   private buildTelegramChannelStatus(
-    config: PiChannelsSettings,
+    config: CompanionChannelsSettings,
     bridgeEnabled: boolean,
   ): ChannelStatus {
     const adapters = isRecord(config.adapters) ? config.adapters : {};
@@ -1464,14 +1464,14 @@ export class GatewayRuntime {
     if (hasConfig) {
       if (!adapter) {
         error =
-          'Telegram requires `pi-channels.adapters.telegram = { "type": "telegram", "botToken": "...", "polling": true }`.';
+          'Telegram requires `companion-channels.adapters.telegram = { "type": "telegram", "botToken": "...", "polling": true }`.';
       } else if (adapterType !== "telegram") {
         error = 'Telegram adapter type must be "telegram".';
       } else if (!botToken) {
-        error = "Telegram requires pi-channels.adapters.telegram.botToken.";
+        error = "Telegram requires companion-channels.adapters.telegram.botToken.";
       } else if (!pollingEnabled) {
         error =
-          "Telegram requires pi-channels.adapters.telegram.polling = true.";
+          "Telegram requires companion-channels.adapters.telegram.polling = true.";
       } else {
         configured = true;
       }
@@ -1479,7 +1479,7 @@ export class GatewayRuntime {
 
     if (configured && !bridgeEnabled) {
       error =
-        "Telegram is configured, but pi-channels.bridge.enabled is false, so messages will not reach the agent.";
+        "Telegram is configured, but companion-channels.bridge.enabled is false, so messages will not reach the agent.";
     }
 
     return {
@@ -1493,7 +1493,7 @@ export class GatewayRuntime {
   }
 
   private handleGetChannelsStatus(): ChannelStatus[] {
-    const config = this.getPiChannelsSettings();
+    const config = this.getCompanionChannelsSettings();
     const bridgeEnabled = config.bridge?.enabled === true;
 
     return [

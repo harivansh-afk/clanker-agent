@@ -3,8 +3,8 @@ import {
   Agent,
   type AgentMessage,
   type ThinkingLevel,
-} from "@mariozechner/pi-agent-core";
-import type { Message, Model } from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-agent-core";
+import type { Message, Model } from "@mariozechner/companion-ai";
 import { getAgentDir, getDocsPath } from "../config.js";
 import { AgentSession } from "./agent-session.js";
 import { AuthStorage } from "./auth-storage.js";
@@ -52,7 +52,7 @@ import {
 export interface CreateAgentSessionOptions {
   /** Working directory for project-local discovery. Default: process.cwd() */
   cwd?: string;
-  /** Global config directory. Default: ~/.pi/agent */
+  /** Global config directory. Default: ~/.companion/agent */
   agentDir?: string;
 
   /** Auth storage for credentials. Default: AuthStorage.create(agentDir/auth.json) */
@@ -149,7 +149,7 @@ function getDefaultAgentDir(): string {
  * const { session } = await createAgentSession();
  *
  * // With explicit model
- * import { getModel } from '@mariozechner/pi-ai';
+ * import { getModel } from '@mariozechner/companion-ai';
  * const { session } = await createAgentSession({
  *   model: getModel('anthropic', 'claude-opus-4-6'),
  *   thinkingLevel: 'high',

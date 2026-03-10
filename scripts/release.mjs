@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Release script for pi
+ * Release script for companion
  *
  * Usage: node scripts/release.mjs <major|minor|patch>
  *

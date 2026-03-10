@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
+import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import type { HistoryMessage, HistoryPart } from "./types.js";
 
 export interface GatewayTransientToolResult {

@@ -313,22 +313,22 @@ describe("DefaultPackageManager git update", () => {
         .slice(0, 8);
       const cachedDir = join(
         tmpdir(),
-        "pi-extensions",
+        "companion-extensions",
         `git-${gitHost}`,
         hash,
         gitPath,
       );
       const extensionFile = join(
         cachedDir,
-        "pi-extensions",
+        "companion-extensions",
         "session-breakdown.ts",
       );
 
       rmSync(cachedDir, { recursive: true, force: true });
-      mkdirSync(join(cachedDir, "pi-extensions"), { recursive: true });
+      mkdirSync(join(cachedDir, "companion-extensions"), { recursive: true });
       writeFileSync(
         join(cachedDir, "package.json"),
-        JSON.stringify({ pi: { extensions: ["./pi-extensions"] } }, null, 2),
+        JSON.stringify({ companion: { extensions: ["./companion-extensions"] } }, null, 2),
       );
       writeFileSync(extensionFile, "// stale");
 
@@ -353,7 +353,7 @@ describe("DefaultPackageManager git update", () => {
 
       expect(executedCommands).toContain("git fetch --prune origin");
       expect(
-        getFileContent(cachedDir, "pi-extensions/session-breakdown.ts"),
+        getFileContent(cachedDir, "companion-extensions/session-breakdown.ts"),
       ).toBe("// fresh");
     });
 
@@ -366,22 +366,22 @@ describe("DefaultPackageManager git update", () => {
         .slice(0, 8);
       const cachedDir = join(
         tmpdir(),
-        "pi-extensions",
+        "companion-extensions",
         `git-${gitHost}`,
         hash,
         gitPath,
       );
       const extensionFile = join(
         cachedDir,
-        "pi-extensions",
+        "companion-extensions",
         "session-breakdown.ts",
       );
 
       rmSync(cachedDir, { recursive: true, force: true });
-      mkdirSync(join(cachedDir, "pi-extensions"), { recursive: true });
+      mkdirSync(join(cachedDir, "companion-extensions"), { recursive: true });
       writeFileSync(
         join(cachedDir, "package.json"),
-        JSON.stringify({ pi: { extensions: ["./pi-extensions"] } }, null, 2),
+        JSON.stringify({ companion: { extensions: ["./companion-extensions"] } }, null, 2),
       );
       writeFileSync(extensionFile, "// pinned");
 
@@ -403,7 +403,7 @@ describe("DefaultPackageManager git update", () => {
 
       expect(executedCommands).toEqual([]);
       expect(
-        getFileContent(cachedDir, "pi-extensions/session-breakdown.ts"),
+        getFileContent(cachedDir, "companion-extensions/session-breakdown.ts"),
       ).toBe("// pinned");
     });
   });
@@ -418,7 +418,7 @@ describe("DefaultPackageManager git update", () => {
       // The project-scope install path should not exist before or after update
       const projectGitDir = join(
         tempDir,
-        ".pi",
+        ".companion",
         "git",
         "github.com",
         "test",

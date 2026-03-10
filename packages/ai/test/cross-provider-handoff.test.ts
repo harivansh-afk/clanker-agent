@@ -227,7 +227,7 @@ function dumpFailurePayload(params: {
   payload?: unknown;
   messages: Message[];
 }): void {
-  const filename = `/tmp/pi-handoff-${params.label}-${Date.now()}.json`;
+  const filename = `/tmp/companion-handoff-${params.label}-${Date.now()}.json`;
   const body = {
     label: params.label,
     error: params.error,

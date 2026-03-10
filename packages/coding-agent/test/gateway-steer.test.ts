@@ -12,7 +12,7 @@ function createMockSession() {
     dispose: vi.fn(),
     subscribe: vi.fn(() => () => {}),
     sessionManager: {
-      getSessionDir: () => "/tmp/pi-gateway-test",
+      getSessionDir: () => "/tmp/companion-gateway-test",
     },
   };
 }

@@ -36,8 +36,8 @@ describe("DefaultPackageManager", () => {
   let previousOfflineEnv: string | undefined;
 
   beforeEach(() => {
-    previousOfflineEnv = process.env.PI_OFFLINE;
-    delete process.env.PI_OFFLINE;
+    previousOfflineEnv = process.env.COMPANION_OFFLINE;
+    delete process.env.COMPANION_OFFLINE;
     tempDir = join(
       tmpdir(),
       `pm-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -56,9 +56,9 @@ describe("DefaultPackageManager", () => {
 
   afterEach(() => {
     if (previousOfflineEnv === undefined) {
-      delete process.env.PI_OFFLINE;
+      delete process.env.COMPANION_OFFLINE;
     } else {
-      process.env.PI_OFFLINE = previousOfflineEnv;
+      process.env.COMPANION_OFFLINE = previousOfflineEnv;
     }
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -114,8 +114,8 @@ Content`,
       );
     });
 
-    it("should resolve project paths relative to .pi", async () => {
-      const extDir = join(tempDir, ".pi", "extensions");
+    it("should resolve project paths relative to .companion", async () => {
+      const extDir = join(tempDir, ".companion", "extensions");
       mkdirSync(extDir, { recursive: true });
       const extPath = join(extDir, "project-ext.ts");
       writeFileSync(extPath, "export default function() {}");
@@ -143,7 +143,7 @@ Content`,
     });
 
     it("should auto-discover project prompts with overrides", async () => {
-      const promptsDir = join(tempDir, ".pi", "prompts");
+      const promptsDir = join(tempDir, ".companion", "prompts");
       mkdirSync(promptsDir, { recursive: true });
       const promptPath = join(promptsDir, "is.md");
       writeFileSync(promptPath, "Is prompt");
@@ -156,15 +156,15 @@ Content`,
       ).toBe(true);
     });
 
-    it("should resolve directory with package.json pi.extensions in extensions setting", async () => {
-      // Create a package with pi.extensions in package.json
+    it("should resolve directory with package.json companion.extensions in extensions setting", async () => {
+      // Create a package with companion.extensions in package.json
       const pkgDir = join(tempDir, "my-extensions-pkg");
       mkdirSync(join(pkgDir, "extensions"), { recursive: true });
       writeFileSync(
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "my-extensions-pkg",
-          pi: {
+          companion: {
             extensions: ["./extensions/clip.ts", "./extensions/cost.ts"],
           },
         }),
@@ -187,7 +187,7 @@ Content`,
 
       const result = await packageManager.resolve();
 
-      // Should find the extensions declared in package.json pi.extensions
+      // Should find the extensions declared in package.json companion.extensions
       expect(
         result.extensions.some(
           (r) => r.path === join(pkgDir, "extensions", "clip.ts") && r.enabled,
@@ -355,10 +355,10 @@ Content`,
       ).toBe(false);
     });
 
-    it("should not apply parent .gitignore to .pi auto-discovery", async () => {
-      writeFileSync(join(tempDir, ".gitignore"), ".pi\n");
+    it("should not apply parent .gitignore to .companion auto-discovery", async () => {
+      writeFileSync(join(tempDir, ".gitignore"), ".companion\n");
 
-      const skillDir = join(tempDir, ".pi", "skills", "auto-skill");
+      const skillDir = join(tempDir, ".companion", "skills", "auto-skill");
       mkdirSync(skillDir, { recursive: true });
       const skillPath = join(skillDir, "SKILL.md");
       writeFileSync(
@@ -384,14 +384,14 @@ Content`,
       ).toBe(true);
     });
 
-    it("should handle directories with pi manifest", async () => {
+    it("should handle directories with companion manifest", async () => {
       const pkgDir = join(tempDir, "my-package");
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "my-package",
-          pi: {
+          companion: {
             extensions: ["./src/index.ts"],
             skills: ["./skills"],
           },
@@ -565,7 +565,7 @@ Content`,
       expect(settings.packages?.[0]).toBe(expected);
     });
 
-    it("should store project local packages relative to .pi settings base", () => {
+    it("should store project local packages relative to .companion settings base", () => {
       const projectPkgDir = join(tempDir, "project-local-pkg");
       mkdirSync(join(projectPkgDir, "extensions"), { recursive: true });
       writeFileSync(
@@ -579,7 +579,7 @@ Content`,
       expect(added).toBe(true);
 
       const settings = settingsManager.getProjectSettings();
-      const rel = relative(join(tempDir, ".pi"), projectPkgDir);
+      const rel = relative(join(tempDir, ".companion"), projectPkgDir);
       const expected = rel.startsWith(".") ? rel : `./${rel}`;
       expect(settings.packages?.[0]).toBe(expected);
     });
@@ -837,7 +837,7 @@ Content`,
     });
   });
 
-  describe("pattern filtering in pi manifest", () => {
+  describe("pattern filtering in companion manifest", () => {
     it("should support glob patterns in manifest extensions", async () => {
       const pkgDir = join(tempDir, "manifest-pkg");
       mkdirSync(join(pkgDir, "extensions"), { recursive: true });
@@ -860,7 +860,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "manifest-pkg",
-          pi: {
+          companion: {
             extensions: [
               "extensions",
               "node_modules/dep/extensions",
@@ -898,7 +898,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "skill-manifest-pkg",
-          pi: {
+          companion: {
             skills: ["skills", "!**/bad-skill"],
           },
         }),
@@ -936,7 +936,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "layered-pkg",
-          pi: {
+          companion: {
             extensions: ["extensions", "!**/baz.ts"],
           },
         }),
@@ -1229,7 +1229,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "manifest-force-pkg",
-          pi: {
+          companion: {
             extensions: ["extensions", "!**/two.ts", "+extensions/two.ts"],
           },
         }),
@@ -1515,7 +1515,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
       );
     });
 
-    it("should respect package.json pi.extensions manifest in subdirectories", async () => {
+    it("should respect package.json companion.extensions manifest in subdirectories", async () => {
       const pkgDir = join(tempDir, "manifest-subdir-pkg");
       mkdirSync(join(pkgDir, "extensions", "custom"), { recursive: true });
 
@@ -1523,7 +1523,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
       writeFileSync(
         join(pkgDir, "extensions", "custom", "package.json"),
         JSON.stringify({
-          pi: {
+          companion: {
             extensions: ["./main.ts"],
           },
         }),
@@ -1634,7 +1634,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
   describe("offline mode and network timeouts", () => {
     it("should skip installing missing package sources when offline", async () => {
-      process.env.PI_OFFLINE = "1";
+      process.env.COMPANION_OFFLINE = "1";
       settingsManager.setProjectPackages([
         "npm:missing-package",
         "git:github.com/example/missing-repo",
@@ -1659,7 +1659,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
     });
 
     it("should skip refreshing temporary git sources when offline", async () => {
-      process.env.PI_OFFLINE = "1";
+      process.env.COMPANION_OFFLINE = "1";
       const gitSource = "git:github.com/example/repo";
       const parsedGitSource = (packageManager as any).parseSource(gitSource);
       const installedPath = (packageManager as any).getGitInstallPath(
@@ -1690,7 +1690,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
     });
 
     it("should not call fetch in npmNeedsUpdate when offline", async () => {
-      process.env.PI_OFFLINE = "1";
+      process.env.COMPANION_OFFLINE = "1";
       const installedPath = join(tempDir, "installed-package");
       mkdirSync(installedPath, { recursive: true });
       writeFileSync(

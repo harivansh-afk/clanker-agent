@@ -10,8 +10,8 @@ import type {
   AgentEvent,
   AgentMessage,
   ThinkingLevel,
-} from "@mariozechner/pi-agent-core";
-import type { ImageContent } from "@mariozechner/pi-ai";
+} from "@mariozechner/companion-agent-core";
+import type { ImageContent } from "@mariozechner/companion-ai";
 import type { SessionStats } from "../../core/agent-session.js";
 import type { BashResult } from "../../core/bash-executor.js";
 import type { CompactionResult } from "../../core/compaction/index.js";

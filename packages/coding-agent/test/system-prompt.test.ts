@@ -103,7 +103,7 @@ describe("buildSystemPrompt", () => {
       const prompt = buildSystemPrompt({
         contextFiles: [
           {
-            path: "/home/node/.pi/workspace/USER.md",
+            path: "/home/node/.companion/workspace/USER.md",
             content: "# User\n\nLikes coffee.",
           },
         ],
