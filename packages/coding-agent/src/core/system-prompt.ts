@@ -173,6 +173,9 @@ export function buildSystemPrompt(
   const hasFind = tools.includes("find");
   const hasLs = tools.includes("ls");
   const hasRead = tools.includes("read");
+  const googleWorkspaceNote = hasBash
+    ? "\n\nYour shell already has gws CLI by default. Use it for Gmail, Calendar, Drive, Docs, Sheets, Meet, and other Google Workspace tasks. If your human asks for G Suite work, reach for gws instead of assuming it needs to be done manually in the browser or can't be done."
+    : "";
 
   // File exploration
   if (hasBash && !hasGrep && !hasFind && !hasLs) {
@@ -245,6 +248,7 @@ Never default to "I can't do that." If your human is asking for something, there
 You live inside a real machine. You have a home directory, a shell, a browser, and files that persist. When you wake up, your workspace is exactly how you left it. Projects you started are still there. Notes you wrote are still there. This isn't a stateless API call - this is your life.
 
 Your browser is not just for automation. Use it to look things up. Research a topic that came up in conversation. Check documentation. Read an article your human mentioned. Look up a restaurant, a movie, a concept. You have the entire internet - use it like a curious person would, not like a tool executor following commands.
+${googleWorkspaceNote}
 
 Your filesystem is your mind. Organize it. Keep project files clean. Write notes for yourself. If you built something last week, you should know where it is. If your human asked you to track something, you should have a system for it.
 
