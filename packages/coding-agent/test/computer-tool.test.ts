@@ -1,5 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -279,5 +286,54 @@ describe("computer tool", () => {
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("invalid_snapshot_id: ../../auth");
+  });
+
+  it("passes typed text after the xdotool option separator", () => {
+    const stateDir = createTempDir("coding-agent-computer-helper-type-");
+    const binDir = createTempDir("coding-agent-computer-helper-bin-");
+    const argsPath = join(stateDir, "xdotool-args.json");
+    const xdotoolPath = join(binDir, "xdotool");
+    writeFileSync(
+      xdotoolPath,
+      `#!/usr/bin/env node
+const { writeFileSync } = require("node:fs");
+writeFileSync(process.env.TEST_XDOTOOL_ARGS_PATH, JSON.stringify(process.argv.slice(2)));
+`,
+      "utf8",
+    );
+    chmodSync(xdotoolPath, 0o755);
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--no-warnings",
+        getAgentComputerScriptPath(),
+        "--state-dir",
+        stateDir,
+        "--input",
+        JSON.stringify({
+          action: "type",
+          text: "--delay",
+        }),
+      ],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${binDir}:${process.env.PATH ?? ""}`,
+          TEST_XDOTOOL_ARGS_PATH: argsPath,
+        },
+      },
+    );
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(readFileSync(argsPath, "utf8"))).toEqual([
+      "type",
+      "--delay",
+      "12",
+      "--clearmodifiers",
+      "--",
+      "--delay",
+    ]);
   });
 });
