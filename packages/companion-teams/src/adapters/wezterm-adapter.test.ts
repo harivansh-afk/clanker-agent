@@ -8,11 +8,10 @@ import { WezTermAdapter } from "./wezterm-adapter";
 
 describe("WezTermAdapter", () => {
   let adapter: WezTermAdapter;
-  let mockExecCommand: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     adapter = new WezTermAdapter();
-    mockExecCommand = vi.spyOn(terminalAdapter, "execCommand");
+    vi.spyOn(terminalAdapter, "execCommand");
     delete process.env.WEZTERM_PANE;
     delete process.env.TMUX;
     delete process.env.ZELLIJ;
@@ -31,6 +30,7 @@ describe("WezTermAdapter", () => {
 
   describe("detect", () => {
     it("should detect when WEZTERM_PANE is set", () => {
+      const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
       mockExecCommand.mockReturnValue({
         stdout: "version 1.0",
         stderr: "",
@@ -43,7 +43,8 @@ describe("WezTermAdapter", () => {
   describe("spawn", () => {
     it("should spawn first pane to the right with 50%", () => {
       // Mock getPanes finding only current pane
-      mockExecCommand.mockImplementation((_bin: string, args: string[]) => {
+      const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
+      mockExecCommand.mockImplementation((_bin, args) => {
         if (args.includes("list")) {
           return {
             stdout: JSON.stringify([{ pane_id: 0, tab_id: 0 }]),
@@ -79,7 +80,8 @@ describe("WezTermAdapter", () => {
 
     it("should spawn subsequent panes by splitting the sidebar", () => {
       // Mock getPanes finding current pane (0) and sidebar pane (1)
-      mockExecCommand.mockImplementation((_bin: string, args: string[]) => {
+      const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
+      mockExecCommand.mockImplementation((_bin, args) => {
         if (args.includes("list")) {
           return {
             stdout: JSON.stringify([

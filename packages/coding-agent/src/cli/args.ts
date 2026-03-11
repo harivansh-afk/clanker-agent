@@ -325,6 +325,7 @@ ${chalk.bold("Environment Variables:")}
   AWS_REGION                       - AWS region for Amazon Bedrock (e.g., us-east-1)
   ${ENV_AGENT_DIR.padEnd(32)} - Session storage directory (default: ~/${CONFIG_DIR_NAME}/agent)
   COMPANION_PACKAGE_DIR                   - Override package directory (for Nix/Guix store paths)
+  COMPANION_AGENT_COMPUTER_COMMAND        - Override the computer helper command (default: agent-computer)
   COMPANION_OFFLINE                       - Disable startup network operations when set to 1/true/yes
   COMPANION_SHARE_VIEWER_URL              - Base URL for /share command (default: https://companion.dev/session/)
   COMPANION_AI_ANTIGRAVITY_VERSION        - Override Antigravity User-Agent version (e.g., 1.23.0)
@@ -333,6 +334,7 @@ ${chalk.bold(`Available Tools (default: ${defaultToolsText}):`)}
   read   - Read file contents
   bash   - Execute bash commands
   browser - Browser automation with persistent state
+  computer - Desktop computer automation with screen observation and native UI control
   edit   - Edit files with find/replace
   write  - Write files (creates/overwrites)
   grep   - Search file contents (read-only, off by default)

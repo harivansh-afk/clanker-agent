@@ -26,10 +26,12 @@ import {
   allTools,
   bashTool,
   browserTool,
+  computerTool,
   codingTools,
   defaultCodingToolNames,
   createBashTool,
   createBrowserTool,
+  createComputerTool,
   createCodingTools,
   createEditTool,
   createFindTool,
@@ -67,7 +69,7 @@ export interface CreateAgentSessionOptions {
   /** Models available for cycling (Ctrl+P in interactive mode) */
   scopedModels?: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
 
-  /** Built-in tools to use. Default: codingTools [read, bash, browser, edit, write] */
+  /** Built-in tools to use. Default: codingTools [read, bash, browser, computer, edit, write] */
   tools?: Tool[];
   /** Custom tools to register (in addition to built-in tools). */
   customTools?: ToolDefinition[];
@@ -113,6 +115,7 @@ export {
   readTool,
   bashTool,
   browserTool,
+  computerTool,
   editTool,
   writeTool,
   grepTool,
@@ -127,6 +130,7 @@ export {
   createReadTool,
   createBashTool,
   createBrowserTool,
+  createComputerTool,
   createEditTool,
   createWriteTool,
   createGrepTool,

@@ -11,6 +11,8 @@ const toolDescriptions: Record<string, string> = {
   bash: "Run shell commands",
   browser:
     "Browse the web: open, snapshot, click, fill, wait, screenshot, save/load state",
+  computer:
+    "Use the desktop computer: observe the screen, click, type, send hotkeys, manage apps/windows, wait for native UI, and read/write the clipboard",
   edit: "Surgical file edits (find exact text, replace it)",
   write: "Create new files or completely rewrite existing ones",
   grep: "Search file contents by regex (respects .gitignore)",
@@ -167,6 +169,7 @@ export function buildSystemPrompt(
 
   const hasBash = tools.includes("bash");
   const hasBrowser = tools.includes("browser");
+  const hasComputer = tools.includes("computer");
   const hasEdit = tools.includes("edit");
   const hasWrite = tools.includes("write");
   const hasGrep = tools.includes("grep");
@@ -213,6 +216,16 @@ export function buildSystemPrompt(
   if (hasBrowser) {
     addGuideline(
       "Browser: snapshot before interacting with elements. Use it for research and learning too, not just automation",
+    );
+  }
+  if (hasComputer) {
+    addGuideline(
+      "Computer: observe before interacting. Use it for native UI, desktop apps, file pickers, downloads, and OS dialogs",
+    );
+  }
+  if (hasBrowser && hasComputer) {
+    addGuideline(
+      "Prefer browser for websites and DOM-aware tasks. Switch to computer when native UI or desktop state matters",
     );
   }
 

@@ -20,6 +20,16 @@ export {
   createBrowserTool,
 } from "./browser.js";
 export {
+  type ComputerObservationMode,
+  type ComputerOperations,
+  type ComputerToolAction,
+  type ComputerToolDetails,
+  type ComputerToolInput,
+  type ComputerToolOptions,
+  computerTool,
+  createComputerTool,
+} from "./computer.js";
+export {
   createEditTool,
   type EditOperations,
   type EditToolDetails,
@@ -84,6 +94,11 @@ import {
   createBrowserTool,
   type BrowserToolOptions,
 } from "./browser.js";
+import {
+  computerTool,
+  createComputerTool,
+  type ComputerToolOptions,
+} from "./computer.js";
 import { createEditTool, editTool } from "./edit.js";
 import { createFindTool, findTool } from "./find.js";
 import { createGrepTool, grepTool } from "./grep.js";
@@ -102,6 +117,7 @@ export const allTools = {
   read: readTool,
   bash: bashTool,
   browser: browserTool,
+  computer: computerTool,
   edit: editTool,
   write: writeTool,
   grep: grepTool,
@@ -115,6 +131,7 @@ export const defaultCodingToolNames: ToolName[] = [
   "read",
   "bash",
   "browser",
+  "computer",
   "edit",
   "write",
 ];
@@ -131,19 +148,16 @@ export interface ToolsOptions {
   bash?: BashToolOptions;
   /** Options for the browser tool */
   browser?: BrowserToolOptions;
+  /** Options for the computer tool */
+  computer?: ComputerToolOptions;
 }
 
 /**
  * Create coding tools configured for a specific working directory.
  */
 export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
-  return [
-    createReadTool(cwd, options?.read),
-    createBashTool(cwd, options?.bash),
-    createBrowserTool(cwd, options?.browser),
-    createEditTool(cwd),
-    createWriteTool(cwd),
-  ];
+  const tools = createAllTools(cwd, options);
+  return defaultCodingToolNames.map((toolName) => tools[toolName]);
 }
 
 /**
@@ -172,6 +186,7 @@ export function createAllTools(
     read: createReadTool(cwd, options?.read),
     bash: createBashTool(cwd, options?.bash),
     browser: createBrowserTool(cwd, options?.browser),
+    computer: createComputerTool(cwd, options?.computer),
     edit: createEditTool(cwd),
     write: createWriteTool(cwd),
     grep: createGrepTool(cwd),

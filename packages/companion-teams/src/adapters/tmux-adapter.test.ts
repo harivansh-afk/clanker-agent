@@ -4,11 +4,10 @@ import { TmuxAdapter } from "./tmux-adapter";
 
 describe("TmuxAdapter", () => {
   let adapter: TmuxAdapter;
-  let mockExecCommand: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     adapter = new TmuxAdapter();
-    mockExecCommand = vi.spyOn(terminalAdapter, "execCommand");
+    vi.spyOn(terminalAdapter, "execCommand");
     delete process.env.TMUX;
     delete process.env.ZELLIJ;
     delete process.env.WEZTERM_PANE;
@@ -21,6 +20,7 @@ describe("TmuxAdapter", () => {
   });
 
   it("detects tmux in headless runtimes when the binary is available", () => {
+    const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
     mockExecCommand.mockReturnValue({
       stdout: "tmux 3.4",
       stderr: "",
@@ -33,6 +33,7 @@ describe("TmuxAdapter", () => {
 
   it("does not detect tmux in GUI terminals just because the binary exists", () => {
     process.env.COLORTERM = "truecolor";
+    const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
     mockExecCommand.mockReturnValue({
       stdout: "tmux 3.4",
       stderr: "",
@@ -44,7 +45,8 @@ describe("TmuxAdapter", () => {
   });
 
   it("creates a detached team session when not already inside tmux", () => {
-    mockExecCommand.mockImplementation((_bin: string, args: string[]) => {
+    const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
+    mockExecCommand.mockImplementation((_bin, args) => {
       if (args[0] === "has-session") {
         return { stdout: "", stderr: "missing", status: 1 };
       }
@@ -65,12 +67,18 @@ describe("TmuxAdapter", () => {
 
     expect(mockExecCommand).toHaveBeenCalledWith(
       "tmux",
-      expect.arrayContaining(["new-session", "-d", "-s", "companion-teams-demo"]),
+      expect.arrayContaining([
+        "new-session",
+        "-d",
+        "-s",
+        "companion-teams-demo",
+      ]),
     );
   });
 
   it("splits an existing detached session when not already inside tmux", () => {
-    mockExecCommand.mockImplementation((_bin: string, args: string[]) => {
+    const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
+    mockExecCommand.mockImplementation((_bin, args) => {
       if (args[0] === "has-session") {
         return { stdout: "", stderr: "", status: 0 };
       }
@@ -96,6 +104,7 @@ describe("TmuxAdapter", () => {
   });
 
   it("checks pane liveness by pane id", () => {
+    const mockExecCommand = vi.mocked(terminalAdapter.execCommand);
     mockExecCommand.mockReturnValue({
       stdout: "%1\n%7\n",
       stderr: "",
