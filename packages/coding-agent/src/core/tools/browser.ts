@@ -187,6 +187,7 @@ export interface BrowserToolOptions {
   profileDir?: string;
   stateDir?: string;
   agentDir?: string;
+  headed?: boolean;
 }
 
 interface BrowserCommandContext {
@@ -262,6 +263,30 @@ function ensureBrowserDirs(profilePath: string, stateDir: string): void {
   mkdirSync(stateDir, { recursive: true });
 }
 
+function isTruthyEnv(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  switch (value.trim().toLowerCase()) {
+    case "":
+    case "0":
+    case "false":
+    case "no":
+    case "off":
+      return false;
+    default:
+      return true;
+  }
+}
+
+function shouldLaunchHeaded(options?: BrowserToolOptions): boolean {
+  if (options?.headed !== undefined) {
+    return options.headed;
+  }
+  return isTruthyEnv(process.env.COMPANION_AGENT_BROWSER_HEADED);
+}
+
 function createBrowserCommandContext(
   profilePath: string,
   stateDir: string,
@@ -328,6 +353,9 @@ function buildBrowserCommand(
   const profilePath = getBrowserProfilePath(cwd, options);
   const stateDir = getBrowserStateDir(cwd, options);
   const baseArgs = ["--profile", profilePath];
+  if (shouldLaunchHeaded(options)) {
+    baseArgs.push("--headed");
+  }
 
   switch (input.action) {
     case "open": {
