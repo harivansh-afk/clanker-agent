@@ -144,6 +144,36 @@ describe("browser tool", () => {
     ]);
   });
 
+  it("passes a custom browser window class through to agent-browser", async () => {
+    const cwd = createTempDir("coding-agent-browser-window-class-");
+    const profileDir = join(cwd, "profile");
+    const stateDir = join(cwd, "states");
+    const { calls, operations } = createMockBrowserOperations();
+
+    const browserTool = createBrowserTool(cwd, {
+      operations,
+      profileDir,
+      stateDir,
+      headed: true,
+      windowClass: "CompanionBrowser",
+    });
+
+    await browserTool.execute("browser-open-window-class", {
+      action: "open",
+      url: "https://example.com",
+    });
+
+    expect(calls[0]?.args).toEqual([
+      "--profile",
+      profileDir,
+      "--headed",
+      "--args",
+      "--class=CompanionBrowser",
+      "open",
+      "https://example.com",
+    ]);
+  });
+
   it("uses interactive snapshots by default and returns snapshot text", async () => {
     const cwd = createTempDir("coding-agent-browser-snapshot-");
     const profileDir = join(cwd, "profile");

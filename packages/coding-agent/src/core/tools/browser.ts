@@ -188,6 +188,7 @@ export interface BrowserToolOptions {
   stateDir?: string;
   agentDir?: string;
   headed?: boolean;
+  windowClass?: string;
 }
 
 interface BrowserCommandContext {
@@ -287,6 +288,15 @@ function shouldLaunchHeaded(options?: BrowserToolOptions): boolean {
   return isTruthyEnv(process.env.COMPANION_AGENT_BROWSER_HEADED);
 }
 
+function getBrowserWindowClass(
+  options?: BrowserToolOptions,
+): string | undefined {
+  const rawValue =
+    options?.windowClass ?? process.env.COMPANION_BROWSER_WINDOW_CLASS;
+  const windowClass = rawValue?.trim();
+  return windowClass ? windowClass : undefined;
+}
+
 function createBrowserCommandContext(
   profilePath: string,
   stateDir: string,
@@ -355,6 +365,10 @@ function buildBrowserCommand(
   const baseArgs = ["--profile", profilePath];
   if (shouldLaunchHeaded(options)) {
     baseArgs.push("--headed");
+  }
+  const windowClass = getBrowserWindowClass(options);
+  if (windowClass) {
+    baseArgs.push("--args", `--class=${windowClass}`);
   }
 
   switch (input.action) {
