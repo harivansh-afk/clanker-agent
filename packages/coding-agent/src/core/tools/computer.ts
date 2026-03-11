@@ -30,7 +30,7 @@ const computerActions = [
   "clipboard_write",
 ] as const;
 
-const computerObservationModes = ["hybrid", "ocr", "accessibility"] as const;
+const computerObservationModes = ["hybrid", "ocr"] as const;
 
 const DEFAULT_COMPUTER_COMMAND =
   process.env.COMPANION_AGENT_COMPUTER_COMMAND || "agent-computer";

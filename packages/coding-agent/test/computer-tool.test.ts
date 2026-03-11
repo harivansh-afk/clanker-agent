@@ -1,6 +1,7 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { parseArgs } from "../src/cli/args.js";
 import { buildSystemPrompt } from "../src/core/system-prompt.js";
@@ -66,6 +67,13 @@ function createMockComputerOperations(
       },
     },
   };
+}
+
+function getAgentComputerScriptPath(): string {
+  return resolve(
+    process.cwd(),
+    "../../../../docker/companion/agent-computer.js",
+  );
 }
 
 describe("computer tool", () => {
@@ -171,5 +179,59 @@ describe("computer tool", () => {
     expect(prompt).toContain(
       "Prefer browser for websites and DOM-aware tasks. Switch to computer",
     );
+  });
+
+  it("rejects accessibility observe mode until a non-screenshot backend exists", () => {
+    const stateDir = createTempDir(
+      "coding-agent-computer-helper-accessibility-",
+    );
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--no-warnings",
+        getAgentComputerScriptPath(),
+        "--state-dir",
+        stateDir,
+        "--input",
+        JSON.stringify({
+          action: "observe",
+          mode: "accessibility",
+        }),
+      ],
+      {
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(
+      "backend_unavailable: accessibility observe mode is not implemented",
+    );
+  });
+
+  it("refuses to shell out when app_open cannot match an installed app", () => {
+    const stateDir = createTempDir("coding-agent-computer-helper-app-open-");
+    const markerPath = join(stateDir, "should-not-exist");
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--no-warnings",
+        getAgentComputerScriptPath(),
+        "--state-dir",
+        stateDir,
+        "--input",
+        JSON.stringify({
+          action: "app_open",
+          app: `definitely-not-an-installed-app && touch ${markerPath}`,
+        }),
+      ],
+      {
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("app_not_found:");
+    expect(existsSync(markerPath)).toBe(false);
   });
 });
