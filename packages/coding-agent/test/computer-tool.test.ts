@@ -159,6 +159,27 @@ describe("computer tool", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("rejects unsafe snapshot ids before spawning the helper", async () => {
+    const cwd = createTempDir("coding-agent-computer-snapshot-id-");
+    const stateDir = join(cwd, "computer-state");
+    const { calls, operations } = createMockComputerOperations();
+
+    const computerTool = createComputerTool(cwd, {
+      operations,
+      stateDir,
+    });
+
+    await expect(
+      computerTool.execute("computer-click-invalid-snapshot", {
+        action: "click",
+        snapshotId: "../../auth",
+        ref: "w1",
+      }),
+    ).rejects.toThrow('Invalid computer snapshotId: "../../auth"');
+
+    expect(calls).toHaveLength(0);
+  });
+
   it("accepts computer in --tools and exposes it in built-in tool wiring", () => {
     const parsed = parseArgs(["--tools", "computer,read"]);
     expect(parsed.tools).toEqual(["computer", "read"]);
@@ -233,5 +254,30 @@ describe("computer tool", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("app_not_found:");
     expect(existsSync(markerPath)).toBe(false);
+  });
+
+  it("rejects snapshot path traversal inside the helper", () => {
+    const stateDir = createTempDir("coding-agent-computer-helper-snapshot-id-");
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--no-warnings",
+        getAgentComputerScriptPath(),
+        "--state-dir",
+        stateDir,
+        "--input",
+        JSON.stringify({
+          action: "click",
+          snapshotId: "../../auth",
+          ref: "w1",
+        }),
+      ],
+      {
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("invalid_snapshot_id: ../../auth");
   });
 });

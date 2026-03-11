@@ -31,6 +31,7 @@ const computerActions = [
 ] as const;
 
 const computerObservationModes = ["hybrid", "ocr"] as const;
+const computerSnapshotIdPattern = /^[A-Za-z0-9_-]+$/;
 
 const DEFAULT_COMPUTER_COMMAND =
   process.env.COMPANION_AGENT_COMPUTER_COMMAND || "agent-computer";
@@ -285,6 +286,12 @@ function hasDragDestination(input: ComputerToolInput): boolean {
   );
 }
 
+function validateSnapshotId(snapshotId: string): void {
+  if (!computerSnapshotIdPattern.test(snapshotId)) {
+    throw new Error(`Invalid computer snapshotId: "${snapshotId}"`);
+  }
+}
+
 function validateWaitInput(input: ComputerToolInput): void {
   const targetCount =
     (input.ref !== undefined ? 1 : 0) +
@@ -307,6 +314,10 @@ function validateWaitInput(input: ComputerToolInput): void {
 }
 
 function validateComputerInput(input: ComputerToolInput): void {
+  if (input.snapshotId !== undefined) {
+    validateSnapshotId(input.snapshotId);
+  }
+
   switch (input.action) {
     case "observe":
     case "app_list":
