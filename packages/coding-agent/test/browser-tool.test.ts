@@ -117,6 +117,33 @@ describe("browser tool", () => {
     expect(details?.profilePath).toBe(profileDir);
   });
 
+  it("can force agent-browser into headed mode for desktop sandboxes", async () => {
+    const cwd = createTempDir("coding-agent-browser-headed-");
+    const profileDir = join(cwd, "profile");
+    const stateDir = join(cwd, "states");
+    const { calls, operations } = createMockBrowserOperations();
+
+    const browserTool = createBrowserTool(cwd, {
+      operations,
+      profileDir,
+      stateDir,
+      headed: true,
+    });
+
+    await browserTool.execute("browser-open-headed", {
+      action: "open",
+      url: "https://example.com",
+    });
+
+    expect(calls[0]?.args).toEqual([
+      "--profile",
+      profileDir,
+      "--headed",
+      "open",
+      "https://example.com",
+    ]);
+  });
+
   it("uses interactive snapshots by default and returns snapshot text", async () => {
     const cwd = createTempDir("coding-agent-browser-snapshot-");
     const profileDir = join(cwd, "profile");
