@@ -77,7 +77,15 @@ export type HistoryPart =
       args: unknown;
       state: string;
       result?: unknown;
-    };
+    }
+  | {
+      type: "teamActivity";
+      teamId: string;
+      status: string;
+      members: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+    }
+  | { type: "media"; url: string; mimeType?: string }
+  | { type: "error"; code: string; message: string };
 
 export interface ChannelStatus {
   id: string;

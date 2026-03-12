@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { AgentSessionEvent } from "../agent-session.js";
+import type { GatewayEvent } from "./internal-types.js";
 
 type TextStreamState = {
   started: boolean;
@@ -323,4 +324,23 @@ export function errorVercelStream(
   writeChunk(response, { type: "error", errorText });
   writeChunk(response, "[DONE]");
   response.end();
+}
+
+/**
+ * Create a GatewayEvent listener that forwards `structured_part` events to the
+ * response as custom SSE chunks. Returns the listener function so the caller
+ * can subscribe it to managedSession.listeners and unsubscribe on cleanup.
+ */
+export function createGatewayStructuredPartListener(
+  response: ServerResponse,
+): (event: GatewayEvent) => void {
+  return (event: GatewayEvent) => {
+    if (response.writableEnded) return;
+    if (event.type !== "structured_part") return;
+    writeChunk(response, {
+      type: "structured-part",
+      partType: event.partType,
+      payload: event.payload,
+    });
+  };
 }

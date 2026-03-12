@@ -7,6 +7,7 @@ import {
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { URL } from "node:url";
+import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import type { AgentSession, AgentSessionEvent } from "../agent-session.js";
 import type { Settings } from "../settings-manager.js";
 import { extractMessageText, getLastAssistantText } from "./helpers.js";
@@ -29,6 +30,7 @@ import type {
   ModelInfo,
 } from "./types.js";
 import {
+  createGatewayStructuredPartListener,
   createVercelStreamListener,
   errorVercelStream,
   extractUserText,
@@ -265,7 +267,7 @@ export class GatewayRuntime {
     sessionKey: string,
     listener: (event: GatewayEvent) => void,
   ): Promise<() => void> {
-    const managedSession = await this.requireExistingSession(sessionKey);
+    const managedSession = await this.ensureSession(sessionKey);
     managedSession.listeners.add(listener);
     listener({
       type: "hello",
@@ -567,6 +569,7 @@ export class GatewayRuntime {
             sessionKey: managedSession.sessionKey,
             text: extractMessageText(event.message),
           });
+          this.emitStructuredParts(managedSession, event.message);
           return;
         }
         if (event.message.role === "toolResult") {
@@ -652,6 +655,76 @@ export class GatewayRuntime {
       sessionKey: managedSession.sessionKey,
       snapshot: this.createSnapshot(managedSession),
     });
+  }
+
+  private emitStructuredParts(
+    managedSession: ManagedGatewaySession,
+    message: AgentMessage,
+  ): void {
+    const content = message.content;
+    if (!Array.isArray(content)) return;
+
+    for (const part of content) {
+      if (typeof part !== "object" || part === null) continue;
+      const p = part as Record<string, unknown>;
+
+      if (p.type === "teamActivity") {
+        const teamId = typeof p.teamId === "string" ? p.teamId : "";
+        const status = typeof p.status === "string" ? p.status : "running";
+        if (!teamId) continue;
+        const rawMembers = Array.isArray(p.members) ? p.members : [];
+        const members = rawMembers
+          .filter(
+            (m): m is Record<string, unknown> =>
+              typeof m === "object" && m !== null,
+          )
+          .map((m) => ({
+            id: typeof m.id === "string" ? m.id : "",
+            name: typeof m.name === "string" ? m.name : "Teammate",
+            ...(typeof m.role === "string" ? { role: m.role } : {}),
+            status: typeof m.status === "string" ? m.status : "running",
+            ...(typeof m.message === "string" ? { message: m.message } : {}),
+          }))
+          .filter((m) => m.id.length > 0);
+        this.emit(managedSession, {
+          type: "structured_part",
+          sessionKey: managedSession.sessionKey,
+          partType: "teamActivity",
+          payload: { teamId, status, members },
+        });
+        continue;
+      }
+
+      if (p.type === "image") {
+        const url = typeof p.url === "string" ? p.url : "";
+        if (!url) continue;
+        this.emit(managedSession, {
+          type: "structured_part",
+          sessionKey: managedSession.sessionKey,
+          partType: "media",
+          payload: {
+            url,
+            ...(typeof p.mimeType === "string" ? { mimeType: p.mimeType } : {}),
+          },
+        });
+        continue;
+      }
+
+      if (p.type === "error") {
+        const errorMessage = typeof p.message === "string" ? p.message : "";
+        if (!errorMessage) continue;
+        this.emit(managedSession, {
+          type: "structured_part",
+          sessionKey: managedSession.sessionKey,
+          partType: "error",
+          payload: {
+            code: typeof p.code === "string" ? p.code : "unknown",
+            message: errorMessage,
+          },
+        });
+        continue;
+      }
+    }
   }
 
   private createSessionState(
@@ -740,7 +813,28 @@ export class GatewayRuntime {
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> {
+    const origin = request.headers.origin;
+    if (origin) {
+      response.setHeader("Access-Control-Allow-Origin", origin);
+      response.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      );
+      response.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
+      response.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+
     const method = request.method ?? "GET";
+
+    if (method === "OPTIONS") {
+      response.writeHead(204);
+      response.end();
+      return;
+    }
+
     const url = new URL(
       request.url ?? "/",
       `http://${request.headers.host ?? `${this.config.bind}:${this.config.port}`}`,
@@ -919,7 +1013,7 @@ export class GatewayRuntime {
     const action = sessionMatch[2];
 
     if (!action && method === "GET") {
-      const session = await this.requireExistingSession(sessionKey);
+      const session = await this.ensureSession(sessionKey);
       this.writeJson(response, 200, { session: this.createSnapshot(session) });
       return;
     }
@@ -1106,7 +1200,10 @@ export class GatewayRuntime {
     response.write("\n");
 
     const listener = createVercelStreamListener(response);
+    const structuredPartListener =
+      createGatewayStructuredPartListener(response);
     let unsubscribe: (() => void) | undefined;
+    let unsubscribeStructured: (() => void) | undefined;
     let streamingActive = false;
 
     const stopStreaming = () => {
@@ -1114,6 +1211,8 @@ export class GatewayRuntime {
       streamingActive = false;
       unsubscribe?.();
       unsubscribe = undefined;
+      unsubscribeStructured?.();
+      unsubscribeStructured = undefined;
     };
 
     // Clean up on client disconnect
@@ -1135,6 +1234,10 @@ export class GatewayRuntime {
         onStart: () => {
           if (clientDisconnected || streamingActive) return;
           unsubscribe = managedSession.session.subscribe(listener);
+          managedSession.listeners.add(structuredPartListener);
+          unsubscribeStructured = () => {
+            managedSession.listeners.delete(structuredPartListener);
+          };
           streamingActive = true;
         },
         onFinish: () => {
@@ -1283,7 +1386,7 @@ export class GatewayRuntime {
     provider: string,
     modelId: string,
   ): Promise<{ ok: true; model: { provider: string; modelId: string } }> {
-    const managed = await this.requireExistingSession(sessionKey);
+    const managed = await this.ensureSession(sessionKey);
     const found = managed.session.modelRegistry.find(provider, modelId);
     if (!found) {
       throw new HttpError(404, `Model not found: ${provider}/${modelId}`);
@@ -1389,7 +1492,8 @@ export class GatewayRuntime {
   }
 
   private getCompanionChannelsSettings(): CompanionChannelsSettings {
-    const globalSettings = this.primarySession.settingsManager.getGlobalSettings();
+    const globalSettings =
+      this.primarySession.settingsManager.getGlobalSettings();
     const projectSettings =
       this.primarySession.settingsManager.getProjectSettings();
     const mergedSettings = mergeRecords(
@@ -1397,7 +1501,9 @@ export class GatewayRuntime {
       isRecord(projectSettings) ? projectSettings : {},
     );
     const piChannels = mergedSettings["companion-channels"];
-    return isRecord(piChannels) ? (piChannels as CompanionChannelsSettings) : {};
+    return isRecord(piChannels)
+      ? (piChannels as CompanionChannelsSettings)
+      : {};
   }
 
   private buildSlackChannelStatus(
@@ -1419,7 +1525,8 @@ export class GatewayRuntime {
 
     if (hasConfig) {
       if (!adapter) {
-        error = 'Slack requires `companion-channels.adapters.slack = { "type": "slack" }`.';
+        error =
+          'Slack requires `companion-channels.adapters.slack = { "type": "slack" }`.';
       } else if (adapterType !== "slack") {
         error = 'Slack adapter type must be "slack".';
       } else if (!appToken) {
@@ -1468,7 +1575,8 @@ export class GatewayRuntime {
       } else if (adapterType !== "telegram") {
         error = 'Telegram adapter type must be "telegram".';
       } else if (!botToken) {
-        error = "Telegram requires companion-channels.adapters.telegram.botToken.";
+        error =
+          "Telegram requires companion-channels.adapters.telegram.botToken.";
       } else if (!pollingEnabled) {
         error =
           "Telegram requires companion-channels.adapters.telegram.polling = true.";
