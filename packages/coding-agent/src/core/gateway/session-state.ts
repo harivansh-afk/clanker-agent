@@ -85,6 +85,41 @@ export function messageContentToHistoryParts(msg: AgentMessage): HistoryPart[] {
           args: toolCall.arguments,
           state: "call",
         });
+      } else if (contentPart.type === "teamActivity") {
+        const activity = contentPart as {
+          type: "teamActivity";
+          teamId: string;
+          status: string;
+          members?: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+        };
+        parts.push({
+          type: "teamActivity",
+          teamId: activity.teamId,
+          status: activity.status,
+          members: Array.isArray(activity.members) ? activity.members : [],
+        });
+      } else if (contentPart.type === "image") {
+        const image = contentPart as {
+          type: "image";
+          url: string;
+          mimeType?: string;
+        };
+        parts.push({
+          type: "media",
+          url: image.url,
+          mimeType: image.mimeType,
+        });
+      } else if (contentPart.type === "error") {
+        const error = contentPart as {
+          type: "error";
+          code?: string;
+          message: string;
+        };
+        parts.push({
+          type: "error",
+          code: typeof error.code === "string" ? error.code : "unknown",
+          message: error.message,
+        });
       }
     }
     return parts;

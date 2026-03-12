@@ -55,7 +55,29 @@ export type GatewayEvent =
     }
   | { type: "message_complete"; sessionKey: string; text: string }
   | { type: "error"; sessionKey: string; error: string }
-  | { type: "aborted"; sessionKey: string };
+  | { type: "aborted"; sessionKey: string }
+  | {
+      type: "structured_part";
+      sessionKey: string;
+      partType: "teamActivity";
+      payload: {
+        teamId: string;
+        status: string;
+        members: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+      };
+    }
+  | {
+      type: "structured_part";
+      sessionKey: string;
+      partType: "media";
+      payload: { url: string; mimeType?: string };
+    }
+  | {
+      type: "structured_part";
+      sessionKey: string;
+      partType: "error";
+      payload: { code: string; message: string };
+    };
 
 export interface ManagedGatewaySession {
   sessionKey: string;
