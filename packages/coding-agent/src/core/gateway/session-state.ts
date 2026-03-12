@@ -9,10 +9,45 @@ export interface GatewayTransientToolResult {
   timestamp: number;
 }
 
+type TeamActivityMember = Extract<
+  HistoryPart,
+  { type: "teamActivity" }
+>["members"][number];
+
 function isSupportedHistoryRole(
   role: AgentMessage["role"],
 ): role is "user" | "assistant" | "toolResult" {
   return role === "user" || role === "assistant" || role === "toolResult";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeTeamActivityMembers(value: unknown): TeamActivityMember[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map((member) => {
+      const id = typeof member.id === "string" ? member.id : "";
+      if (!id) {
+        return null;
+      }
+
+      return {
+        id,
+        name: typeof member.name === "string" ? member.name : "Teammate",
+        ...(typeof member.role === "string" ? { role: member.role } : {}),
+        status: typeof member.status === "string" ? member.status : "running",
+        ...(typeof member.message === "string"
+          ? { message: member.message }
+          : {}),
+      };
+    })
+    .filter((member): member is TeamActivityMember => member !== null);
 }
 
 function historyMessageId(message: AgentMessage, index: number): string {
@@ -53,73 +88,85 @@ export function messageContentToHistoryParts(msg: AgentMessage): HistoryPart[] {
   }
 
   if (msg.role === "assistant") {
-    const content = msg.content;
+    const content: unknown = msg.content;
     if (!Array.isArray(content)) return [];
     const parts: HistoryPart[] = [];
     for (const contentPart of content) {
-      if (typeof contentPart !== "object" || contentPart === null) {
+      if (!isRecord(contentPart) || typeof contentPart.type !== "string") {
         continue;
       }
-      if (contentPart.type === "text") {
-        parts.push({
-          type: "text",
-          text: (contentPart as { type: "text"; text: string }).text,
-        });
-      } else if (contentPart.type === "thinking") {
-        parts.push({
-          type: "reasoning",
-          text: (contentPart as { type: "thinking"; thinking: string })
-            .thinking,
-        });
-      } else if (contentPart.type === "toolCall") {
-        const toolCall = contentPart as {
-          type: "toolCall";
-          id: string;
-          name: string;
-          arguments: unknown;
-        };
-        parts.push({
-          type: "tool-invocation",
-          toolCallId: toolCall.id,
-          toolName: toolCall.name,
-          args: toolCall.arguments,
-          state: "call",
-        });
-      } else if (contentPart.type === "teamActivity") {
-        const activity = contentPart as {
-          type: "teamActivity";
-          teamId: string;
-          status: string;
-          members?: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
-        };
-        parts.push({
-          type: "teamActivity",
-          teamId: activity.teamId,
-          status: activity.status,
-          members: Array.isArray(activity.members) ? activity.members : [],
-        });
-      } else if (contentPart.type === "image") {
-        const image = contentPart as {
-          type: "image";
-          url: string;
-          mimeType?: string;
-        };
-        parts.push({
-          type: "media",
-          url: image.url,
-          mimeType: image.mimeType,
-        });
-      } else if (contentPart.type === "error") {
-        const error = contentPart as {
-          type: "error";
-          code?: string;
-          message: string;
-        };
-        parts.push({
-          type: "error",
-          code: typeof error.code === "string" ? error.code : "unknown",
-          message: error.message,
-        });
+
+      switch (contentPart.type) {
+        case "text":
+          if (typeof contentPart.text === "string") {
+            parts.push({
+              type: "text",
+              text: contentPart.text,
+            });
+          }
+          break;
+        case "thinking":
+          if (typeof contentPart.thinking === "string") {
+            parts.push({
+              type: "reasoning",
+              text: contentPart.thinking,
+            });
+          }
+          break;
+        case "toolCall":
+          if (
+            typeof contentPart.id === "string" &&
+            typeof contentPart.name === "string"
+          ) {
+            parts.push({
+              type: "tool-invocation",
+              toolCallId: contentPart.id,
+              toolName: contentPart.name,
+              args: contentPart.arguments,
+              state: "call",
+            });
+          }
+          break;
+        case "teamActivity": {
+          const teamId =
+            typeof contentPart.teamId === "string" ? contentPart.teamId : "";
+          if (!teamId) {
+            break;
+          }
+          parts.push({
+            type: "teamActivity",
+            teamId,
+            status:
+              typeof contentPart.status === "string"
+                ? contentPart.status
+                : "running",
+            members: normalizeTeamActivityMembers(contentPart.members),
+          });
+          break;
+        }
+        case "image":
+          if (typeof contentPart.url === "string") {
+            parts.push({
+              type: "media",
+              url: contentPart.url,
+              ...(typeof contentPart.mimeType === "string"
+                ? { mimeType: contentPart.mimeType }
+                : {}),
+            });
+          }
+          break;
+        case "error":
+          if (typeof contentPart.message === "string") {
+            parts.push({
+              type: "error",
+              code:
+                typeof contentPart.code === "string"
+                  ? contentPart.code
+                  : "unknown",
+              message: contentPart.message,
+            });
+          }
+          break;
       }
     }
     return parts;

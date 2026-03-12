@@ -62,6 +62,7 @@ export type { HistoryPart } from "./types.js";
 let activeGatewayRuntime: GatewayRuntime | null = null;
 
 type JsonRecord = Record<string, unknown>;
+type AssistantAgentMessage = Extract<AgentMessage, { role: "assistant" }>;
 
 type CompanionChannelsSettings = JsonRecord & {
   adapters?: Record<string, JsonRecord>;
@@ -659,14 +660,15 @@ export class GatewayRuntime {
 
   private emitStructuredParts(
     managedSession: ManagedGatewaySession,
-    message: AgentMessage,
+    message: AssistantAgentMessage,
   ): void {
     const content = message.content;
     if (!Array.isArray(content)) return;
 
     for (const part of content) {
-      if (typeof part !== "object" || part === null) continue;
-      const p = part as Record<string, unknown>;
+      const rawPart: unknown = part;
+      if (!isRecord(rawPart)) continue;
+      const p = rawPart;
 
       if (p.type === "teamActivity") {
         const teamId = typeof p.teamId === "string" ? p.teamId : "";
@@ -722,7 +724,6 @@ export class GatewayRuntime {
             message: errorMessage,
           },
         });
-        continue;
       }
     }
   }
