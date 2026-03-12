@@ -282,9 +282,20 @@ export class GatewayRuntime {
 
   abortSession(sessionKey: string): boolean {
     const managedSession = this.sessions.get(sessionKey);
-    if (!managedSession?.processing) {
+    if (!managedSession) {
       return false;
     }
+
+    const hadQueuedMessages = managedSession.queue.length > 0;
+    if (hadQueuedMessages) {
+      this.rejectQueuedMessages(managedSession, "Session aborted");
+      this.emitState(managedSession);
+    }
+
+    if (!managedSession.processing) {
+      return hadQueuedMessages;
+    }
+
     void managedSession.session.abort().catch((error) => {
       this.emit(managedSession, {
         type: "error",

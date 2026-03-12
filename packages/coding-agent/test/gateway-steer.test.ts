@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ManagedGatewaySession } from "../src/core/gateway/internal-types.js";
 import { GatewayRuntime } from "../src/core/gateway/runtime.js";
 
 function createMockSession() {
@@ -43,9 +44,9 @@ function addManagedSession(
   session: ReturnType<typeof createMockSession>,
   processing: boolean,
 ) {
-  const managedSession = {
+  const managedSession: ManagedGatewaySession = {
     sessionKey,
-    session,
+    session: session as never,
     queue: [],
     processing,
     activeAssistantMessage: null,
@@ -123,5 +124,37 @@ describe("GatewayRuntime steer handling", () => {
         source: "extension",
       });
     });
+  });
+
+  it("abort clears queued follow-ups before aborting the active session", () => {
+    const session = createMockSession();
+    const runtime = createRuntime(session);
+    const managedSession = addManagedSession(runtime, "chat", session, true);
+    const resolve = vi.fn();
+
+    managedSession.queue.push({
+      request: {
+        sessionKey: "chat",
+        text: "stale follow-up",
+        source: "extension",
+      },
+      resolve,
+    });
+
+    const result = (
+      runtime as unknown as {
+        abortSession: (sessionKey: string) => boolean;
+      }
+    ).abortSession("chat");
+
+    expect(result).toBe(true);
+    expect(managedSession.queue).toHaveLength(0);
+    expect(resolve).toHaveBeenCalledWith({
+      ok: false,
+      response: "",
+      error: "Session aborted",
+      sessionKey: "chat",
+    });
+    expect(session.abort).toHaveBeenCalledTimes(1);
   });
 });
