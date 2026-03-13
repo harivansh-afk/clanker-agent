@@ -60,6 +60,7 @@ export type {
 export type { HistoryPart } from "./types.js";
 
 let activeGatewayRuntime: GatewayRuntime | null = null;
+const SSE_HEARTBEAT_MS = 15_000;
 
 type JsonRecord = Record<string, unknown>;
 type AssistantAgentMessage = Extract<AgentMessage, { role: "assistant" }>;
@@ -85,6 +86,18 @@ function mergeRecords(base: JsonRecord, overrides: JsonRecord): JsonRecord {
     merged[key] = value;
   }
   return merged;
+}
+
+function startSseHeartbeat(response: ServerResponse): () => void {
+  const timer = setInterval(() => {
+    if (response.writableEnded) {
+      clearInterval(timer);
+      return;
+    }
+    response.write(":\n\n");
+  }, SSE_HEARTBEAT_MS);
+  timer.unref?.();
+  return () => clearInterval(timer);
 }
 
 function readString(value: unknown): string | undefined {
@@ -1178,11 +1191,13 @@ export class GatewayRuntime {
       Connection: "keep-alive",
     });
     response.write("\n");
+    const stopHeartbeat = startSseHeartbeat(response);
 
     const unsubscribe = await this.addSubscriber(sessionKey, (event) => {
       response.write(`data: ${JSON.stringify(event)}\n\n`);
     });
     request.on("close", () => {
+      stopHeartbeat();
       unsubscribe();
     });
   }
@@ -1210,6 +1225,7 @@ export class GatewayRuntime {
       "x-vercel-ai-ui-message-stream": "v1",
     });
     response.write("\n");
+    const stopHeartbeat = startSseHeartbeat(response);
 
     const listener = createVercelStreamListener(response);
     const structuredPartListener =
@@ -1231,6 +1247,7 @@ export class GatewayRuntime {
     let clientDisconnected = false;
     request.on("close", () => {
       clientDisconnected = true;
+      stopHeartbeat();
       stopStreaming();
     });
 
@@ -1258,6 +1275,7 @@ export class GatewayRuntime {
       });
       if (!clientDisconnected) {
         stopStreaming();
+        stopHeartbeat();
         if (result.ok) {
           this.log(`[chat] session=${sessionKey} completed ok`);
           finishVercelStream(response, "stop");
@@ -1278,6 +1296,7 @@ export class GatewayRuntime {
     } catch (error) {
       if (!clientDisconnected) {
         stopStreaming();
+        stopHeartbeat();
         const message = error instanceof Error ? error.message : String(error);
         this.log(`[chat] session=${sessionKey} exception: ${message}`);
         errorVercelStream(response, message);

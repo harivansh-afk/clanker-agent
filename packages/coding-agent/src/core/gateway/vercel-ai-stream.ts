@@ -25,7 +25,10 @@ function isTextContent(
 function getAssistantTextParts(
   event: Extract<AgentSessionEvent, { type: "message_end" }>,
 ): Array<{ contentIndex: number; text: string }> {
-  if (event.message.role !== "assistant" || !Array.isArray(event.message.content)) {
+  if (
+    event.message.role !== "assistant" ||
+    !Array.isArray(event.message.content)
+  ) {
     return [];
   }
 
@@ -338,9 +341,8 @@ export function createGatewayStructuredPartListener(
     if (response.writableEnded) return;
     if (event.type !== "structured_part") return;
     writeChunk(response, {
-      type: "structured-part",
-      partType: event.partType,
-      payload: event.payload,
+      type: `data-${event.partType}`,
+      data: event.payload,
     });
   };
 }
