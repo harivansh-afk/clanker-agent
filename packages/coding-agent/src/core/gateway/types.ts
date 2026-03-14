@@ -53,6 +53,8 @@ export interface GatewaySessionSnapshot {
   name?: string;
   lastMessagePreview?: string;
   updatedAt: number;
+  modelProvider?: string;
+  modelId?: string;
 }
 
 export interface GatewaySessionState {
