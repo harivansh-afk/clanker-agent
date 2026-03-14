@@ -10,6 +10,7 @@ import { URL } from "node:url";
 import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import type { AgentSession, AgentSessionEvent } from "../agent-session.js";
 import type { Settings } from "../settings-manager.js";
+import { DurableChatRunReporter } from "./durable-chat-run.js";
 import { extractMessageText, getLastAssistantText } from "./helpers.js";
 import {
   type GatewayEvent,
@@ -106,6 +107,32 @@ function readString(value: unknown): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readDurableRun(
+  value: unknown,
+): GatewayMessageRequest["durableRun"] | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const runId = readString(value.runId);
+  const userId = readString(value.userId);
+  const agentId = readString(value.agentId);
+  const threadId = readString(value.threadId);
+  const sessionKey = readString(value.sessionKey);
+
+  if (!runId || !userId || !agentId || !threadId || !sessionKey) {
+    return undefined;
+  }
+
+  return {
+    runId,
+    userId,
+    agentId,
+    threadId,
+    sessionKey,
+  };
 }
 
 export function setActiveGatewayRuntime(runtime: GatewayRuntime | null): void {
@@ -419,6 +446,7 @@ export class GatewayRuntime {
       session,
       queue: [],
       processing: false,
+      activeDurableRun: null,
       activeAssistantMessage: null,
       pendingToolResults: [],
       createdAt: Date.now(),
@@ -462,18 +490,33 @@ export class GatewayRuntime {
     );
     this.emitState(managedSession);
 
+    let result: GatewayMessageResult = {
+      ok: false,
+      response: "",
+      error: "Unknown error",
+      sessionKey: managedSession.sessionKey,
+    };
+    let durableRunReporter: DurableChatRunReporter | null = null;
+
     try {
       queued.onStart?.();
+      if (queued.request.durableRun) {
+        durableRunReporter = new DurableChatRunReporter(
+          queued.request.durableRun,
+        );
+        managedSession.activeDurableRun = durableRunReporter;
+      }
       await managedSession.session.prompt(queued.request.text, {
         images: queued.request.images,
         source: queued.request.source ?? "extension",
       });
       const response = getLastAssistantText(managedSession.session);
-      queued.resolve({
+      result = {
         ok: true,
         response,
         sessionKey: managedSession.sessionKey,
-      });
+      };
+      queued.resolve(result);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.log(
@@ -491,19 +534,30 @@ export class GatewayRuntime {
           error: message,
         });
       }
-      queued.resolve({
+      result = {
         ok: false,
         response: "",
         error: message,
         sessionKey: managedSession.sessionKey,
-      });
+      };
+      queued.resolve(result);
     } finally {
       queued.onFinish?.();
       managedSession.processing = false;
+      managedSession.activeDurableRun = null;
       managedSession.activeAssistantMessage = null;
       managedSession.pendingToolResults = [];
       managedSession.lastActiveAt = Date.now();
       this.emitState(managedSession);
+      if (durableRunReporter) {
+        await durableRunReporter.finalize(result).catch((error) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          this.log(
+            `[chat-run] session=${managedSession.sessionKey} finalize error: ${message}`,
+          );
+        });
+      }
       if (managedSession.queue.length > 0) {
         void this.processNext(managedSession);
       }
@@ -529,6 +583,13 @@ export class GatewayRuntime {
     managedSession: ManagedGatewaySession,
     event: AgentSessionEvent,
   ): void {
+    const forwardToDurableRun = () => {
+      managedSession.activeDurableRun?.handleSessionEvent(
+        event,
+        managedSession.pendingToolResults,
+      );
+    };
+
     switch (event.type) {
       case "turn_start":
         managedSession.lastActiveAt = Date.now();
@@ -537,6 +598,7 @@ export class GatewayRuntime {
           type: "turn_start",
           sessionKey: managedSession.sessionKey,
         });
+        forwardToDurableRun();
         return;
       case "turn_end":
         managedSession.lastActiveAt = Date.now();
@@ -545,6 +607,7 @@ export class GatewayRuntime {
           type: "turn_end",
           sessionKey: managedSession.sessionKey,
         });
+        forwardToDurableRun();
         return;
       case "message_start":
         managedSession.lastActiveAt = Date.now();
@@ -556,6 +619,7 @@ export class GatewayRuntime {
           sessionKey: managedSession.sessionKey,
           role: event.message.role,
         });
+        forwardToDurableRun();
         return;
       case "message_update":
         managedSession.lastActiveAt = Date.now();
@@ -570,6 +634,7 @@ export class GatewayRuntime {
               delta: event.assistantMessageEvent.delta,
               contentIndex: event.assistantMessageEvent.contentIndex,
             });
+            forwardToDurableRun();
             return;
           case "thinking_delta":
             this.emit(managedSession, {
@@ -578,8 +643,10 @@ export class GatewayRuntime {
               delta: event.assistantMessageEvent.delta,
               contentIndex: event.assistantMessageEvent.contentIndex,
             });
+            forwardToDurableRun();
             return;
         }
+        forwardToDurableRun();
         return;
       case "message_end":
         managedSession.lastActiveAt = Date.now();
@@ -595,6 +662,7 @@ export class GatewayRuntime {
             text: extractMessageText(event.message),
           });
           this.emitStructuredParts(managedSession, event.message);
+          forwardToDurableRun();
           return;
         }
         if (event.message.role === "toolResult") {
@@ -610,6 +678,7 @@ export class GatewayRuntime {
               );
           }
         }
+        forwardToDurableRun();
         return;
       case "tool_execution_start":
         managedSession.lastActiveAt = Date.now();
@@ -624,6 +693,7 @@ export class GatewayRuntime {
           toolName: event.toolName,
           args: event.args,
         });
+        forwardToDurableRun();
         return;
       case "tool_execution_update":
         managedSession.lastActiveAt = Date.now();
@@ -634,6 +704,7 @@ export class GatewayRuntime {
           toolName: event.toolName,
           partialResult: event.partialResult,
         });
+        forwardToDurableRun();
         return;
       case "tool_execution_end":
         managedSession.lastActiveAt = Date.now();
@@ -661,6 +732,7 @@ export class GatewayRuntime {
           result: event.result,
           isError: event.isError,
         });
+        forwardToDurableRun();
         return;
     }
   }
@@ -1027,7 +1099,7 @@ export class GatewayRuntime {
     }
 
     const sessionMatch = path.match(
-      /^\/sessions\/([^/]+)(?:\/(events|messages|abort|reset|chat|history|model|reload|state|steer))?$/,
+      /^\/sessions\/([^/]+)(?:\/(enqueue|events|messages|abort|reset|chat|history|model|reload|state|steer))?$/,
     );
     if (!sessionMatch) {
       this.writeJson(response, 404, { error: "Not found" });
@@ -1063,6 +1135,37 @@ export class GatewayRuntime {
 
     if (action === "chat" && method === "POST") {
       await this.handleChat(sessionKey, request, response);
+      return;
+    }
+
+    if (action === "enqueue" && method === "POST") {
+      const body = await this.readJsonBody(request);
+      const text = extractUserText(body);
+      if (!text) {
+        this.writeJson(response, 400, { error: "Missing user message text" });
+        return;
+      }
+      const durableRun = readDurableRun(body.durableRun);
+      const queued = await this.queueManagedMessage({
+        request: {
+          sessionKey,
+          text,
+          source: "extension",
+          metadata: isRecord(body.metadata) ? body.metadata : undefined,
+          durableRun,
+        },
+      });
+      if (!queued.accepted) {
+        this.writeJson(response, 409, queued.errorResult);
+        return;
+      }
+      void queued.completion.catch(() => undefined);
+      this.writeJson(response, 202, {
+        ok: true,
+        queued: true,
+        sessionKey,
+        ...(durableRun ? { runId: durableRun.runId } : {}),
+      });
       return;
     }
 

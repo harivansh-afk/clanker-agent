@@ -1,5 +1,6 @@
 import type { AgentMessage } from "@mariozechner/companion-agent-core";
 import type { AgentSession } from "../agent-session.js";
+import type { DurableChatRunReporter } from "./durable-chat-run.js";
 import type {
   GatewayMessageRequest,
   GatewayMessageResult,
@@ -63,7 +64,13 @@ export type GatewayEvent =
       payload: {
         teamId: string;
         status: string;
-        members: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+        members: Array<{
+          id: string;
+          name: string;
+          role?: string;
+          status: string;
+          message?: string;
+        }>;
       };
     }
   | {
@@ -84,6 +91,7 @@ export interface ManagedGatewaySession {
   session: AgentSession;
   queue: GatewayQueuedMessage[];
   processing: boolean;
+  activeDurableRun: DurableChatRunReporter | null;
   activeAssistantMessage: AgentMessage | null;
   pendingToolResults: GatewayTransientToolResult[];
   createdAt: number;

@@ -26,6 +26,13 @@ export interface GatewayMessageRequest {
   source?: "interactive" | "rpc" | "extension";
   images?: ImageContent[];
   metadata?: Record<string, unknown>;
+  durableRun?: {
+    runId: string;
+    userId: string;
+    agentId: string;
+    threadId: string;
+    sessionKey: string;
+  };
 }
 
 export interface GatewayMessageResult {
@@ -82,7 +89,13 @@ export type HistoryPart =
       type: "teamActivity";
       teamId: string;
       status: string;
-      members: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+      members: Array<{
+        id: string;
+        name: string;
+        role?: string;
+        status: string;
+        message?: string;
+      }>;
     }
   | { type: "media"; url: string; mimeType?: string }
   | { type: "error"; code: string; message: string };
