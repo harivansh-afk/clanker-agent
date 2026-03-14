@@ -770,6 +770,7 @@ export class GatewayRuntime {
     managedSession: ManagedGatewaySession,
   ): GatewaySessionSnapshot {
     const messages = managedSession.session.messages;
+    const currentModel = managedSession.session.model;
     const name = managedSession.session.sessionName?.trim() || undefined;
     let lastMessagePreview: string | undefined;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -809,6 +810,8 @@ export class GatewayRuntime {
       updatedAt: managedSession.lastActiveAt,
       name,
       lastMessagePreview,
+      modelProvider: currentModel?.provider,
+      modelId: currentModel?.id,
     };
   }
 
@@ -1647,8 +1650,11 @@ export class GatewayRuntime {
 
   private async handleReloadSession(sessionKey: string): Promise<void> {
     const managed = await this.requireExistingSession(sessionKey);
-    // Reloading config by calling settingsManager.reload() on the session
-    managed.session.settingsManager.reload();
+    // Rebuild the full session runtime so auth.json, models.json, settings,
+    // and extension-backed resources all pick up on-disk changes.
+    await managed.session.reload();
+    managed.lastActiveAt = Date.now();
+    this.emitState(managed);
   }
 
   getGatewaySessionDir(sessionKey: string): string {

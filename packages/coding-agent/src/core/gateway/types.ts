@@ -46,6 +46,8 @@ export interface GatewaySessionSnapshot {
   name?: string;
   lastMessagePreview?: string;
   updatedAt: number;
+  modelProvider?: string;
+  modelId?: string;
 }
 
 export interface GatewaySessionState {
@@ -82,7 +84,13 @@ export type HistoryPart =
       type: "teamActivity";
       teamId: string;
       status: string;
-      members: Array<{ id: string; name: string; role?: string; status: string; message?: string }>;
+      members: Array<{
+        id: string;
+        name: string;
+        role?: string;
+        status: string;
+        message?: string;
+      }>;
     }
   | { type: "media"; url: string; mimeType?: string }
   | { type: "error"; code: string; message: string };
