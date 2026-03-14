@@ -24,24 +24,31 @@ function normalizeErrorMessage(error: unknown): string {
   return typeof error === "string" ? error : String(error);
 }
 
-function readConvexSiteUrl(): string | null {
-  const raw =
-    process.env.CONVEX_SITE_URL ??
-    process.env.NEXT_PUBLIC_CONVEX_SITE_URL ??
-    process.env.CONVEX_URL ??
-    process.env.NEXT_PUBLIC_CONVEX_URL;
-  return typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : null;
-}
+type DurableChatRunEventBody =
+  | {
+      items: PersistHistoryItem[];
+      final?: {
+        status: ConvexRunStatus;
+        error?: string;
+      };
+    }
+  | {
+      items?: PersistHistoryItem[];
+      final: {
+        status: ConvexRunStatus;
+        error?: string;
+      };
+    };
 
-function readConvexSecret(): string | null {
-  const raw = process.env.CONVEX_SECRET;
-  return typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : null;
+function buildAuthHeaders(token: string): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 export class DurableChatRunReporter {
   private readonly assistantMessageId: string;
-  private readonly convexSiteUrl: string;
-  private readonly convexSecret: string;
   private latestAssistantMessage: AgentMessage | null = null;
   private readonly knownToolResults = new Map<
     string,
@@ -56,16 +63,15 @@ export class DurableChatRunReporter {
       GatewayMessageRequest["durableRun"]
     >,
   ) {
-    const convexSiteUrl = readConvexSiteUrl();
-    const convexSecret = readConvexSecret();
-    if (!convexSiteUrl || !convexSecret) {
+    if (
+      durableRun.callbackUrl.trim().length === 0 ||
+      durableRun.callbackToken.trim().length === 0
+    ) {
       throw new Error(
-        "Durable chat run reporting requires CONVEX_SITE_URL/CONVEX_URL and CONVEX_SECRET",
+        "Durable chat run reporting requires callbackUrl and callbackToken",
       );
     }
-    this.convexSiteUrl = convexSiteUrl;
-    this.convexSecret = convexSecret;
-    this.assistantMessageId = `run:${durableRun.runId}:assistant`;
+    this.assistantMessageId = `run:${this.durableRun.runId}:assistant`;
   }
 
   handleSessionEvent(
@@ -116,17 +122,11 @@ export class DurableChatRunReporter {
       status = "failed";
       errorMessage = normalizeErrorMessage(error);
     }
-
-    const endpoint =
-      status === "completed"
-        ? "/api/chat/complete-run"
-        : status === "interrupted"
-          ? "/api/chat/interrupt-run"
-          : "/api/chat/fail-run";
-
-    await this.callConvexHttpAction(endpoint, {
-      runId: this.durableRun.runId,
-      ...(status === "failed" && errorMessage ? { error: errorMessage } : {}),
+    await this.postEvent({
+      final: {
+        status,
+        ...(status === "failed" && errorMessage ? { error: errorMessage } : {}),
+      },
     });
   }
 
@@ -152,12 +152,7 @@ export class DurableChatRunReporter {
 
     const flushPromise = this.flushChain.then(async () => {
       this.throwIfFlushFailed();
-      await this.callConvexHttpAction("/api/chat/run-messages", {
-        runId: this.durableRun.runId,
-        userId: this.durableRun.userId,
-        agentId: this.durableRun.agentId,
-        threadId: this.durableRun.threadId,
-        sessionKey: this.durableRun.sessionKey,
+      await this.postEvent({
         items,
       });
     });
@@ -177,8 +172,6 @@ export class DurableChatRunReporter {
   }
 
   private buildItems(): PersistHistoryItem[] {
-    const items: PersistHistoryItem[] = [];
-
     const assistantParts =
       this.latestAssistantMessage?.role === "assistant"
         ? messageContentToHistoryParts(this.latestAssistantMessage)
@@ -201,40 +194,36 @@ export class DurableChatRunReporter {
       this.latestAssistantMessage?.role === "assistant" ||
       assistantParts.length > 0
     ) {
-      items.push({
-        role: "assistant",
-        text:
-          this.latestAssistantMessage?.role === "assistant"
-            ? extractMessageText(this.latestAssistantMessage) || undefined
-            : undefined,
-        partsJson: JSON.stringify(assistantParts),
-        timestamp:
-          this.latestAssistantMessage?.timestamp ??
-          firstToolResult?.timestamp ??
-          Date.now(),
-        idempotencyKey: this.assistantMessageId,
-      });
+      return [
+        {
+          role: "assistant",
+          text:
+            this.latestAssistantMessage?.role === "assistant"
+              ? extractMessageText(this.latestAssistantMessage) || undefined
+              : undefined,
+          partsJson: JSON.stringify(assistantParts),
+          timestamp:
+            this.latestAssistantMessage?.timestamp ??
+            firstToolResult?.timestamp ??
+            Date.now(),
+          idempotencyKey: this.assistantMessageId,
+        },
+      ];
     }
 
-    return items;
+    return [];
   }
 
-  private async callConvexHttpAction(
-    path: string,
-    body: Record<string, unknown>,
-  ): Promise<void> {
-    const response = await fetch(`${this.convexSiteUrl}${path}`, {
+  private async postEvent(body: DurableChatRunEventBody): Promise<void> {
+    const response = await fetch(this.durableRun.callbackUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.convexSecret}`,
-      },
+      headers: buildAuthHeaders(this.durableRun.callbackToken),
       body: JSON.stringify(body),
     });
     if (!response.ok) {
       const text = await response.text().catch(() => "");
       throw new Error(
-        `Convex HTTP action failed for ${path}: ${response.status} ${text}`,
+        `Chat run relay failed: ${response.status} ${text}`.trim(),
       );
     }
   }

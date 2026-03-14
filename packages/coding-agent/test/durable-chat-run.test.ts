@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DurableChatRunReporter } from "../src/core/gateway/durable-chat-run.js";
 
-const originalConvexUrl = process.env.CONVEX_URL;
-const originalConvexSecret = process.env.CONVEX_SECRET;
-
 function mockOkResponse() {
   return {
     ok: true,
@@ -15,31 +12,16 @@ function mockOkResponse() {
 describe("DurableChatRunReporter", () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    if (originalConvexUrl === undefined) {
-      delete process.env.CONVEX_URL;
-    } else {
-      process.env.CONVEX_URL = originalConvexUrl;
-    }
-    if (originalConvexSecret === undefined) {
-      delete process.env.CONVEX_SECRET;
-    } else {
-      process.env.CONVEX_SECRET = originalConvexSecret;
-    }
   });
 
-  it("upserts a single assistant message with tool results and completes the run", async () => {
-    process.env.CONVEX_URL = "https://convex.example";
-    process.env.CONVEX_SECRET = "test-secret";
-
+  it("posts assistant state to the relay and completes the run", async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(mockOkResponse());
     vi.stubGlobal("fetch", fetchMock);
 
     const reporter = new DurableChatRunReporter({
       runId: "run-1",
-      userId: "user-1",
-      agentId: "agent-1",
-      threadId: "thread-1",
-      sessionKey: "session-1",
+      callbackUrl: "https://web.example/api/chat/runs/run-1/events",
+      callbackToken: "callback-token",
     });
 
     const assistantMessage = {
@@ -94,24 +76,28 @@ describe("DurableChatRunReporter", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      "https://convex.example/api/chat/run-messages",
+      "https://web.example/api/chat/runs/run-1/events",
     );
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      "https://convex.example/api/chat/complete-run",
+      "https://web.example/api/chat/runs/run-1/events",
     );
 
-    const runMessagesBody = JSON.parse(
-      String(fetchMock.mock.calls[0]?.[1]?.body),
-    ) as {
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
+      Authorization: "Bearer callback-token",
+      "Content-Type": "application/json",
+    });
+
+    const runMessagesCall = fetchMock.mock.calls.find((call) =>
+      String(call[1]?.body).includes('"items"'),
+    );
+    const runMessagesBody = JSON.parse(String(runMessagesCall?.[1]?.body)) as {
       items: Array<{
-        role: string;
         idempotencyKey: string;
         partsJson: string;
       }>;
     };
     expect(runMessagesBody.items).toHaveLength(1);
     expect(runMessagesBody.items[0]).toMatchObject({
-      role: "assistant",
       idempotencyKey: "run:run-1:assistant",
     });
     expect(JSON.parse(runMessagesBody.items[0]?.partsJson ?? "[]")).toEqual(
@@ -129,21 +115,24 @@ describe("DurableChatRunReporter", () => {
         }),
       ]),
     );
+
+    expect(
+      JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)),
+    ).toMatchObject({
+      final: {
+        status: "completed",
+      },
+    });
   });
 
   it("marks aborted runs as interrupted", async () => {
-    process.env.CONVEX_URL = "https://convex.example";
-    process.env.CONVEX_SECRET = "test-secret";
-
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(mockOkResponse());
     vi.stubGlobal("fetch", fetchMock);
 
     const reporter = new DurableChatRunReporter({
       runId: "run-2",
-      userId: "user-1",
-      agentId: "agent-1",
-      threadId: "thread-1",
-      sessionKey: "session-1",
+      callbackUrl: "https://web.example/api/chat/runs/run-2/events",
+      callbackToken: "callback-token",
     });
 
     await reporter.finalize({
@@ -155,7 +144,14 @@ describe("DurableChatRunReporter", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      "https://convex.example/api/chat/interrupt-run",
+      "https://web.example/api/chat/runs/run-2/events",
     );
+    expect(
+      JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)),
+    ).toMatchObject({
+      final: {
+        status: "interrupted",
+      },
+    });
   });
 });

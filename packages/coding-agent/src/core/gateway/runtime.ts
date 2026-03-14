@@ -117,21 +117,17 @@ function readDurableRun(
   }
 
   const runId = readString(value.runId);
-  const userId = readString(value.userId);
-  const agentId = readString(value.agentId);
-  const threadId = readString(value.threadId);
-  const sessionKey = readString(value.sessionKey);
+  const callbackUrl = readString(value.callbackUrl);
+  const callbackToken = readString(value.callbackToken);
 
-  if (!runId || !userId || !agentId || !threadId || !sessionKey) {
+  if (!runId || !callbackUrl || !callbackToken) {
     return undefined;
   }
 
   return {
     runId,
-    userId,
-    agentId,
-    threadId,
-    sessionKey,
+    callbackUrl,
+    callbackToken,
   };
 }
 
@@ -516,7 +512,6 @@ export class GatewayRuntime {
         response,
         sessionKey: managedSession.sessionKey,
       };
-      queued.resolve(result);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.log(
@@ -540,24 +535,37 @@ export class GatewayRuntime {
         error: message,
         sessionKey: managedSession.sessionKey,
       };
-      queued.resolve(result);
     } finally {
       queued.onFinish?.();
+      if (durableRunReporter) {
+        try {
+          await durableRunReporter.finalize(result);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          this.log(
+            `[chat-run] session=${managedSession.sessionKey} finalize error: ${message}`,
+          );
+          this.emit(managedSession, {
+            type: "error",
+            sessionKey: managedSession.sessionKey,
+            error: message,
+          });
+          result = {
+            ok: false,
+            response: result.response,
+            error: message,
+            sessionKey: managedSession.sessionKey,
+          };
+        }
+      }
+      queued.resolve(result);
       managedSession.processing = false;
       managedSession.activeDurableRun = null;
       managedSession.activeAssistantMessage = null;
       managedSession.pendingToolResults = [];
       managedSession.lastActiveAt = Date.now();
       this.emitState(managedSession);
-      if (durableRunReporter) {
-        await durableRunReporter.finalize(result).catch((error) => {
-          const message =
-            error instanceof Error ? error.message : String(error);
-          this.log(
-            `[chat-run] session=${managedSession.sessionKey} finalize error: ${message}`,
-          );
-        });
-      }
       if (managedSession.queue.length > 0) {
         void this.processNext(managedSession);
       }

@@ -28,10 +28,8 @@ export interface GatewayMessageRequest {
   metadata?: Record<string, unknown>;
   durableRun?: {
     runId: string;
-    userId: string;
-    agentId: string;
-    threadId: string;
-    sessionKey: string;
+    callbackUrl: string;
+    callbackToken: string;
   };
 }
 
