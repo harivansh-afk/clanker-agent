@@ -26,6 +26,11 @@ export interface GatewayMessageRequest {
   source?: "interactive" | "rpc" | "extension";
   images?: ImageContent[];
   metadata?: Record<string, unknown>;
+  durableRun?: {
+    runId: string;
+    callbackUrl: string;
+    callbackToken: string;
+  };
 }
 
 export interface GatewayMessageResult {

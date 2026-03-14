@@ -49,6 +49,7 @@ function addManagedSession(
     session,
     queue: [],
     processing: false,
+    activeDurableRun: null,
     activeAssistantMessage: null,
     pendingToolResults: [],
     createdAt: Date.now(),
