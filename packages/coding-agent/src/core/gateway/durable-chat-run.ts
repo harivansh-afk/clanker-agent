@@ -3,7 +3,11 @@ import type { AgentSessionEvent } from "../agent-session.js";
 import { extractMessageText } from "./helpers.js";
 import { messageContentToHistoryParts } from "./session-state.js";
 import type { GatewayTransientToolResult } from "./session-state.js";
-import type { GatewayMessageResult, GatewayMessageRequest } from "./types.js";
+import type {
+  GatewayMessageResult,
+  GatewayMessageRequest,
+  HistoryPart,
+} from "./types.js";
 
 const FLUSH_INTERVAL_MS = 500;
 
@@ -50,6 +54,7 @@ function buildAuthHeaders(token: string): Record<string, string> {
 export class DurableChatRunReporter {
   private readonly assistantMessageId: string;
   private latestAssistantMessage: AgentMessage | null = null;
+  private accumulatedReasoningParts: Array<HistoryPart> = [];
   private readonly knownToolResults = new Map<
     string,
     GatewayTransientToolResult
@@ -83,6 +88,16 @@ export class DurableChatRunReporter {
     }
 
     if (event.type === "message_start" && event.message.role === "assistant") {
+      if (this.latestAssistantMessage?.role === "assistant") {
+        const previousParts = messageContentToHistoryParts(
+          this.latestAssistantMessage,
+        );
+        for (const part of previousParts) {
+          if (part.type === "reasoning") {
+            this.accumulatedReasoningParts.push(part);
+          }
+        }
+      }
       this.latestAssistantMessage = event.message;
       return;
     }
@@ -172,10 +187,25 @@ export class DurableChatRunReporter {
   }
 
   private buildItems(): PersistHistoryItem[] {
-    const assistantParts =
+    const currentParts =
       this.latestAssistantMessage?.role === "assistant"
         ? messageContentToHistoryParts(this.latestAssistantMessage)
         : [];
+
+    const currentReasoningTexts = new Set(
+      currentParts
+        .filter(
+          (p): p is HistoryPart & { type: "reasoning" } =>
+            p.type === "reasoning",
+        )
+        .map((p) => p.text),
+    );
+
+    const deduplicatedPrior = this.accumulatedReasoningParts.filter(
+      (p) => p.type === "reasoning" && !currentReasoningTexts.has(p.text),
+    );
+
+    const assistantParts = [...deduplicatedPrior, ...currentParts];
 
     for (const toolResult of this.knownToolResults.values()) {
       assistantParts.push({
