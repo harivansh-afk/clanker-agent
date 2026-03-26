@@ -155,7 +155,7 @@ describe("browser tool", () => {
       profileDir,
       stateDir,
       headed: true,
-      windowClass: "CompanionBrowser",
+      windowClass: "ClankerBrowser",
     });
 
     await browserTool.execute("browser-open-window-class", {
@@ -168,7 +168,7 @@ describe("browser tool", () => {
       profileDir,
       "--headed",
       "--args",
-      "--class=CompanionBrowser",
+      "--class=ClankerBrowser",
       "open",
       "https://example.com",
     ]);

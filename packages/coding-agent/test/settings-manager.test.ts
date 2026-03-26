@@ -14,7 +14,7 @@ describe("SettingsManager", () => {
       rmSync(testDir, { recursive: true });
     }
     mkdirSync(agentDir, { recursive: true });
-    mkdirSync(join(projectDir, ".companion"), { recursive: true });
+    mkdirSync(join(projectDir, ".clanker"), { recursive: true });
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe("SettingsManager", () => {
         }),
       );
 
-      // Create SettingsManager (simulates companion starting up)
+      // Create SettingsManager (simulates clanker starting up)
       const manager = SettingsManager.create(projectDir, agentDir);
 
       // Simulate user editing settings.json externally to add enabledModels
@@ -205,7 +205,7 @@ describe("SettingsManager", () => {
   describe("error tracking", () => {
     it("should collect and clear load errors via drainErrors", () => {
       const globalSettingsPath = join(agentDir, "settings.json");
-      const projectSettingsPath = join(projectDir, ".companion", "settings.json");
+      const projectSettingsPath = join(projectDir, ".clanker", "settings.json");
       writeFileSync(globalSettingsPath, "{ invalid global json");
       writeFileSync(projectSettingsPath, "{ invalid project json");
 
@@ -219,46 +219,46 @@ describe("SettingsManager", () => {
   });
 
   describe("project settings directory creation", () => {
-    it("should not create .companion folder when only reading project settings", () => {
-      // Create agent dir with global settings, but NO .companion folder in project
+    it("should not create .clanker folder when only reading project settings", () => {
+      // Create agent dir with global settings, but NO .clanker folder in project
       const settingsPath = join(agentDir, "settings.json");
       writeFileSync(settingsPath, JSON.stringify({ theme: "dark" }));
 
-      // Delete the .companion folder that beforeEach created
-      rmSync(join(projectDir, ".companion"), { recursive: true });
+      // Delete the .clanker folder that beforeEach created
+      rmSync(join(projectDir, ".clanker"), { recursive: true });
 
       // Create SettingsManager (reads both global and project settings)
       const manager = SettingsManager.create(projectDir, agentDir);
 
-      // .companion folder should NOT have been created just from reading
-      expect(existsSync(join(projectDir, ".companion"))).toBe(false);
+      // .clanker folder should NOT have been created just from reading
+      expect(existsSync(join(projectDir, ".clanker"))).toBe(false);
 
       // Settings should still be loaded from global
       expect(manager.getTheme()).toBe("dark");
     });
 
-    it("should create .companion folder when writing project settings", async () => {
-      // Create agent dir with global settings, but NO .companion folder in project
+    it("should create .clanker folder when writing project settings", async () => {
+      // Create agent dir with global settings, but NO .clanker folder in project
       const settingsPath = join(agentDir, "settings.json");
       writeFileSync(settingsPath, JSON.stringify({ theme: "dark" }));
 
-      // Delete the .companion folder that beforeEach created
-      rmSync(join(projectDir, ".companion"), { recursive: true });
+      // Delete the .clanker folder that beforeEach created
+      rmSync(join(projectDir, ".clanker"), { recursive: true });
 
       const manager = SettingsManager.create(projectDir, agentDir);
 
-      // .companion folder should NOT exist yet
-      expect(existsSync(join(projectDir, ".companion"))).toBe(false);
+      // .clanker folder should NOT exist yet
+      expect(existsSync(join(projectDir, ".clanker"))).toBe(false);
 
       // Write a project-specific setting
       manager.setProjectPackages([{ source: "npm:test-pkg" }]);
       await manager.flush();
 
-      // Now .companion folder should exist
-      expect(existsSync(join(projectDir, ".companion"))).toBe(true);
+      // Now .clanker folder should exist
+      expect(existsSync(join(projectDir, ".clanker"))).toBe(true);
 
       // And settings file should be created
-      expect(existsSync(join(projectDir, ".companion", "settings.json"))).toBe(true);
+      expect(existsSync(join(projectDir, ".clanker", "settings.json"))).toBe(true);
     });
   });
 

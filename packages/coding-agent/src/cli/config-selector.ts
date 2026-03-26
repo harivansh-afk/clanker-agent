@@ -1,8 +1,8 @@
 /**
- * TUI config selector for `companion config` command
+ * TUI config selector for `clanker config` command
  */
 
-import { ProcessTerminal, TUI } from "@mariozechner/companion-tui";
+import { ProcessTerminal, TUI } from "@mariozechner/clanker-tui";
 import type { ResolvedPaths } from "../core/package-manager.js";
 import type { SettingsManager } from "../core/settings-manager.js";
 import { ConfigSelectorComponent } from "../modes/interactive/components/config-selector.js";

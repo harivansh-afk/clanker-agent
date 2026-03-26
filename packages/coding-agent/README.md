@@ -1,24 +1,24 @@
 <p align="center">
-  <a href="https://shittycodingagent.ai">
-    <img src="https://shittycodingagent.ai/logo.svg" alt="companion logo" width="128">
+  <a href="https://clanker.dev">
+    <img src="https://clanker.dev/logo.svg" alt="clanker logo" width="128">
   </a>
 </p>
 <p align="center">
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@mariozechner/companion-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@mariozechner/companion-coding-agent?style=flat-square" /></a>
-  <a href="https://github.com/getcompanion-ai/co-mono/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/getcompanion-ai/co-mono/ci.yml?style=flat-square&branch=main" /></a>
+  <a href="https://www.npmjs.com/package/@mariozechner/clanker-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@mariozechner/clanker-coding-agent?style=flat-square" /></a>
+  <a href="https://github.com/harivansh-afk/clanker-agent/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/harivansh-afk/clanker-agent/ci.yml?style=flat-square&branch=main" /></a>
 </p>
 <p align="center">
-  <a href="https://companion.dev">companion.dev</a> domain graciously donated by
+  <a href="https://clanker.dev">clanker.dev</a> domain graciously donated by
   <br /><br />
   <a href="https://exe.dev"><img src="docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
 
-Companion is a minimal terminal coding harness. Adapt companion to your workflows, not the other way around, without having to fork and modify companion internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Companion Packages](#companion-packages) and share them with others via npm or git.
+Clanker is a minimal terminal coding harness. Adapt clanker to your workflows, not the other way around, without having to fork and modify clanker internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Clanker Packages](#clanker-packages) and share them with others via npm or git.
 
-Companion ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask companion to build what you want or install a third party companion package that matches your workflow.
+Clanker ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask clanker to build what you want or install a third party clanker package that matches your workflow.
 
-Companion runs in four modes: interactive, print or JSON, RPC for process integration, and an SDK for embedding in your own apps. See [openclaw/openclaw](https://github.com/openclaw/openclaw) for a real-world SDK integration.
+Clanker runs in four modes: interactive, print or JSON, RPC for process integration, and an SDK for embedding in your own apps. See [openclaw/openclaw](https://github.com/openclaw/openclaw) for a real-world SDK integration.
 
 ## Table of Contents
 
@@ -39,7 +39,7 @@ Companion runs in four modes: interactive, print or JSON, RPC for process integr
   - [Skills](#skills)
   - [Extensions](#extensions)
   - [Themes](#themes)
-  - [Companion Packages](#companion-packages)
+  - [Clanker Packages](#clanker-packages)
 - [Programmatic Usage](#programmatic-usage)
 - [Philosophy](#philosophy)
 - [CLI Reference](#cli-reference)
@@ -49,24 +49,24 @@ Companion runs in four modes: interactive, print or JSON, RPC for process integr
 ## Quick Start
 
 ```bash
-npm install -g @mariozechner/companion-coding-agent
+npm install -g @mariozechner/clanker-coding-agent
 ```
 
 Authenticate with an API key:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-companion
+clanker
 ```
 
 Or use your existing subscription:
 
 ```bash
-companion
+clanker
 /login  # Then select provider
 ```
 
-Then just talk to companion. By default, companion gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [companion packages](#companion-packages).
+Then just talk to clanker. By default, clanker gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [clanker packages](#clanker-packages).
 
 **Platform notes:** [Windows](docs/windows.md) | [Termux (Android)](docs/termux.md) | [Terminal setup](docs/terminal-setup.md) | [Shell aliases](docs/shell-aliases.md)
 
@@ -74,7 +74,7 @@ Then just talk to companion. By default, companion gives the model four tools: `
 
 ## Providers & Models
 
-For each built-in provider, companion maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/login`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
+For each built-in provider, clanker maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/login`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
 
 **Subscriptions:**
 
@@ -107,7 +107,7 @@ For each built-in provider, companion maintains a list of tool-capable models, u
 
 See [docs/providers.md](docs/providers.md) for detailed setup instructions.
 
-**Custom providers & models:** Add providers via `~/.companion/agent/models.json` if they speak a supported API (OpenAI, Anthropic, Google). For custom APIs or OAuth, use extensions. See [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
+**Custom providers & models:** Add providers via `~/.clanker/agent/models.json` if they speak a supported API (OpenAI, Anthropic, Google). For custom APIs or OAuth, use extensions. See [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
 
 ---
 
@@ -159,11 +159,11 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/reload`           | Reload extensions, skills, prompts, context files (themes hot-reload automatically) |
 | `/hotkeys`          | Show all keyboard shortcuts                                                         |
 | `/changelog`        | Display version history                                                             |
-| `/quit`, `/exit`    | Quit companion                                                                             |
+| `/quit`, `/exit`    | Quit clanker                                                                             |
 
 ### Keyboard Shortcuts
 
-See `/hotkeys` for the full list. Customize via `~/.companion/agent/keybindings.json`. See [docs/keybindings.md](docs/keybindings.md).
+See `/hotkeys` for the full list. Customize via `~/.clanker/agent/keybindings.json`. See [docs/keybindings.md](docs/keybindings.md).
 
 **Commonly used:**
 
@@ -198,13 +198,13 @@ Sessions are stored as JSONL files with a tree structure. Each entry has an `id`
 
 ### Management
 
-Sessions auto-save to `~/.companion/agent/sessions/` organized by working directory.
+Sessions auto-save to `~/.clanker/agent/sessions/` organized by working directory.
 
 ```bash
-companion -c                  # Continue most recent session
-companion -r                  # Browse and select from past sessions
-companion --no-session        # Ephemeral mode (don't save)
-companion --session <path>    # Use specific session file or ID
+clanker -c                  # Continue most recent session
+clanker -r                  # Browse and select from past sessions
+clanker --no-session        # Ephemeral mode (don't save)
+clanker --session <path>    # Use specific session file or ID
 ```
 
 ### Branching
@@ -237,8 +237,8 @@ Use `/settings` to modify common options, or edit JSON files directly:
 
 | Location                    | Scope                      |
 | --------------------------- | -------------------------- |
-| `~/.companion/agent/settings.json` | Global (all projects)      |
-| `.companion/settings.json`         | Project (overrides global) |
+| `~/.clanker/agent/settings.json` | Global (all projects)      |
+| `.clanker/settings.json`         | Project (overrides global) |
 
 See [docs/settings.md](docs/settings.md) for all options.
 
@@ -246,9 +246,9 @@ See [docs/settings.md](docs/settings.md) for all options.
 
 ## Context Files
 
-Companion loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
+Clanker loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
 
-- `~/.companion/agent/AGENTS.md` (global)
+- `~/.clanker/agent/AGENTS.md` (global)
 - Parent directories (walking up from cwd)
 - Current directory
 
@@ -256,7 +256,7 @@ Use for project instructions, conventions, common commands. All matching files a
 
 ### System Prompt
 
-Replace the default system prompt with `.companion/SYSTEM.md` (project) or `~/.companion/agent/SYSTEM.md` (global). Append without replacing via `APPEND_SYSTEM.md`.
+Replace the default system prompt with `.clanker/SYSTEM.md` (project) or `~/.clanker/agent/SYSTEM.md` (global). Append without replacing via `APPEND_SYSTEM.md`.
 
 ---
 
@@ -267,20 +267,20 @@ Replace the default system prompt with `.companion/SYSTEM.md` (project) or `~/.c
 Reusable prompts as Markdown files. Type `/name` to expand.
 
 ```markdown
-<!-- ~/.companion/agent/prompts/review.md -->
+<!-- ~/.clanker/agent/prompts/review.md -->
 
 Review this code for bugs, security issues, and performance problems.
 Focus on: {{focus}}
 ```
 
-Place in `~/.companion/agent/prompts/`, `.companion/prompts/`, or a [companion package](#companion-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
+Place in `~/.clanker/agent/prompts/`, `.clanker/prompts/`, or a [clanker package](#clanker-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
 
 ### Skills
 
 On-demand capability packages following the [Agent Skills standard](https://agentskills.io). Invoke via `/skill:name` or let the agent load them automatically.
 
 ```markdown
-<!-- ~/.companion/agent/skills/my-skill/SKILL.md -->
+<!-- ~/.clanker/agent/skills/my-skill/SKILL.md -->
 
 # My Skill
 
@@ -292,19 +292,19 @@ Use this skill when the user asks about X.
 2. Then that
 ```
 
-Place in `~/.companion/agent/skills/`, `~/.agents/skills/`, `.companion/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [companion package](#companion-packages) to share with others. See [docs/skills.md](docs/skills.md).
+Place in `~/.clanker/agent/skills/`, `~/.agents/skills/`, `.clanker/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [clanker package](#clanker-packages) to share with others. See [docs/skills.md](docs/skills.md).
 
 ### Extensions
 
 <p align="center"><img src="docs/images/doom-extension.png" alt="Doom Extension" width="600"></p>
 
-TypeScript modules that extend companion with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
+TypeScript modules that extend clanker with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
 
 ```typescript
-export default function (companion: ExtensionAPI) {
-  companion.registerTool({ name: "deploy", ... });
-  companion.registerCommand("stats", { ... });
-  companion.on("tool_call", async (event, ctx) => { ... });
+export default function (clanker: ExtensionAPI) {
+  clanker.registerTool({ name: "deploy", ... });
+  clanker.registerCommand("stats", { ... });
+  clanker.on("tool_call", async (event, ctx) => { ... });
 }
 ```
 
@@ -319,50 +319,50 @@ export default function (companion: ExtensionAPI) {
 - Git checkpointing and auto-commit
 - SSH and sandbox execution
 - MCP server integration
-- Make companion look like Claude Code
+- Make clanker look like Claude Code
 - Games while waiting (yes, Doom runs)
 - ...anything you can dream up
 
-Place in `~/.companion/agent/extensions/`, `.companion/extensions/`, or a [companion package](#companion-packages) to share with others. See [docs/extensions.md](docs/extensions.md).
+Place in `~/.clanker/agent/extensions/`, `.clanker/extensions/`, or a [clanker package](#clanker-packages) to share with others. See [docs/extensions.md](docs/extensions.md).
 
 ### Themes
 
-Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and companion immediately applies changes.
+Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and clanker immediately applies changes.
 
-Place in `~/.companion/agent/themes/`, `.companion/themes/`, or a [companion package](#companion-packages) to share with others. See [docs/themes.md](docs/themes.md).
+Place in `~/.clanker/agent/themes/`, `.clanker/themes/`, or a [clanker package](#clanker-packages) to share with others. See [docs/themes.md](docs/themes.md).
 
-### Companion Packages
+### Clanker Packages
 
-Bundle and share extensions, skills, prompts, and themes via npm or git. Find packages on [npmjs.com](https://www.npmjs.com/search?q=keywords%3Acompanion-package) or [Discord](https://discord.com/channels/1456806362351669492/1457744485428629628).
+Bundle and share extensions, skills, prompts, and themes via npm or git. Find packages on [npmjs.com](https://www.npmjs.com/search?q=keywords%3Aclanker-package) or [Discord](https://discord.com/channels/1456806362351669492/1457744485428629628).
 
-> **Security:** Companion packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
+> **Security:** Clanker packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
 
 ```bash
-companion install npm:@foo/companion-tools
-companion install npm:@foo/companion-tools@1.2.3      # pinned version
-companion install git:github.com/user/repo
-companion install git:github.com/user/repo@v1  # tag or commit
-companion install git:git@github.com:user/repo
-companion install git:git@github.com:user/repo@v1  # tag or commit
-companion install https://github.com/user/repo
-companion install https://github.com/user/repo@v1      # tag or commit
-companion install ssh://git@github.com/user/repo
-companion install ssh://git@github.com/user/repo@v1    # tag or commit
-companion remove npm:@foo/companion-tools
-companion list
-companion update                               # skips pinned packages
-companion config                               # enable/disable extensions, skills, prompts, themes
+clanker install npm:@foo/clanker-tools
+clanker install npm:@foo/clanker-tools@1.2.3      # pinned version
+clanker install git:github.com/user/repo
+clanker install git:github.com/user/repo@v1  # tag or commit
+clanker install git:git@github.com:user/repo
+clanker install git:git@github.com:user/repo@v1  # tag or commit
+clanker install https://github.com/user/repo
+clanker install https://github.com/user/repo@v1      # tag or commit
+clanker install ssh://git@github.com/user/repo
+clanker install ssh://git@github.com/user/repo@v1    # tag or commit
+clanker remove npm:@foo/clanker-tools
+clanker list
+clanker update                               # skips pinned packages
+clanker config                               # enable/disable extensions, skills, prompts, themes
 ```
 
-Packages install to `~/.companion/agent/git/` (git) or global npm. Use `-l` for project-local installs (`.companion/git/`, `.companion/npm/`).
+Packages install to `~/.clanker/agent/git/` (git) or global npm. Use `-l` for project-local installs (`.clanker/git/`, `.clanker/npm/`).
 
-Create a package by adding a `companion` key to `package.json`:
+Create a package by adding a `clanker` key to `package.json`:
 
 ```json
 {
-  "name": "my-companion-package",
-  "keywords": ["companion-package"],
-  "companion": {
+  "name": "my-clanker-package",
+  "keywords": ["clanker-package"],
+  "clanker": {
     "extensions": ["./extensions"],
     "skills": ["./skills"],
     "prompts": ["./prompts"],
@@ -371,7 +371,7 @@ Create a package by adding a `companion` key to `package.json`:
 }
 ```
 
-Without a `companion` manifest, companion auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
+Without a `clanker` manifest, clanker auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
 
 See [docs/packages.md](docs/packages.md).
 
@@ -387,7 +387,7 @@ import {
   createAgentSession,
   ModelRegistry,
   SessionManager,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const { session } = await createAgentSession({
   sessionManager: SessionManager.inMemory(),
@@ -405,7 +405,7 @@ See [docs/sdk.md](docs/sdk.md).
 For non-Node.js integrations, use RPC mode over stdin/stdout:
 
 ```bash
-companion --mode rpc
+clanker --mode rpc
 ```
 
 See [docs/rpc.md](docs/rpc.md) for the protocol.
@@ -414,11 +414,11 @@ See [docs/rpc.md](docs/rpc.md) for the protocol.
 
 ## Philosophy
 
-Companion is aggressively extensible so it doesn't have to dictate your workflow. Features that other tools bake in can be built with [extensions](#extensions), [skills](#skills), or installed from third-party [companion packages](#companion-packages). This keeps the core minimal while letting you shape companion to fit how you work.
+Clanker is aggressively extensible so it doesn't have to dictate your workflow. Features that other tools bake in can be built with [extensions](#extensions), [skills](#skills), or installed from third-party [clanker packages](#clanker-packages). This keeps the core minimal while letting you shape clanker to fit how you work.
 
 **No MCP.** Build CLI tools with READMEs (see [Skills](#skills)), or build an extension that adds MCP support. [Why?](https://mariozechner.at/posts/2025-11-02-what-if-you-dont-need-mcp/)
 
-**No sub-agents.** There's many ways to do this. Spawn companion instances via tmux, or build your own with [extensions](#extensions), or install a package that does it your way.
+**No sub-agents.** There's many ways to do this. Spawn clanker instances via tmux, or build your own with [extensions](#extensions), or install a package that does it your way.
 
 **No permission popups.** Run in a container, or build your own confirmation flow with [extensions](#extensions) inline with your environment and security requirements.
 
@@ -428,24 +428,24 @@ Companion is aggressively extensible so it doesn't have to dictate your workflow
 
 **No background bash.** Use tmux. Full observability, direct interaction.
 
-Read the [blog post](https://mariozechner.at/posts/2025-11-30-companion-coding-agent/) for the full rationale.
+Read the [blog post](https://mariozechner.at/posts/2025-11-30-clanker-coding-agent/) for the full rationale.
 
 ---
 
 ## CLI Reference
 
 ```bash
-companion [options] [@files...] [messages...]
+clanker [options] [@files...] [messages...]
 ```
 
 ### Package Commands
 
 ```bash
-companion install <source> [-l]    # Install package, -l for project-local
-companion remove <source> [-l]     # Remove package
-companion update [source]          # Update packages (skips pinned)
-companion list                     # List installed packages
-companion config                   # Enable/disable package resources
+clanker install <source> [-l]    # Install package, -l for project-local
+clanker remove <source> [-l]     # Remove package
+clanker update [source]          # Update packages (skips pinned)
+clanker list                     # List installed packages
+clanker config                   # Enable/disable package resources
 ```
 
 ### Modes
@@ -519,47 +519,47 @@ Combine `--no-*` with explicit flags to load exactly what you need, ignoring set
 Prefix files with `@` to include in the message:
 
 ```bash
-companion @prompt.md "Answer this"
-companion -p @screenshot.png "What's in this image?"
-companion @code.ts @test.ts "Review these files"
+clanker @prompt.md "Answer this"
+clanker -p @screenshot.png "What's in this image?"
+clanker @code.ts @test.ts "Review these files"
 ```
 
 ### Examples
 
 ```bash
 # Interactive with initial prompt
-companion "List all .ts files in src/"
+clanker "List all .ts files in src/"
 
 # Non-interactive
-companion -p "Summarize this codebase"
+clanker -p "Summarize this codebase"
 
 # Different model
-companion --provider openai --model gpt-4o "Help me refactor"
+clanker --provider openai --model gpt-4o "Help me refactor"
 
 # Model with provider prefix (no --provider needed)
-companion --model openai/gpt-4o "Help me refactor"
+clanker --model openai/gpt-4o "Help me refactor"
 
 # Model with thinking level shorthand
-companion --model sonnet:high "Solve this complex problem"
+clanker --model sonnet:high "Solve this complex problem"
 
 # Limit model cycling
-companion --models "claude-*,gpt-4o"
+clanker --models "claude-*,gpt-4o"
 
 # Read-only mode
-companion --tools read,grep,find,ls -p "Review the code"
+clanker --tools read,grep,find,ls -p "Review the code"
 
 # High thinking level
-companion --thinking high "Solve this complex problem"
+clanker --thinking high "Solve this complex problem"
 ```
 
 ### Environment Variables
 
 | Variable                | Description                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------- |
-| `COMPANION_CODING_AGENT_DIR`   | Override config directory (default: `~/.companion/agent`)                                 |
-| `COMPANION_PACKAGE_DIR`        | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
-| `COMPANION_SKIP_VERSION_CHECK` | Skip version check at startup                                                      |
-| `COMPANION_CACHE_RETENTION`    | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h)               |
+| `CLANKER_CODING_AGENT_DIR`   | Override config directory (default: `~/.clanker/agent`)                                 |
+| `CLANKER_PACKAGE_DIR`        | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
+| `CLANKER_SKIP_VERSION_CHECK` | Skip version check at startup                                                      |
+| `CLANKER_CACHE_RETENTION`    | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h)               |
 | `VISUAL`, `EDITOR`      | External editor for Ctrl+G                                                         |
 
 ---
@@ -576,6 +576,6 @@ MIT
 
 ## See Also
 
-- [@mariozechner/companion-ai](https://www.npmjs.com/package/@mariozechner/companion-ai): Core LLM toolkit
-- [@mariozechner/companion-agent](https://www.npmjs.com/package/@mariozechner/companion-agent): Agent framework
-- [@mariozechner/companion-tui](https://www.npmjs.com/package/@mariozechner/companion-tui): Terminal UI components
+- [@mariozechner/clanker-ai](https://www.npmjs.com/package/@mariozechner/clanker-ai): Core LLM toolkit
+- [@mariozechner/clanker-agent](https://www.npmjs.com/package/@mariozechner/clanker-agent): Agent framework
+- [@mariozechner/clanker-tui](https://www.npmjs.com/package/@mariozechner/clanker-tui): Terminal UI components

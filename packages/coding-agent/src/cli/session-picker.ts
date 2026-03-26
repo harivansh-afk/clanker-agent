@@ -2,7 +2,7 @@
  * TUI session selector for --resume flag
  */
 
-import { ProcessTerminal, TUI } from "@mariozechner/companion-tui";
+import { ProcessTerminal, TUI } from "@mariozechner/clanker-tui";
 import { KeybindingsManager } from "../core/keybindings.js";
 import type {
   SessionInfo,

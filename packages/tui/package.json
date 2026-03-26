@@ -1,5 +1,5 @@
 {
-  "name": "@mariozechner/companion-tui",
+  "name": "@harivansh-afk/clanker-tui",
   "version": "0.56.2",
   "description": "Terminal User Interface library with differential rendering for efficient text-based applications",
   "type": "module",
@@ -28,7 +28,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getcompanion-ai/co-mono.git",
+    "url": "git+https://github.com/harivansh-afk/clanker-agent.git",
     "directory": "packages/tui"
   },
   "engines": {

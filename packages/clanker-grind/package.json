@@ -1,0 +1,35 @@
+{
+  "name": "clanker-grind",
+  "version": "0.1.0",
+  "description": "Explicit grind mode for clanker with durable follow-up continuation in daemon mode",
+  "type": "module",
+  "keywords": [
+    "clanker-package"
+  ],
+  "license": "MIT",
+  "author": "Mario Zechner",
+  "main": "./src/index.ts",
+  "files": [
+    "src",
+    "test",
+    "package.json",
+    "README.md"
+  ],
+  "clanker": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@harivansh-afk/clanker-agent-core": "*",
+    "@harivansh-afk/clanker-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "test": "vitest --run"
+  }
+}

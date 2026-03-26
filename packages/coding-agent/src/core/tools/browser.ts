@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import type { AgentTool } from "@mariozechner/companion-agent-core";
+import type { AgentTool } from "@mariozechner/clanker-agent-core";
 import { type Static, Type } from "@sinclair/typebox";
 import { getAgentDir } from "../../config.js";
 import {
@@ -28,7 +28,7 @@ const browserSnapshotModes = ["interactive", "full"] as const;
 const browserLoadStates = ["load", "domcontentloaded", "networkidle"] as const;
 
 const DEFAULT_BROWSER_COMMAND =
-  process.env.COMPANION_AGENT_BROWSER_COMMAND || "agent-browser";
+  process.env.CLANKER_AGENT_BROWSER_COMMAND || "agent-browser";
 const DEFAULT_BROWSER_TIMEOUT_SECONDS = 90;
 
 const browserSchema = Type.Object({
@@ -78,7 +78,7 @@ const browserSchema = Type.Object({
   stateName: Type.Optional(
     Type.String({
       description:
-        "Named browser state checkpoint stored under ~/.companion/agent/browser/states/",
+        "Named browser state checkpoint stored under ~/.clanker/agent/browser/states/",
     }),
   ),
 });
@@ -232,7 +232,7 @@ function getBrowserStateDir(cwd: string, options?: BrowserToolOptions): string {
 
 function createTempScreenshotPath(): string {
   const id = randomBytes(8).toString("hex");
-  return join(tmpdir(), `companion-browser-screenshot-${id}.png`);
+  return join(tmpdir(), `clanker-browser-screenshot-${id}.png`);
 }
 
 function normalizeOutput(chunks: Buffer[]): string {
@@ -285,14 +285,14 @@ function shouldLaunchHeaded(options?: BrowserToolOptions): boolean {
   if (options?.headed !== undefined) {
     return options.headed;
   }
-  return isTruthyEnv(process.env.COMPANION_AGENT_BROWSER_HEADED);
+  return isTruthyEnv(process.env.CLANKER_AGENT_BROWSER_HEADED);
 }
 
 function getBrowserWindowClass(
   options?: BrowserToolOptions,
 ): string | undefined {
   const rawValue =
-    options?.windowClass ?? process.env.COMPANION_BROWSER_WINDOW_CLASS;
+    options?.windowClass ?? process.env.CLANKER_BROWSER_WINDOW_CLASS;
   const windowClass = rawValue?.trim();
   return windowClass ? windowClass : undefined;
 }

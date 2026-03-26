@@ -395,11 +395,11 @@ describe("skills", () => {
     });
 
     it("should expand ~ in skillPaths", () => {
-      const homeSkillsDir = join(homedir(), ".companion/agent/skills");
+      const homeSkillsDir = join(homedir(), ".clanker/agent/skills");
       const { skills: withTilde } = loadSkills({
         agentDir: emptyAgentDir,
         cwd: emptyCwd,
-        skillPaths: ["~/.companion/agent/skills"],
+        skillPaths: ["~/.clanker/agent/skills"],
       });
       const { skills: withoutTilde } = loadSkills({
         agentDir: emptyAgentDir,

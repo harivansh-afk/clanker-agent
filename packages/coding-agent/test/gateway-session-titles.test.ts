@@ -12,7 +12,7 @@ function createMockSession(options?: { sessionName?: string }) {
     dispose: vi.fn(),
     subscribe: vi.fn(() => () => {}),
     sessionManager: {
-      getSessionDir: () => "/tmp/companion-gateway-test",
+      getSessionDir: () => "/tmp/clanker-gateway-test",
       appendSessionInfo: vi.fn(),
       appendLabelChange: vi.fn(),
     },

@@ -3,18 +3,18 @@ import { getModel } from "../src/models.js";
 import { stream } from "../src/stream.js";
 import type { Context } from "../src/types.js";
 
-describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
-  const originalEnv = process.env.COMPANION_CACHE_RETENTION;
+describe("Cache Retention (CLANKER_CACHE_RETENTION)", () => {
+  const originalEnv = process.env.CLANKER_CACHE_RETENTION;
 
   beforeEach(() => {
-    delete process.env.COMPANION_CACHE_RETENTION;
+    delete process.env.CLANKER_CACHE_RETENTION;
   });
 
   afterEach(() => {
     if (originalEnv !== undefined) {
-      process.env.COMPANION_CACHE_RETENTION = originalEnv;
+      process.env.CLANKER_CACHE_RETENTION = originalEnv;
     } else {
-      delete process.env.COMPANION_CACHE_RETENTION;
+      delete process.env.CLANKER_CACHE_RETENTION;
     }
   });
 
@@ -25,7 +25,7 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
 
   describe("Anthropic Provider", () => {
     it.skipIf(!process.env.ANTHROPIC_API_KEY)(
-      "should use default cache TTL (no ttl field) when COMPANION_CACHE_RETENTION is not set",
+      "should use default cache TTL (no ttl field) when CLANKER_CACHE_RETENTION is not set",
       async () => {
         const model = getModel("anthropic", "claude-3-5-haiku-20241022");
         let capturedPayload: any = null;
@@ -51,9 +51,9 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
     );
 
     it.skipIf(!process.env.ANTHROPIC_API_KEY)(
-      "should use 1h cache TTL when COMPANION_CACHE_RETENTION=long",
+      "should use 1h cache TTL when CLANKER_CACHE_RETENTION=long",
       async () => {
-        process.env.COMPANION_CACHE_RETENTION = "long";
+        process.env.CLANKER_CACHE_RETENTION = "long";
         const model = getModel("anthropic", "claude-3-5-haiku-20241022");
         let capturedPayload: any = null;
 
@@ -79,7 +79,7 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
     );
 
     it("should not add ttl when baseUrl is not api.anthropic.com", async () => {
-      process.env.COMPANION_CACHE_RETENTION = "long";
+      process.env.CLANKER_CACHE_RETENTION = "long";
 
       // Create a model with a different baseUrl (simulating a proxy)
       const baseModel = getModel("anthropic", "claude-3-5-haiku-20241022");
@@ -210,7 +210,7 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
 
   describe("OpenAI Responses Provider", () => {
     it.skipIf(!process.env.OPENAI_API_KEY)(
-      "should not set prompt_cache_retention when COMPANION_CACHE_RETENTION is not set",
+      "should not set prompt_cache_retention when CLANKER_CACHE_RETENTION is not set",
       async () => {
         const model = getModel("openai", "gpt-4o-mini");
         let capturedPayload: any = null;
@@ -232,9 +232,9 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
     );
 
     it.skipIf(!process.env.OPENAI_API_KEY)(
-      "should set prompt_cache_retention to 24h when COMPANION_CACHE_RETENTION=long",
+      "should set prompt_cache_retention to 24h when CLANKER_CACHE_RETENTION=long",
       async () => {
-        process.env.COMPANION_CACHE_RETENTION = "long";
+        process.env.CLANKER_CACHE_RETENTION = "long";
         const model = getModel("openai", "gpt-4o-mini");
         let capturedPayload: any = null;
 
@@ -255,7 +255,7 @@ describe("Cache Retention (COMPANION_CACHE_RETENTION)", () => {
     );
 
     it("should not set prompt_cache_retention when baseUrl is not api.openai.com", async () => {
-      process.env.COMPANION_CACHE_RETENTION = "long";
+      process.env.CLANKER_CACHE_RETENTION = "long";
 
       // Create a model with a different baseUrl (simulating a proxy)
       const baseModel = getModel("openai", "gpt-4o-mini");

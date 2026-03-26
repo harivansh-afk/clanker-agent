@@ -8,7 +8,7 @@ import {
   Spacer,
   Text,
   type TUI,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import stripAnsi from "strip-ansi";
 import {
   DEFAULT_MAX_BYTES,

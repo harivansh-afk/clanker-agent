@@ -1,5 +1,5 @@
 {
-  "name": "@mariozechner/companion-ai",
+  "name": "@harivansh-afk/clanker-ai",
   "version": "0.56.2",
   "description": "Unified LLM API with automatic model discovery and provider configuration",
   "type": "module",
@@ -20,7 +20,7 @@
     }
   },
   "bin": {
-    "companion-ai": "./dist/cli.js"
+    "clanker-ai": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -66,7 +66,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getcompanion-ai/co-mono.git",
+    "url": "git+https://github.com/harivansh-afk/clanker-agent.git",
     "directory": "packages/ai"
   },
   "engines": {

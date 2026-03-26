@@ -10,8 +10,8 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Agent } from "@mariozechner/companion-agent-core";
-import { getModel } from "@mariozechner/companion-ai";
+import { Agent } from "@mariozechner/clanker-agent-core";
+import { getModel } from "@mariozechner/clanker-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   AgentSession,
@@ -32,7 +32,7 @@ describe.skipIf(!API_KEY)("AgentSession compaction e2e", () => {
 
   beforeEach(() => {
     // Create temp directory for session files
-    tempDir = join(tmpdir(), `companion-compaction-test-${Date.now()}`);
+    tempDir = join(tmpdir(), `clanker-compaction-test-${Date.now()}`);
     mkdirSync(tempDir, { recursive: true });
 
     // Track events

@@ -16,11 +16,11 @@ import {
   registerApiProvider,
   resetApiProviders,
   type SimpleStreamOptions,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import {
   registerOAuthProvider,
   resetOAuthProviders,
-} from "@mariozechner/companion-ai/oauth";
+} from "@mariozechner/clanker-ai/oauth";
 import { type Static, Type } from "@sinclair/typebox";
 import AjvModule from "ajv";
 import { existsSync, readFileSync } from "fs";

@@ -5,9 +5,9 @@
  * a summary of the branch being left so context isn't lost.
  */
 
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
-import type { Model } from "@mariozechner/companion-ai";
-import { completeSimple } from "@mariozechner/companion-ai";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
+import type { Model } from "@mariozechner/clanker-ai";
+import { completeSimple } from "@mariozechner/clanker-ai";
 import {
   convertToLlm,
   createBranchSummaryMessage,
@@ -206,7 +206,7 @@ export function prepareBranchEntries(
 
   // First pass: collect file ops from ALL entries (even if they don't fit in token budget)
   // This ensures we capture cumulative file tracking from nested branch summaries
-  // Only extract from companion-generated summaries (fromHook !== true), not extension-generated ones
+  // Only extract from clanker-generated summaries (fromHook !== true), not extension-generated ones
   for (const entry of entries) {
     if (entry.type === "branch_summary" && !entry.fromHook && entry.details) {
       const details = entry.details as BranchSummaryDetails;

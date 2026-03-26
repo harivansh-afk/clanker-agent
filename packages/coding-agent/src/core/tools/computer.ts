@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { AgentTool } from "@mariozechner/companion-agent-core";
+import type { AgentTool } from "@mariozechner/clanker-agent-core";
 import { type Static, Type } from "@sinclair/typebox";
 import { getAgentDir } from "../../config.js";
 import {
@@ -34,7 +34,7 @@ const computerObservationModes = ["hybrid", "ocr"] as const;
 const computerSnapshotIdPattern = /^[A-Za-z0-9_-]+$/;
 
 const DEFAULT_COMPUTER_COMMAND =
-  process.env.COMPANION_AGENT_COMPUTER_COMMAND || "agent-computer";
+  process.env.CLANKER_AGENT_COMPUTER_COMMAND || "agent-computer";
 const DEFAULT_COMPUTER_TIMEOUT_SECONDS = 90;
 
 const computerSchema = Type.Object({

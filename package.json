@@ -1,14 +1,14 @@
 {
-  "name": "companion",
+  "name": "clanker-agent",
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/getcompanion-ai/co-mono#readme",
+  "homepage": "https://github.com/harivansh-afk/clanker-agent#readme",
   "bugs": {
-    "url": "https://github.com/getcompanion-ai/co-mono/issues"
+    "url": "https://github.com/harivansh-afk/clanker-agent/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getcompanion-ai/co-mono.git"
+    "url": "git+https://github.com/harivansh-afk/clanker-agent.git"
   },
   "workspaces": [
     "packages/*"
@@ -19,7 +19,7 @@
     "dev": "concurrently --names \"ai,agent,coding-agent,tui\" --prefix-colors \"cyan,yellow,red,magenta\" \"cd packages/ai && npm run dev\" \"cd packages/agent && npm run dev\" \"cd packages/coding-agent && npm run dev\" \"cd packages/tui && npm run dev\"",
     "dev:tsc": "cd packages/ai && npm run dev:tsc",
     "check": "biome lint --error-on-warnings . && tsgo --noEmit && npm run check:browser-smoke",
-    "check:browser-smoke": "sh -c 'esbuild scripts/browser-smoke-entry.ts --bundle --platform=browser --format=esm --log-limit=0 --outfile=/tmp/companion-browser-smoke.js > /tmp/companion-browser-smoke-errors.log 2>&1 || { echo \"Browser smoke check failed. See /tmp/companion-browser-smoke-errors.log\"; exit 1; }'",
+    "check:browser-smoke": "sh -c 'esbuild scripts/browser-smoke-entry.ts --bundle --platform=browser --format=esm --log-limit=0 --outfile=/tmp/clanker-browser-smoke.js > /tmp/clanker-browser-smoke-errors.log 2>&1 || { echo \"Browser smoke check failed. See /tmp/clanker-browser-smoke-errors.log\"; exit 1; }'",
     "test": "npm run test --workspaces --if-present",
     "version:patch": "npm version patch -ws --no-git-tag-version && node scripts/sync-versions.js && shx rm -rf node_modules packages/*/node_modules package-lock.json && npm install",
     "version:minor": "npm version minor -ws --no-git-tag-version && node scripts/sync-versions.js && shx rm -rf node_modules packages/*/node_modules package-lock.json && npm install",
@@ -49,7 +49,7 @@
   "version": "0.0.3",
   "dependencies": {
     "@mariozechner/jiti": "^2.6.5",
-    "@mariozechner/companion-coding-agent": "^0.30.2",
+    "@harivansh-afk/clanker-coding-agent": "^0.30.2",
     "get-east-asian-width": "^1.4.0"
   },
   "overrides": {

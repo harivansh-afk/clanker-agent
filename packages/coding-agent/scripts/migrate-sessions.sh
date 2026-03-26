@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
-# Migrate sessions from ~/.companion/agent/*.jsonl to proper session directories.
+# Migrate sessions from ~/.clanker/agent/*.jsonl to proper session directories.
 # This fixes sessions created by the bug in v0.30.0 where sessions were
-# saved to ~/.companion/agent/ instead of ~/.companion/agent/sessions/<encoded-cwd>/.
+# saved to ~/.clanker/agent/ instead of ~/.clanker/agent/sessions/<encoded-cwd>/.
 #
 # Usage: ./migrate-sessions.sh [--dry-run]
 #
 
 set -e
 
-AGENT_DIR="${COMPANION_AGENT_DIR:-$HOME/.companion/agent}"
+AGENT_DIR="${CLANKER_AGENT_DIR:-$HOME/.clanker/agent}"
 DRY_RUN=false
 
 if [[ "$1" == "--dry-run" ]]; then

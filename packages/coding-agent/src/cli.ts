@@ -5,10 +5,10 @@
  *
  * Test with: npx tsx src/cli-new.ts [args...]
  */
-process.title = "companion";
+process.title = "clanker";
 
-import { bedrockProviderModule } from "@mariozechner/companion-ai/bedrock-provider";
-import { setBedrockProviderModule } from "@mariozechner/companion-ai";
+import { bedrockProviderModule } from "@mariozechner/clanker-ai/bedrock-provider";
+import { setBedrockProviderModule } from "@mariozechner/clanker-ai";
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
 import { main } from "./main.js";
 

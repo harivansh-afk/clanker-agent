@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { AssistantMessage } from "@mariozechner/companion-ai";
+import type { AssistantMessage } from "@mariozechner/clanker-ai";
 import { describe, expect, it } from "vitest";
 import type { AgentSessionEvent } from "../src/core/agent-session.js";
 import {

@@ -73,7 +73,7 @@ export function getUpdateInstruction(packageName: string): string {
   const method = detectInstallMethod();
   switch (method) {
     case "bun-binary":
-      return `Download from: https://github.com/badlogic/companion-mono/releases/latest`;
+      return `Download from: https://github.com/badlogic/clanker-mono/releases/latest`;
     case "pnpm":
       return `Run: pnpm install -g ${packageName}`;
     case "yarn":
@@ -99,7 +99,7 @@ export function getUpdateInstruction(packageName: string): string {
  */
 export function getPackageDir(): string {
   // Allow override via environment variable (useful for Nix/Guix where store paths tokenize poorly)
-  const envDir = process.env.COMPANION_PACKAGE_DIR;
+  const envDir = process.env.CLANKER_PACKAGE_DIR;
   if (envDir) {
     if (envDir === "~") return homedir();
     if (envDir.startsWith("~/")) return homedir() + envDir.slice(1);
@@ -174,32 +174,32 @@ export function getChangelogPath(): string {
 }
 
 // =============================================================================
-// App Config (from package.json companionConfig)
+// App Config (from package.json clankerConfig)
 // =============================================================================
 
 const pkg = JSON.parse(readFileSync(getPackageJsonPath(), "utf-8"));
 
-export const APP_NAME: string = pkg.companionConfig?.name || "companion";
+export const APP_NAME: string = pkg.clankerConfig?.name || "clanker";
 export const CONFIG_DIR_NAME: string =
-  pkg.companionConfig?.configDir || ".companion";
+  pkg.clankerConfig?.configDir || ".clanker";
 export const VERSION: string = pkg.version;
 
-// e.g., COMPANION_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
+// e.g., CLANKER_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
 export const ENV_AGENT_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_DIR`;
 
-const DEFAULT_SHARE_VIEWER_URL = "https://companion.dev/session/";
+const DEFAULT_SHARE_VIEWER_URL = "https://clanker.dev/session/";
 
 /** Get the share viewer URL for a gist ID */
 export function getShareViewerUrl(gistId: string): string {
-  const baseUrl = process.env.COMPANION_SHARE_VIEWER_URL || DEFAULT_SHARE_VIEWER_URL;
+  const baseUrl = process.env.CLANKER_SHARE_VIEWER_URL || DEFAULT_SHARE_VIEWER_URL;
   return `${baseUrl}#${gistId}`;
 }
 
 // =============================================================================
-// User Config Paths (~/.companion/agent/*)
+// User Config Paths (~/.clanker/agent/*)
 // =============================================================================
 
-/** Get the agent config directory (e.g., ~/.companion/agent/) */
+/** Get the agent config directory (e.g., ~/.clanker/agent/) */
 export function getAgentDir(): string {
   const envDir = process.env[ENV_AGENT_DIR];
   if (envDir) {

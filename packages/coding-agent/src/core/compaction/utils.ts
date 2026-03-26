@@ -2,8 +2,8 @@
  * Shared utilities for compaction and branch summarization.
  */
 
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
-import type { Message } from "@mariozechner/companion-ai";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
+import type { Message } from "@mariozechner/clanker-ai";
 
 // ============================================================================
 // File Operation Tracking

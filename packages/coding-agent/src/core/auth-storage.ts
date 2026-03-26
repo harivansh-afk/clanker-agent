@@ -2,7 +2,7 @@
  * Credential storage for API keys and OAuth tokens.
  * Handles loading, saving, and refreshing credentials from auth.json.
  *
- * Uses file locking to prevent race conditions when multiple companion instances
+ * Uses file locking to prevent race conditions when multiple clanker instances
  * try to refresh tokens simultaneously.
  */
 
@@ -11,12 +11,12 @@ import {
   type OAuthCredentials,
   type OAuthLoginCallbacks,
   type OAuthProviderId,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import {
   getOAuthApiKey,
   getOAuthProvider,
   getOAuthProviders,
-} from "@mariozechner/companion-ai/oauth";
+} from "@mariozechner/clanker-ai/oauth";
 import {
   chmodSync,
   existsSync,
@@ -373,7 +373,7 @@ export class AuthStorage {
 
   /**
    * Refresh OAuth token with backend locking to prevent race conditions.
-   * Multiple companion instances may try to refresh simultaneously when tokens expire.
+   * Multiple clanker instances may try to refresh simultaneously when tokens expire.
    */
   private async refreshOAuthTokenWithLock(
     providerId: OAuthProviderId,

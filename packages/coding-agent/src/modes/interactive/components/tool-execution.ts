@@ -10,7 +10,7 @@ import {
   Text,
   type TUI,
   truncateToWidth,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import stripAnsi from "strip-ansi";
 import type { ToolDefinition } from "../../../core/extensions/types.js";
 import {

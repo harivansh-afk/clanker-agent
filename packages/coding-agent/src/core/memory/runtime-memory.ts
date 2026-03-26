@@ -9,32 +9,32 @@ import {
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
 import {
   completeSimple,
   type Model,
   type TextContent,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import { parseFrontmatter } from "../../utils/frontmatter.js";
 import type { SettingsManager } from "../settings-manager.js";
 import type { ReadonlySessionManager } from "../session-manager.js";
 
-const DEFAULT_STORAGE_DIR = join(homedir(), ".companion", "memory");
+const DEFAULT_STORAGE_DIR = join(homedir(), ".clanker", "memory");
 const MAX_EPISODE_CHARS = 4_000;
 const MAX_EPISODES = 5_000;
 const DEFAULT_CORE_TOKEN_BUDGET = 700;
 const DEFAULT_RECALL_RESULTS = 4;
 const DEFAULT_WRITER_MAX_TOKENS = 600;
-const CUSTOM_MEMORY_TYPE = "companion_memory";
+const CUSTOM_MEMORY_TYPE = "clanker_memory";
 const require = createRequire(import.meta.url);
 
-const MEMORY_WRITER_SYSTEM_PROMPT = `You manage long-term conversational memory for a companion agent.
+const MEMORY_WRITER_SYSTEM_PROMPT = `You manage long-term conversational memory for a clanker agent.
 
 Decide which facts from the latest exchange should be persisted for future chats.
 
 Rules:
 - Save only information grounded in the user or assistant messages.
-- Prefer durable facts, explicit remember requests, stable preferences, relationship context, and secrets/keys/codes the user will expect the companion to recall later.
+- Prefer durable facts, explicit remember requests, stable preferences, relationship context, and secrets/keys/codes the user will expect the clanker to recall later.
 - Use bucket "core" only for stable profile, preference, or relationship memory.
 - Use bucket "archival" for facts and secrets that should be searchable later.
 - Never invent details or infer beyond the exchange.
@@ -52,7 +52,7 @@ export type RuntimeMemoryKind =
   | "secret";
 export type RuntimeMemorySource = "auto" | "manual" | "legacy-import";
 
-export interface CompanionMemorySettings {
+export interface ClankerMemorySettings {
   enabled?: boolean;
   storageDir?: string;
   maxCoreTokens?: number;
@@ -65,7 +65,7 @@ export interface CompanionMemorySettings {
 
 export interface RuntimeMemoryIdentity {
   key: string;
-  scope: "agent" | "companion" | "sandbox" | "unknown";
+  scope: "agent" | "clanker" | "sandbox" | "unknown";
 }
 
 export interface RuntimeMemoryStatus {
@@ -229,15 +229,15 @@ function expandHomePath(value: string): string {
   return join(homedir(), value.slice(1));
 }
 
-function getCompanionMemorySettings(
+function getClankerMemorySettings(
   settingsManager: SettingsManager,
-): Required<CompanionMemorySettings> & {
+): Required<ClankerMemorySettings> & {
   writer: { enabled: boolean; maxTokens: number };
 } {
   const globalSettings = asRecord(settingsManager.getGlobalSettings()) ?? {};
   const projectSettings = asRecord(settingsManager.getProjectSettings()) ?? {};
-  const globalMemory = asRecord(globalSettings.companionMemory) ?? {};
-  const projectMemory = asRecord(projectSettings.companionMemory) ?? {};
+  const globalMemory = asRecord(globalSettings.clankerMemory) ?? {};
+  const projectMemory = asRecord(projectSettings.clankerMemory) ?? {};
 
   const enabled =
     typeof projectMemory.enabled === "boolean"
@@ -327,7 +327,7 @@ function buildDbFileName(identity: RuntimeMemoryIdentity): string {
 }
 
 function parseAgentIdFromSessionKey(value: string): string | null {
-  const match = value.match(/^agent:([^:]+):companion:[^:]+$/);
+  const match = value.match(/^agent:([^:]+):clanker:[^:]+$/);
   return match?.[1] ?? null;
 }
 
@@ -335,7 +335,7 @@ function parseAgentIdFromSanitizedSessionKey(value: string): string | null {
   if (!value.startsWith("agent_")) {
     return null;
   }
-  const marker = "_companion_";
+  const marker = "_clanker_";
   const markerIndex = value.lastIndexOf(marker);
   if (markerIndex <= "agent_".length) {
     return null;
@@ -362,10 +362,10 @@ function resolveIdentity(params: {
     return { key: `agent:${directAgentId}`, scope: "agent" };
   }
 
-  const companion = asRecord(settings.companion);
-  const explicitCompanionId = asString(companion?.id);
-  if (explicitCompanionId) {
-    return { key: `companion:${explicitCompanionId}`, scope: "companion" };
+  const clanker = asRecord(settings.clanker);
+  const explicitClankerId = asString(clanker?.id);
+  if (explicitClankerId) {
+    return { key: `clanker:${explicitClankerId}`, scope: "clanker" };
   }
 
   const sandboxHandle = asString(settings.sandboxHandle);
@@ -570,7 +570,7 @@ function guessLegacyKind(filePath: string, body: string): RuntimeMemoryKind {
 export class RuntimeMemoryManager {
   private readonly sessionManager: ReadonlySessionManager;
   private readonly settingsManager: SettingsManager;
-  private readonly settings: Required<CompanionMemorySettings> & {
+  private readonly settings: Required<ClankerMemorySettings> & {
     writer: { enabled: boolean; maxTokens: number };
   };
   private readonly identity: RuntimeMemoryIdentity | null;
@@ -583,7 +583,7 @@ export class RuntimeMemoryManager {
   }) {
     this.sessionManager = params.sessionManager;
     this.settingsManager = params.settingsManager;
-    this.settings = getCompanionMemorySettings(params.settingsManager);
+    this.settings = getClankerMemorySettings(params.settingsManager);
     this.identity = this.settings.enabled ? resolveIdentity(params) : null;
 
     if (!this.settings.enabled || !this.identity) {
@@ -1487,9 +1487,9 @@ function resolveLegacyProjectDir(
   cwd: string,
 ): string | null {
   const settings = asRecord(settingsManager.getGlobalSettings()) ?? {};
-  const legacySettings = asRecord(settings["companion-memory-md"]) ?? {};
+  const legacySettings = asRecord(settings["clanker-memory-md"]) ?? {};
   const configuredRoot =
-    asString(legacySettings.localPath) ?? join(homedir(), ".companion", "memory-md");
+    asString(legacySettings.localPath) ?? join(homedir(), ".clanker", "memory-md");
   const legacyRoot = expandHomePath(configuredRoot);
   const legacyProjectDir = join(legacyRoot, basename(cwd));
   if (existsSync(legacyProjectDir)) {
@@ -1511,7 +1511,7 @@ function renderMemoryBlock(
   const coreIds = new Set(coreMemories.map((memory) => memory.id));
 
   if (coreMemories.length > 0) {
-    lines.push("Companion Memory");
+    lines.push("Clanker Memory");
     lines.push("");
     lines.push("Core memory:");
     for (const memory of coreMemories) {
@@ -1528,7 +1528,7 @@ function renderMemoryBlock(
 
   if (memoryResults.length > 0) {
     if (lines.length === 0) {
-      lines.push("Companion Memory");
+      lines.push("Clanker Memory");
       lines.push("");
     } else {
       lines.push("");
@@ -1541,7 +1541,7 @@ function renderMemoryBlock(
 
   if (episodeResults.length > 0) {
     if (lines.length === 0) {
-      lines.push("Companion Memory");
+      lines.push("Clanker Memory");
       lines.push("");
     } else {
       lines.push("");

@@ -12,7 +12,7 @@ import {
   type TextContent,
   type ThinkingBudgets,
   type Transport,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import { agentLoop, agentLoopContinue } from "./agent-loop.js";
 import type {
   AgentContext,

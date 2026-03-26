@@ -1,5 +1,5 @@
-import type { AgentTool } from "@mariozechner/companion-agent-core";
-import type { ImageContent, TextContent } from "@mariozechner/companion-ai";
+import type { AgentTool } from "@mariozechner/clanker-agent-core";
+import type { ImageContent, TextContent } from "@mariozechner/clanker-ai";
 import { type Static, Type } from "@sinclair/typebox";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";

@@ -36,8 +36,8 @@ describe("DefaultPackageManager", () => {
   let previousOfflineEnv: string | undefined;
 
   beforeEach(() => {
-    previousOfflineEnv = process.env.COMPANION_OFFLINE;
-    delete process.env.COMPANION_OFFLINE;
+    previousOfflineEnv = process.env.CLANKER_OFFLINE;
+    delete process.env.CLANKER_OFFLINE;
     tempDir = join(
       tmpdir(),
       `pm-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -56,9 +56,9 @@ describe("DefaultPackageManager", () => {
 
   afterEach(() => {
     if (previousOfflineEnv === undefined) {
-      delete process.env.COMPANION_OFFLINE;
+      delete process.env.CLANKER_OFFLINE;
     } else {
-      process.env.COMPANION_OFFLINE = previousOfflineEnv;
+      process.env.CLANKER_OFFLINE = previousOfflineEnv;
     }
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -114,8 +114,8 @@ Content`,
       );
     });
 
-    it("should resolve project paths relative to .companion", async () => {
-      const extDir = join(tempDir, ".companion", "extensions");
+    it("should resolve project paths relative to .clanker", async () => {
+      const extDir = join(tempDir, ".clanker", "extensions");
       mkdirSync(extDir, { recursive: true });
       const extPath = join(extDir, "project-ext.ts");
       writeFileSync(extPath, "export default function() {}");
@@ -143,7 +143,7 @@ Content`,
     });
 
     it("should auto-discover project prompts with overrides", async () => {
-      const promptsDir = join(tempDir, ".companion", "prompts");
+      const promptsDir = join(tempDir, ".clanker", "prompts");
       mkdirSync(promptsDir, { recursive: true });
       const promptPath = join(promptsDir, "is.md");
       writeFileSync(promptPath, "Is prompt");
@@ -156,15 +156,15 @@ Content`,
       ).toBe(true);
     });
 
-    it("should resolve directory with package.json companion.extensions in extensions setting", async () => {
-      // Create a package with companion.extensions in package.json
+    it("should resolve directory with package.json clanker.extensions in extensions setting", async () => {
+      // Create a package with clanker.extensions in package.json
       const pkgDir = join(tempDir, "my-extensions-pkg");
       mkdirSync(join(pkgDir, "extensions"), { recursive: true });
       writeFileSync(
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "my-extensions-pkg",
-          companion: {
+          clanker: {
             extensions: ["./extensions/clip.ts", "./extensions/cost.ts"],
           },
         }),
@@ -187,7 +187,7 @@ Content`,
 
       const result = await packageManager.resolve();
 
-      // Should find the extensions declared in package.json companion.extensions
+      // Should find the extensions declared in package.json clanker.extensions
       expect(
         result.extensions.some(
           (r) => r.path === join(pkgDir, "extensions", "clip.ts") && r.enabled,
@@ -355,10 +355,10 @@ Content`,
       ).toBe(false);
     });
 
-    it("should not apply parent .gitignore to .companion auto-discovery", async () => {
-      writeFileSync(join(tempDir, ".gitignore"), ".companion\n");
+    it("should not apply parent .gitignore to .clanker auto-discovery", async () => {
+      writeFileSync(join(tempDir, ".gitignore"), ".clanker\n");
 
-      const skillDir = join(tempDir, ".companion", "skills", "auto-skill");
+      const skillDir = join(tempDir, ".clanker", "skills", "auto-skill");
       mkdirSync(skillDir, { recursive: true });
       const skillPath = join(skillDir, "SKILL.md");
       writeFileSync(
@@ -384,14 +384,14 @@ Content`,
       ).toBe(true);
     });
 
-    it("should handle directories with companion manifest", async () => {
+    it("should handle directories with clanker manifest", async () => {
       const pkgDir = join(tempDir, "my-package");
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "my-package",
-          companion: {
+          clanker: {
             extensions: ["./src/index.ts"],
             skills: ["./skills"],
           },
@@ -565,7 +565,7 @@ Content`,
       expect(settings.packages?.[0]).toBe(expected);
     });
 
-    it("should store project local packages relative to .companion settings base", () => {
+    it("should store project local packages relative to .clanker settings base", () => {
       const projectPkgDir = join(tempDir, "project-local-pkg");
       mkdirSync(join(projectPkgDir, "extensions"), { recursive: true });
       writeFileSync(
@@ -579,7 +579,7 @@ Content`,
       expect(added).toBe(true);
 
       const settings = settingsManager.getProjectSettings();
-      const rel = relative(join(tempDir, ".companion"), projectPkgDir);
+      const rel = relative(join(tempDir, ".clanker"), projectPkgDir);
       const expected = rel.startsWith(".") ? rel : `./${rel}`;
       expect(settings.packages?.[0]).toBe(expected);
     });
@@ -837,7 +837,7 @@ Content`,
     });
   });
 
-  describe("pattern filtering in companion manifest", () => {
+  describe("pattern filtering in clanker manifest", () => {
     it("should support glob patterns in manifest extensions", async () => {
       const pkgDir = join(tempDir, "manifest-pkg");
       mkdirSync(join(pkgDir, "extensions"), { recursive: true });
@@ -860,7 +860,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "manifest-pkg",
-          companion: {
+          clanker: {
             extensions: [
               "extensions",
               "node_modules/dep/extensions",
@@ -898,7 +898,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "skill-manifest-pkg",
-          companion: {
+          clanker: {
             skills: ["skills", "!**/bad-skill"],
           },
         }),
@@ -936,7 +936,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "layered-pkg",
-          companion: {
+          clanker: {
             extensions: ["extensions", "!**/baz.ts"],
           },
         }),
@@ -1229,7 +1229,7 @@ Content`,
         join(pkgDir, "package.json"),
         JSON.stringify({
           name: "manifest-force-pkg",
-          companion: {
+          clanker: {
             extensions: ["extensions", "!**/two.ts", "+extensions/two.ts"],
           },
         }),
@@ -1515,7 +1515,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
       );
     });
 
-    it("should respect package.json companion.extensions manifest in subdirectories", async () => {
+    it("should respect package.json clanker.extensions manifest in subdirectories", async () => {
       const pkgDir = join(tempDir, "manifest-subdir-pkg");
       mkdirSync(join(pkgDir, "extensions", "custom"), { recursive: true });
 
@@ -1523,7 +1523,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
       writeFileSync(
         join(pkgDir, "extensions", "custom", "package.json"),
         JSON.stringify({
-          companion: {
+          clanker: {
             extensions: ["./main.ts"],
           },
         }),
@@ -1634,7 +1634,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
   describe("offline mode and network timeouts", () => {
     it("should skip installing missing package sources when offline", async () => {
-      process.env.COMPANION_OFFLINE = "1";
+      process.env.CLANKER_OFFLINE = "1";
       settingsManager.setProjectPackages([
         "npm:missing-package",
         "git:github.com/example/missing-repo",
@@ -1659,7 +1659,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
     });
 
     it("should skip refreshing temporary git sources when offline", async () => {
-      process.env.COMPANION_OFFLINE = "1";
+      process.env.CLANKER_OFFLINE = "1";
       const gitSource = "git:github.com/example/repo";
       const parsedGitSource = (packageManager as any).parseSource(gitSource);
       const installedPath = (packageManager as any).getGitInstallPath(
@@ -1690,7 +1690,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
     });
 
     it("should not call fetch in npmNeedsUpdate when offline", async () => {
-      process.env.COMPANION_OFFLINE = "1";
+      process.env.CLANKER_OFFLINE = "1";
       const installedPath = join(tempDir, "installed-package");
       mkdirSync(installedPath, { recursive: true });
       writeFileSync(

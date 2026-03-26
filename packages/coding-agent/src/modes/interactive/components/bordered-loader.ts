@@ -5,7 +5,7 @@ import {
   Spacer,
   Text,
   type TUI,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type { Theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 import { keyHint } from "./keybinding-hints.js";

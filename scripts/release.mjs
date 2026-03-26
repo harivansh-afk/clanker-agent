@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Release script for companion
+ * Release script for clanker
  *
  * Usage: node scripts/release.mjs <major|minor|patch>
  *

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build companion binaries for all platforms locally.
+# Build clanker binaries for all platforms locally.
 # Mirrors .github/workflows/build-binaries.yml
 #
 # Usage:
@@ -12,11 +12,11 @@
 #
 # Output:
 #   packages/coding-agent/binaries/
-#     companion-darwin-arm64.tar.gz
-#     companion-darwin-x64.tar.gz
-#     companion-linux-x64.tar.gz
-#     companion-linux-arm64.tar.gz
-#     companion-windows-x64.zip
+#     clanker-darwin-arm64.tar.gz
+#     clanker-darwin-x64.tar.gz
+#     clanker-linux-x64.tar.gz
+#     clanker-linux-arm64.tar.gz
+#     clanker-windows-x64.zip
 
 set -euo pipefail
 
@@ -107,9 +107,9 @@ for platform in "${PLATFORMS[@]}"; do
     # call site has a try/catch fallback. For Windows builds, we copy the
     # appropriate .node file alongside the binary below.
     if [[ "$platform" == "windows-x64" ]]; then
-        bun build --compile --external koffi --target=bun-$platform ./dist/cli.js --outfile binaries/$platform/companion.exe
+        bun build --compile --external koffi --target=bun-$platform ./dist/cli.js --outfile binaries/$platform/clanker.exe
     else
-        bun build --compile --external koffi --target=bun-$platform ./dist/cli.js --outfile binaries/$platform/companion
+        bun build --compile --external koffi --target=bun-$platform ./dist/cli.js --outfile binaries/$platform/clanker
     fi
 done
 
@@ -141,12 +141,12 @@ cd binaries
 for platform in "${PLATFORMS[@]}"; do
     if [[ "$platform" == "windows-x64" ]]; then
         # Windows (zip)
-        echo "Creating companion-$platform.zip..."
-        (cd $platform && zip -r ../companion-$platform.zip .)
+        echo "Creating clanker-$platform.zip..."
+        (cd $platform && zip -r ../clanker-$platform.zip .)
     else
         # Unix platforms (tar.gz) - use wrapper directory for mise compatibility
-        echo "Creating companion-$platform.tar.gz..."
-        mv $platform companion && tar -czf companion-$platform.tar.gz companion && mv companion $platform
+        echo "Creating clanker-$platform.tar.gz..."
+        mv $platform clanker && tar -czf clanker-$platform.tar.gz clanker && mv clanker $platform
     fi
 done
 
@@ -155,9 +155,9 @@ echo "==> Extracting archives for testing..."
 for platform in "${PLATFORMS[@]}"; do
     rm -rf $platform
     if [[ "$platform" == "windows-x64" ]]; then
-        mkdir -p $platform && (cd $platform && unzip -q ../companion-$platform.zip)
+        mkdir -p $platform && (cd $platform && unzip -q ../clanker-$platform.zip)
     else
-        tar -xzf companion-$platform.tar.gz && mv companion $platform
+        tar -xzf clanker-$platform.tar.gz && mv clanker $platform
     fi
 done
 
@@ -168,5 +168,5 @@ ls -lh *.tar.gz *.zip 2>/dev/null || true
 echo ""
 echo "Extracted directories for testing:"
 for platform in "${PLATFORMS[@]}"; do
-    echo "  binaries/$platform/companion"
+    echo "  binaries/$platform/clanker"
 done

@@ -10,7 +10,7 @@ import {
   type ImageContent,
   modelsAreEqual,
   supportsXhigh,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import chalk from "chalk";
 import { createInterface } from "readline";
 import { type Args, parseArgs, printHelp } from "./cli/args.js";
@@ -123,7 +123,7 @@ function printDaemonHelp(): void {
   ${APP_NAME} gateway [options] [messages...]
   ${APP_NAME} daemon [options] [messages...]
 
-Run companion as a long-lived gateway (non-interactive) with extensions enabled.
+Run clanker as a long-lived gateway (non-interactive) with extensions enabled.
 Messages passed as positional args are sent once at startup.
 
 Options:
@@ -154,7 +154,7 @@ function printPackageCommandHelp(command: PackageCommand): void {
 Install a package and add it to settings.
 
 Options:
-  -l, --local    Install project-locally (.companion/settings.json)
+  -l, --local    Install project-locally (.clanker/settings.json)
 
 Examples:
   ${APP_NAME} install npm:@foo/bar
@@ -173,7 +173,7 @@ Examples:
 Remove a package and its source from settings.
 
 Options:
-  -l, --local    Remove from project settings (.companion/settings.json)
+  -l, --local    Remove from project settings (.clanker/settings.json)
 
 Example:
   ${APP_NAME} remove npm:@foo/bar
@@ -661,10 +661,10 @@ export async function main(args: string[]) {
   const isGatewayCommand = args[0] === "daemon" || args[0] === "gateway";
   const parsedArgs = isGatewayCommand ? args.slice(1) : args;
   const offlineMode =
-    parsedArgs.includes("--offline") || isTruthyEnvFlag(process.env.COMPANION_OFFLINE);
+    parsedArgs.includes("--offline") || isTruthyEnvFlag(process.env.CLANKER_OFFLINE);
   if (offlineMode) {
-    process.env.COMPANION_OFFLINE = "1";
-    process.env.COMPANION_SKIP_VERSION_CHECK = "1";
+    process.env.CLANKER_OFFLINE = "1";
+    process.env.CLANKER_SKIP_VERSION_CHECK = "1";
   }
 
   if (await handlePackageCommand(args)) {
@@ -993,7 +993,7 @@ export async function main(args: string[]) {
       } catch (error) {
         const message =
           error instanceof Error ? error.stack || error.message : String(error);
-        console.error(`[companion-gateway] daemon crashed: ${message}`);
+        console.error(`[clanker-gateway] daemon crashed: ${message}`);
         try {
           session.dispose();
         } catch {
@@ -1005,20 +1005,20 @@ export async function main(args: string[]) {
       if (runtimeMs < GATEWAY_MIN_RUNTIME_MS) {
         consecutiveFailures += 1;
         console.error(
-          `[companion-gateway] exited quickly (${runtimeMs}ms), failure ${consecutiveFailures}/${GATEWAY_MAX_CONSECUTIVE_FAILURES}`,
+          `[clanker-gateway] exited quickly (${runtimeMs}ms), failure ${consecutiveFailures}/${GATEWAY_MAX_CONSECUTIVE_FAILURES}`,
         );
         if (consecutiveFailures >= GATEWAY_MAX_CONSECUTIVE_FAILURES) {
-          console.error("[companion-gateway] crash loop detected, exiting");
+          console.error("[clanker-gateway] crash loop detected, exiting");
           process.exit(1);
         }
       } else {
         consecutiveFailures = 0;
-        console.error(`[companion-gateway] exited after ${runtimeMs}ms, restarting`);
+        console.error(`[clanker-gateway] exited after ${runtimeMs}ms, restarting`);
       }
 
       if (GATEWAY_RESTART_DELAY_MS > 0) {
         console.error(
-          `[companion-gateway] restarting in ${GATEWAY_RESTART_DELAY_MS}ms`,
+          `[clanker-gateway] restarting in ${GATEWAY_RESTART_DELAY_MS}ms`,
         );
         await sleep(GATEWAY_RESTART_DELAY_MS);
       }

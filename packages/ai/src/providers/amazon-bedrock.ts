@@ -514,7 +514,7 @@ function mapThinkingLevelToEffort(
 
 /**
  * Resolve cache retention preference.
- * Defaults to "short" and uses COMPANION_CACHE_RETENTION for backward compatibility.
+ * Defaults to "short" and uses CLANKER_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(
   cacheRetention?: CacheRetention,
@@ -524,7 +524,7 @@ function resolveCacheRetention(
   }
   if (
     typeof process !== "undefined" &&
-    process.env.COMPANION_CACHE_RETENTION === "long"
+    process.env.CLANKER_CACHE_RETENTION === "long"
   ) {
     return "long";
   }

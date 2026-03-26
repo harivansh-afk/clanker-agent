@@ -9,7 +9,7 @@
  *
  * You can run this test suite with:
  * ```bash
- * $ AWS_REGION=us-east-1 BEDROCK_EXTENSIVE_MODEL_TEST=1 AWS_PROFILE=companion npm test -- ./test/bedrock-models.test.ts
+ * $ AWS_REGION=us-east-1 BEDROCK_EXTENSIVE_MODEL_TEST=1 AWS_PROFILE=clanker npm test -- ./test/bedrock-models.test.ts
  * ```
  *
  * ## Known Issues by Category
@@ -21,8 +21,8 @@
  * 5. **Invalid Signature Format**: Model validates signature format (Anthropic newer models).
  */
 
-import type { AssistantMessage } from "@mariozechner/companion-ai";
-import { getModels } from "@mariozechner/companion-ai";
+import type { AssistantMessage } from "@mariozechner/clanker-ai";
+import { getModels } from "@mariozechner/clanker-ai";
 import { describe, expect, it } from "vitest";
 import { Agent } from "../src/index.js";
 import { hasBedrockCredentials } from "./bedrock-utils.js";

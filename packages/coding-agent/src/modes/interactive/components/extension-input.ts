@@ -10,7 +10,7 @@ import {
   Spacer,
   Text,
   type TUI,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { theme } from "../theme/theme.js";
 import { CountdownTimer } from "./countdown-timer.js";
 import { DynamicBorder } from "./dynamic-border.js";

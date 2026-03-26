@@ -1,0 +1,40 @@
+{
+  "name": "@harivansh-afk/clanker-channels",
+  "version": "0.1.0",
+  "description": "Two-way channel extension for clanker - route messages between agents and Telegram, webhooks, and custom adapters",
+  "type": "module",
+  "keywords": [
+    "clanker-package"
+  ],
+  "license": "MIT",
+  "author": "Espen Nilsen <hi@e9n.dev>",
+  "clanker": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@harivansh-afk/clanker-ai": "*",
+    "@harivansh-afk/clanker-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "dependencies": {
+    "@slack/socket-mode": "^2.0.5",
+    "@slack/web-api": "^7.14.1"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "package.json",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harivansh-afk/clanker-agent.git",
+    "directory": "packages/clanker-channels"
+  }
+}

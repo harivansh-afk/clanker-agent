@@ -1,11 +1,11 @@
-import type { AssistantMessage } from "@mariozechner/companion-ai";
+import type { AssistantMessage } from "@mariozechner/clanker-ai";
 import {
   Container,
   Markdown,
   type MarkdownTheme,
   Spacer,
   Text,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.js";
 
 /**

@@ -1,4 +1,4 @@
-# @mariozechner/companion-tui
+# @mariozechner/clanker-tui
 
 Minimal terminal UI framework with differential rendering and synchronized output for flicker-free interactive CLI applications.
 
@@ -16,7 +16,7 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 ## Quick Start
 
 ```typescript
-import { TUI, Text, Editor, ProcessTerminal } from "@mariozechner/companion-tui";
+import { TUI, Text, Editor, ProcessTerminal } from "@mariozechner/clanker-tui";
 
 // Create terminal
 const terminal = new ProcessTerminal();
@@ -146,7 +146,7 @@ import {
   CURSOR_MARKER,
   type Component,
   type Focusable,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 
 class MyInput implements Component, Focusable {
   focused: boolean = false; // Set by TUI when focus changes
@@ -173,7 +173,7 @@ This enables IME candidate windows to appear at the correct position for CJK inp
 **Container components with embedded inputs:** When a container component (dialog, selector, etc.) contains an `Input` or `Editor` child, the container must implement `Focusable` and propagate the focus state to the child:
 
 ```typescript
-import { Container, type Focusable, Input } from "@mariozechner/companion-tui";
+import { Container, type Focusable, Input } from "@mariozechner/clanker-tui";
 
 class SearchDialog extends Container implements Focusable {
   private searchInput: Input;
@@ -542,7 +542,7 @@ Supported formats: PNG, JPEG, GIF, WebP. Dimensions are parsed from the image he
 Supports both slash commands and file paths.
 
 ```typescript
-import { CombinedAutocompleteProvider } from "@mariozechner/companion-tui";
+import { CombinedAutocompleteProvider } from "@mariozechner/clanker-tui";
 
 const provider = new CombinedAutocompleteProvider(
   [
@@ -568,7 +568,7 @@ editor.setAutocompleteProvider(provider);
 Use `matchesKey()` with the `Key` helper for detecting keyboard input (supports Kitty keyboard protocol):
 
 ```typescript
-import { matchesKey, Key } from "@mariozechner/companion-tui";
+import { matchesKey, Key } from "@mariozechner/clanker-tui";
 
 if (matchesKey(data, Key.ctrl("c"))) {
   process.exit(0);
@@ -632,7 +632,7 @@ import {
   visibleWidth,
   truncateToWidth,
   wrapTextWithAnsi,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 
 // Get visible width of string (ignoring ANSI codes)
 const width = visibleWidth("\x1b[31mHello\x1b[0m"); // 5
@@ -657,8 +657,8 @@ When creating custom components, **each line returned by `render()` must not exc
 Use `matchesKey()` with the `Key` helper for keyboard input:
 
 ```typescript
-import { matchesKey, Key, truncateToWidth } from "@mariozechner/companion-tui";
-import type { Component } from "@mariozechner/companion-tui";
+import { matchesKey, Key, truncateToWidth } from "@mariozechner/clanker-tui";
+import type { Component } from "@mariozechner/clanker-tui";
 
 class MyInteractiveComponent implements Component {
   private selectedIndex = 0;
@@ -699,8 +699,8 @@ class MyInteractiveComponent implements Component {
 Use the provided utilities to ensure lines fit:
 
 ```typescript
-import { visibleWidth, truncateToWidth } from "@mariozechner/companion-tui";
-import type { Component } from "@mariozechner/companion-tui";
+import { visibleWidth, truncateToWidth } from "@mariozechner/clanker-tui";
+import type { Component } from "@mariozechner/clanker-tui";
 
 class MyComponent implements Component {
   private text: string;
@@ -799,8 +799,8 @@ npx tsx test/chat-simple.ts
 
 ### Debug logging
 
-Set `COMPANION_TUI_WRITE_LOG` to capture the raw ANSI stream written to stdout.
+Set `CLANKER_TUI_WRITE_LOG` to capture the raw ANSI stream written to stdout.
 
 ```bash
-COMPANION_TUI_WRITE_LOG=/tmp/tui-ansi.log npx tsx test/chat-simple.ts
+CLANKER_TUI_WRITE_LOG=/tmp/tui-ansi.log npx tsx test/chat-simple.ts
 ```

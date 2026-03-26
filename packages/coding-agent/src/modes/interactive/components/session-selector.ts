@@ -13,7 +13,7 @@ import {
   Text,
   truncateToWidth,
   visibleWidth,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { KeybindingsManager } from "../../../core/keybindings.js";
 import type {
   SessionInfo,
@@ -607,7 +607,7 @@ class SessionList implements Component, Focusable {
         void this.onDeleteSession?.(pathToDelete);
         return;
       }
-      // Allow both Escape and Ctrl+C to cancel (consistent with companion UX)
+      // Allow both Escape and Ctrl+C to cancel (consistent with clanker UX)
       if (
         kb.matches(keyData, "selectCancel") ||
         matchesKey(keyData, "ctrl+c")

@@ -1,4 +1,4 @@
-import type { Model } from "@mariozechner/companion-ai";
+import type { Model } from "@mariozechner/clanker-ai";
 import { describe, expect, test } from "vitest";
 import {
   defaultModelPerProvider,

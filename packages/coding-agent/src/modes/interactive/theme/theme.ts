@@ -4,7 +4,7 @@ import type {
   EditorTheme,
   MarkdownTheme,
   SelectListTheme,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { type Static, Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
 import chalk from "chalk";
@@ -682,7 +682,7 @@ function getDefaultTheme(): string {
 // ============================================================================
 
 // Use globalThis to share theme across module loaders (tsx + jiti in dev mode)
-const THEME_KEY = Symbol.for("@mariozechner/companion-coding-agent:theme");
+const THEME_KEY = Symbol.for("@mariozechner/clanker-coding-agent:theme");
 
 // Export theme as a getter that reads from globalThis
 // This ensures all module instances (tsx, jiti) see the same theme
@@ -1144,7 +1144,7 @@ export function getEditorTheme(): EditorTheme {
   };
 }
 
-export function getSettingsListTheme(): import("@mariozechner/companion-tui").SettingsListTheme {
+export function getSettingsListTheme(): import("@mariozechner/clanker-tui").SettingsListTheme {
   return {
     label: (text: string, selected: boolean) =>
       selected ? theme.fg("accent", text) : text,

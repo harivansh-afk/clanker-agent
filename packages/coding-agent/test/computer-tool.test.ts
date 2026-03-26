@@ -79,7 +79,7 @@ function createMockComputerOperations(
 function getAgentComputerScriptPath(): string {
   return resolve(
     process.cwd(),
-    "../../../../docker/companion/agent-computer.js",
+    "../../../../docker/clanker/agent-computer.js",
   );
 }
 

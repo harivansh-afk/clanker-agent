@@ -4,7 +4,7 @@ import {
   type MarkdownTheme,
   Spacer,
   Text,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type { BranchSummaryMessage } from "../../../core/messages.js";
 import { getMarkdownTheme, theme } from "../theme/theme.js";
 import { editorKey } from "./keybinding-hints.js";

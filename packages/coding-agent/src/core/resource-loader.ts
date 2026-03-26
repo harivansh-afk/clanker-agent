@@ -120,7 +120,7 @@ function loadNamedContextFileFromDir(
   }
 }
 
-const companionContextFilenames = [
+const clankerContextFilenames = [
   "IDENTITY.md",
   "SOUL.md",
   "USER.md",
@@ -154,7 +154,7 @@ function addContextFile(
   seenPaths.add(file.path);
 }
 
-function collectCompanionContextDirs(cwd: string, agentDir: string): string[] {
+function collectClankerContextDirs(cwd: string, agentDir: string): string[] {
   const contextDirs: string[] = [];
   const seenDirs = new Set<string>();
   const configDir = dirname(resolve(agentDir));
@@ -232,13 +232,13 @@ function loadProjectContextFiles(
     loadNamedContextFileFromDir(resolvedAgentDir, "SOUL.md"),
   );
 
-  for (const companionDir of collectCompanionContextDirs(
+  for (const clankerDir of collectClankerContextDirs(
     resolvedCwd,
     resolvedAgentDir,
   )) {
     for (const file of loadNamedContextFilesFromDir(
-      companionDir,
-      companionContextFilenames,
+      clankerDir,
+      clankerContextFilenames,
     )) {
       addContextFile(contextFiles, seenPaths, file);
     }

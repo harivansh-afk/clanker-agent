@@ -1,6 +1,6 @@
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
-import type { AssistantMessage, Usage } from "@mariozechner/companion-ai";
-import { getModel } from "@mariozechner/companion-ai";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
+import type { AssistantMessage, Usage } from "@mariozechner/clanker-ai";
+import { getModel } from "@mariozechner/clanker-ai";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { beforeEach, describe, expect, it } from "vitest";

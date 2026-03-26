@@ -1,0 +1,48 @@
+{
+  "name": "clanker-teams",
+  "version": "0.8.6",
+  "description": "Agent teams for clanker, ported from claude-code-teams-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harivansh-afk/clanker-agent.git",
+    "directory": "packages/clanker-teams"
+  },
+  "author": "Mark Burggraf",
+  "license": "MIT",
+  "keywords": [
+    "clanker-package"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "main": "extensions/index.ts",
+  "files": [
+    "extensions",
+    "skills",
+    "src",
+    "package.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "uuid": "^11.1.0"
+  },
+  "peerDependencies": {
+    "@harivansh-afk/clanker-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "clanker": {
+    "image": "https://raw.githubusercontent.com/burggraf/clanker-teams/main/clanker-team-in-action.png",
+    "extensions": [
+      "extensions/index.ts"
+    ],
+    "skills": [
+      "skills"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

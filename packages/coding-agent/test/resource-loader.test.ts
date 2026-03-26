@@ -60,7 +60,7 @@ Skill content here.`,
     });
 
     it("should ignore extra markdown files in auto-discovered skill dirs", async () => {
-      const skillDir = join(agentDir, "skills", "companion-skills", "browser-tools");
+      const skillDir = join(agentDir, "skills", "clanker-skills", "browser-tools");
       mkdirSync(skillDir, { recursive: true });
       writeFileSync(
         join(skillDir, "SKILL.md"),
@@ -102,7 +102,7 @@ Prompt content.`,
 
     it("should prefer project resources over user on name collisions", async () => {
       const userPromptsDir = join(agentDir, "prompts");
-      const projectPromptsDir = join(cwd, ".companion", "prompts");
+      const projectPromptsDir = join(cwd, ".clanker", "prompts");
       mkdirSync(userPromptsDir, { recursive: true });
       mkdirSync(projectPromptsDir, { recursive: true });
       const userPromptPath = join(userPromptsDir, "commit.md");
@@ -111,7 +111,7 @@ Prompt content.`,
       writeFileSync(projectPromptPath, "Project prompt");
 
       const userSkillDir = join(agentDir, "skills", "collision-skill");
-      const projectSkillDir = join(cwd, ".companion", "skills", "collision-skill");
+      const projectSkillDir = join(cwd, ".clanker", "skills", "collision-skill");
       mkdirSync(userSkillDir, { recursive: true });
       mkdirSync(projectSkillDir, { recursive: true });
       const userSkillPath = join(userSkillDir, "SKILL.md");
@@ -148,9 +148,9 @@ Project skill`,
       ) as { name: string; vars?: Record<string, string> };
       baseTheme.name = "collision-theme";
       const userThemePath = join(agentDir, "themes", "collision.json");
-      const projectThemePath = join(cwd, ".companion", "themes", "collision.json");
+      const projectThemePath = join(cwd, ".clanker", "themes", "collision.json");
       mkdirSync(join(agentDir, "themes"), { recursive: true });
-      mkdirSync(join(cwd, ".companion", "themes"), { recursive: true });
+      mkdirSync(join(cwd, ".clanker", "themes"), { recursive: true });
       writeFileSync(userThemePath, JSON.stringify(baseTheme, null, 2));
       if (baseTheme.vars) {
         baseTheme.vars.accent = "#ff00ff";
@@ -178,18 +178,18 @@ Project skill`,
 
     it("should keep both extensions loaded when command names collide", async () => {
       const userExtDir = join(agentDir, "extensions");
-      const projectExtDir = join(cwd, ".companion", "extensions");
+      const projectExtDir = join(cwd, ".clanker", "extensions");
       mkdirSync(userExtDir, { recursive: true });
       mkdirSync(projectExtDir, { recursive: true });
 
       writeFileSync(
         join(projectExtDir, "project.ts"),
-        `export default function(companion) {
-	companion.registerCommand("deploy", {
+        `export default function(clanker) {
+	clanker.registerCommand("deploy", {
 		description: "project deploy",
 		handler: async () => {},
 	});
-	companion.registerCommand("project-only", {
+	clanker.registerCommand("project-only", {
 		description: "project only",
 		handler: async () => {},
 	});
@@ -198,12 +198,12 @@ Project skill`,
 
       writeFileSync(
         join(userExtDir, "user.ts"),
-        `export default function(companion) {
-	companion.registerCommand("deploy", {
+        `export default function(clanker) {
+	clanker.registerCommand("deploy", {
 		description: "user deploy",
 		handler: async () => {},
 	});
-	companion.registerCommand("user-only", {
+	clanker.registerCommand("user-only", {
 		description: "user only",
 		handler: async () => {},
 	});
@@ -320,13 +320,13 @@ Content`,
       expect(agentsFiles.some((f) => f.path.endsWith("SOUL.md"))).toBe(true);
     });
 
-    it("should discover companion context files from the default workspace", async () => {
+    it("should discover clanker context files from the default workspace", async () => {
       const workspaceDir = join(tempDir, "workspace");
       const appDir = join(tempDir, "apps", "todo-app");
       mkdirSync(workspaceDir, { recursive: true });
       mkdirSync(appDir, { recursive: true });
       writeFileSync(join(workspaceDir, "IDENTITY.md"), "# Identity\n\nPi");
-      writeFileSync(join(workspaceDir, "TOOLS.md"), "# Tools\n\nUse ~/.companion");
+      writeFileSync(join(workspaceDir, "TOOLS.md"), "# Tools\n\nUse ~/.clanker");
 
       const loader = new DefaultResourceLoader({ cwd: appDir, agentDir });
       await loader.reload();
@@ -338,8 +338,8 @@ Content`,
       expect(agentsFiles.some((f) => f.path.endsWith("TOOLS.md"))).toBe(true);
     });
 
-    it("should discover SYSTEM.md from cwd/.companion", async () => {
-      const piDir = join(cwd, ".companion");
+    it("should discover SYSTEM.md from cwd/.clanker", async () => {
+      const piDir = join(cwd, ".clanker");
       mkdirSync(piDir, { recursive: true });
       writeFileSync(join(piDir, "SYSTEM.md"), "You are a helpful assistant.");
 
@@ -350,7 +350,7 @@ Content`,
     });
 
     it("should discover APPEND_SYSTEM.md", async () => {
-      const piDir = join(cwd, ".companion");
+      const piDir = join(cwd, ".clanker");
       mkdirSync(piDir, { recursive: true });
       writeFileSync(
         join(piDir, "APPEND_SYSTEM.md"),
@@ -528,10 +528,10 @@ Content`,
       writeFileSync(
         join(ext1Dir, "index.ts"),
         `
-import type { ExtensionAPI } from "@mariozechner/companion-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/clanker-coding-agent";
 import { Type } from "@sinclair/typebox";
-export default function(companion: ExtensionAPI) {
-  companion.registerTool({
+export default function(clanker: ExtensionAPI) {
+  clanker.registerTool({
     name: "duplicate-tool",
     description: "First",
     parameters: Type.Object({}),
@@ -543,10 +543,10 @@ export default function(companion: ExtensionAPI) {
       writeFileSync(
         join(ext2Dir, "index.ts"),
         `
-import type { ExtensionAPI } from "@mariozechner/companion-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/clanker-coding-agent";
 import { Type } from "@sinclair/typebox";
-export default function(companion: ExtensionAPI) {
-  companion.registerTool({
+export default function(clanker: ExtensionAPI) {
+  clanker.registerTool({
     name: "duplicate-tool",
     description: "Second",
     parameters: Type.Object({}),

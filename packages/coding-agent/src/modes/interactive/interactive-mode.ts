@@ -7,14 +7,14 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
 import type {
   AssistantMessage,
   ImageContent,
   Message,
   Model,
   OAuthProviderId,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import type {
   AutocompleteItem,
   EditorAction,
@@ -25,7 +25,7 @@ import type {
   OverlayHandle,
   OverlayOptions,
   SlashCommand,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import {
   CombinedAutocompleteProvider,
   type Component,
@@ -40,7 +40,7 @@ import {
   TruncatedText,
   TUI,
   visibleWidth,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { spawn, spawnSync } from "child_process";
 import {
   APP_NAME,
@@ -666,12 +666,12 @@ export class InteractiveMode {
    * Check npm registry for a newer version.
    */
   private async checkForNewVersion(): Promise<string | undefined> {
-    if (process.env.COMPANION_SKIP_VERSION_CHECK || process.env.COMPANION_OFFLINE)
+    if (process.env.CLANKER_SKIP_VERSION_CHECK || process.env.CLANKER_OFFLINE)
       return undefined;
 
     try {
       const response = await fetch(
-        "https://registry.npmjs.org/@mariozechner/companion-coding-agent/latest",
+        "https://registry.npmjs.org/@mariozechner/clanker-coding-agent/latest",
         {
           signal: AbortSignal.timeout(10000),
         },
@@ -2141,7 +2141,7 @@ export class InteractiveMode {
       // Write to temp file
       const tmpDir = os.tmpdir();
       const ext = extensionForImageMimeType(image.mimeType) ?? "png";
-      const fileName = `companion-clipboard-${crypto.randomUUID()}.${ext}`;
+      const fileName = `clanker-clipboard-${crypto.randomUUID()}.${ext}`;
       const filePath = path.join(tmpDir, fileName);
       fs.writeFileSync(filePath, Buffer.from(image.bytes));
 
@@ -3110,7 +3110,7 @@ export class InteractiveMode {
 
     const currentText =
       this.editor.getExpandedText?.() ?? this.editor.getText();
-    const tmpFile = path.join(os.tmpdir(), `companion-editor-${Date.now()}.companion.md`);
+    const tmpFile = path.join(os.tmpdir(), `clanker-editor-${Date.now()}.clanker.md`);
 
     try {
       // Write current content to temp file
@@ -3176,13 +3176,13 @@ export class InteractiveMode {
   showNewVersionNotification(newVersion: string): void {
     const action = theme.fg(
       "accent",
-      getUpdateInstruction("@mariozechner/companion-coding-agent"),
+      getUpdateInstruction("@mariozechner/clanker-coding-agent"),
     );
     const updateInstruction =
       theme.fg("muted", `New version ${newVersion} is available. `) + action;
     const changelogUrl = theme.fg(
       "accent",
-      "https://github.com/badlogic/companion-mono/blob/main/packages/coding-agent/CHANGELOG.md",
+      "https://github.com/badlogic/clanker-mono/blob/main/packages/coding-agent/CHANGELOG.md",
     );
     const changelogLine = theme.fg("muted", "Changelog: ") + changelogUrl;
 

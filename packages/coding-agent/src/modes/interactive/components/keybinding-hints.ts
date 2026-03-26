@@ -6,7 +6,7 @@ import {
   type EditorAction,
   getEditorKeybindings,
   type KeyId,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type {
   AppAction,
   KeybindingsManager,

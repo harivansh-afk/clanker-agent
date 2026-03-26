@@ -17,7 +17,7 @@ describe("package commands", () => {
   beforeEach(() => {
     tempDir = join(
       tmpdir(),
-      `companion-package-commands-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `clanker-package-commands-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     agentDir = join(tempDir, "agent");
     projectDir = join(tempDir, "project");
@@ -89,7 +89,7 @@ describe("package commands", () => {
         .map(([message]) => String(message))
         .join("\n");
       expect(stdout).toContain("Usage:");
-      expect(stdout).toContain("companion install <source> [-l]");
+      expect(stdout).toContain("clanker install <source> [-l]");
       expect(errorSpy).not.toHaveBeenCalled();
       expect(process.exitCode).toBeUndefined();
     } finally {
@@ -109,7 +109,7 @@ describe("package commands", () => {
         .join("\n");
       expect(stderr).toContain('Unknown option --unknown for "install".');
       expect(stderr).toContain(
-        'Use "companion --help" or "companion install <source> [-l]".',
+        'Use "clanker --help" or "clanker install <source> [-l]".',
       );
       expect(process.exitCode).toBe(1);
     } finally {
@@ -127,7 +127,7 @@ describe("package commands", () => {
         .map(([message]) => String(message))
         .join("\n");
       expect(stderr).toContain("Missing install source.");
-      expect(stderr).toContain("Usage: companion install <source> [-l]");
+      expect(stderr).toContain("Usage: clanker install <source> [-l]");
       expect(stderr).not.toContain("at ");
       expect(process.exitCode).toBe(1);
     } finally {

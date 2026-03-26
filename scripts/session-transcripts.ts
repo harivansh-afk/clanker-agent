@@ -4,7 +4,7 @@
  * optionally spawns subagents to analyze patterns.
  *
  * Usage: npx tsx scripts/session-transcripts.ts [--analyze] [--output <dir>] [cwd]
- *   --analyze      Spawn companion subagents to analyze each transcript file
+ *   --analyze      Spawn clanker subagents to analyze each transcript file
  *   --output <dir> Output directory for transcript files (defaults to ./session-transcripts)
  *   cwd            Working directory to extract sessions for (defaults to current)
  */
@@ -94,7 +94,7 @@ function runSubagent(
 ): Promise<{ success: boolean }> {
   return new Promise((resolve) => {
     const child = spawn(
-      "companion",
+      "clanker",
       ["--mode", "json", "--tools", "read,write", "-p", prompt],
       {
         cwd,
@@ -158,7 +158,7 @@ function runSubagent(
     });
 
     child.on("error", (err) => {
-      console.error(chalk.red(`  Failed to spawn companion: ${err.message}`));
+      console.error(chalk.red(`  Failed to spawn clanker: ${err.message}`));
       resolve({ success: false });
     });
   });
@@ -188,7 +188,7 @@ async function main() {
   const cwd = resolve(cwdArg || process.cwd());
 
   mkdirSync(outputDir, { recursive: true });
-  const sessionsBase = join(homedir(), ".companion/agent/sessions");
+  const sessionsBase = join(homedir(), ".clanker/agent/sessions");
   const sessionDirName = cwdToSessionDir(cwd);
   const sessionDir = join(sessionsBase, sessionDirName);
 
@@ -281,13 +281,13 @@ async function main() {
 
   if (!analyzeFlag) {
     console.log(
-      "\nRun with --analyze to spawn companion subagents for pattern analysis.",
+      "\nRun with --analyze to spawn clanker subagents for pattern analysis.",
     );
     return;
   }
 
   // Find AGENTS.md files to compare against
-  const globalAgentsMd = join(homedir(), ".companion/agent/AGENTS.md");
+  const globalAgentsMd = join(homedir(), ".clanker/agent/AGENTS.md");
   const localAgentsMd = join(cwd, "AGENTS.md");
   const agentsMdFiles = [globalAgentsMd, localAgentsMd].filter(existsSync);
   const agentsMdSection =

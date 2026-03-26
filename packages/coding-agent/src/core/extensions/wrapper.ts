@@ -5,7 +5,7 @@
 import type {
   AgentTool,
   AgentToolUpdateCallback,
-} from "@mariozechner/companion-agent-core";
+} from "@mariozechner/clanker-agent-core";
 import type { ExtensionRunner } from "./runner.js";
 import type { RegisteredTool, ToolCallEventResult } from "./types.js";
 

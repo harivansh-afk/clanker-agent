@@ -1,4 +1,4 @@
-import { Container } from "@mariozechner/companion-tui";
+import { Container } from "@mariozechner/clanker-tui";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { InteractiveMode } from "../src/modes/interactive/interactive-mode.js";
 import { initTheme } from "../src/modes/interactive/theme/theme.js";

@@ -10,18 +10,18 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJiti } from "@mariozechner/jiti";
-import * as _bundledPiAgentCore from "@mariozechner/companion-agent-core";
-import * as _bundledPiAi from "@mariozechner/companion-ai";
-import * as _bundledPiAiOauth from "@mariozechner/companion-ai/oauth";
-import type { KeyId } from "@mariozechner/companion-tui";
-import * as _bundledPiTui from "@mariozechner/companion-tui";
+import * as _bundledPiAgentCore from "@mariozechner/clanker-agent-core";
+import * as _bundledPiAi from "@mariozechner/clanker-ai";
+import * as _bundledPiAiOauth from "@mariozechner/clanker-ai/oauth";
+import type { KeyId } from "@mariozechner/clanker-tui";
+import * as _bundledPiTui from "@mariozechner/clanker-tui";
 // Static imports of packages that extensions may use.
 // These MUST be static so Bun bundles them into the compiled binary.
 // The virtualModules option then makes them available to extensions.
 import * as _bundledTypebox from "@sinclair/typebox";
 import { getAgentDir, isBunBinary } from "../../config.js";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
-// avoiding a circular dependency. Extensions can import from @mariozechner/companion-coding-agent.
+// avoiding a circular dependency. Extensions can import from @mariozechner/clanker-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.js";
 import { createEventBus, type EventBus } from "../event-bus.js";
 import type { ExecOptions } from "../exec.js";
@@ -41,11 +41,11 @@ import type {
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
 const VIRTUAL_MODULES: Record<string, unknown> = {
   "@sinclair/typebox": _bundledTypebox,
-  "@mariozechner/companion-agent-core": _bundledPiAgentCore,
-  "@mariozechner/companion-tui": _bundledPiTui,
-  "@mariozechner/companion-ai": _bundledPiAi,
-  "@mariozechner/companion-ai/oauth": _bundledPiAiOauth,
-  "@mariozechner/companion-coding-agent": _bundledPiCodingAgent,
+  "@mariozechner/clanker-agent-core": _bundledPiAgentCore,
+  "@mariozechner/clanker-tui": _bundledPiTui,
+  "@mariozechner/clanker-ai": _bundledPiAi,
+  "@mariozechner/clanker-ai/oauth": _bundledPiAiOauth,
+  "@mariozechner/clanker-coding-agent": _bundledPiCodingAgent,
 };
 
 const require = createRequire(import.meta.url);
@@ -80,22 +80,22 @@ function getAliases(): Record<string, string> {
   };
 
   _aliases = {
-    "@mariozechner/companion-coding-agent": packageIndex,
-    "@mariozechner/companion-agent-core": resolveWorkspaceOrImport(
+    "@mariozechner/clanker-coding-agent": packageIndex,
+    "@mariozechner/clanker-agent-core": resolveWorkspaceOrImport(
       "agent/dist/index.js",
-      "@mariozechner/companion-agent-core",
+      "@mariozechner/clanker-agent-core",
     ),
-    "@mariozechner/companion-tui": resolveWorkspaceOrImport(
+    "@mariozechner/clanker-tui": resolveWorkspaceOrImport(
       "tui/dist/index.js",
-      "@mariozechner/companion-tui",
+      "@mariozechner/clanker-tui",
     ),
-    "@mariozechner/companion-ai": resolveWorkspaceOrImport(
+    "@mariozechner/clanker-ai": resolveWorkspaceOrImport(
       "ai/dist/index.js",
-      "@mariozechner/companion-ai",
+      "@mariozechner/clanker-ai",
     ),
-    "@mariozechner/companion-ai/oauth": resolveWorkspaceOrImport(
+    "@mariozechner/clanker-ai/oauth": resolveWorkspaceOrImport(
       "ai/dist/oauth.js",
-      "@mariozechner/companion-ai/oauth",
+      "@mariozechner/clanker-ai/oauth",
     ),
     "@sinclair/typebox": typeboxRoot,
   };
@@ -454,8 +454,8 @@ function readPiManifest(packageJsonPath: string): PiManifest | null {
   try {
     const content = fs.readFileSync(packageJsonPath, "utf-8");
     const pkg = JSON.parse(content);
-    if (pkg.companion && typeof pkg.companion === "object") {
-      return pkg.companion as PiManifest;
+    if (pkg.clanker && typeof pkg.clanker === "object") {
+      return pkg.clanker as PiManifest;
     }
     return null;
   } catch {
@@ -471,13 +471,13 @@ function isExtensionFile(name: string): boolean {
  * Resolve extension entry points from a directory.
  *
  * Checks for:
- * 1. package.json with "companion.extensions" field -> returns declared paths
+ * 1. package.json with "clanker.extensions" field -> returns declared paths
  * 2. index.ts or index.js -> returns the index file
  *
  * Returns resolved paths or null if no entry points found.
  */
 function resolveExtensionEntries(dir: string): string[] | null {
-  // Check for package.json with "companion" field first
+  // Check for package.json with "clanker" field first
   const packageJsonPath = path.join(dir, "package.json");
   if (fs.existsSync(packageJsonPath)) {
     const manifest = readPiManifest(packageJsonPath);
@@ -514,7 +514,7 @@ function resolveExtensionEntries(dir: string): string[] | null {
  * Discovery rules:
  * 1. Direct files: `extensions/*.ts` or `*.js` → load
  * 2. Subdirectory with index: `extensions/* /index.ts` or `index.js` → load
- * 3. Subdirectory with package.json: `extensions/* /package.json` with "companion" field → load what it declares
+ * 3. Subdirectory with package.json: `extensions/* /package.json` with "clanker" field → load what it declares
  *
  * No recursion beyond one level. Complex packages must use package.json manifest.
  */
@@ -577,8 +577,8 @@ export async function discoverAndLoadExtensions(
     }
   };
 
-  // 1. Project-local extensions: cwd/.companion/extensions/
-  const localExtDir = path.join(cwd, ".companion", "extensions");
+  // 1. Project-local extensions: cwd/.clanker/extensions/
+  const localExtDir = path.join(cwd, ".clanker", "extensions");
   addPaths(discoverExtensionsInDir(localExtDir));
 
   // 2. Global extensions: agentDir/extensions/
@@ -589,7 +589,7 @@ export async function discoverAndLoadExtensions(
   for (const p of configuredPaths) {
     const resolved = resolvePath(p, cwd);
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
-      // Check for package.json with companion manifest or index.ts
+      // Check for package.json with clanker manifest or index.ts
       const entries = resolveExtensionEntries(resolved);
       if (entries) {
         addPaths(entries);

@@ -12,9 +12,9 @@ import type {
   Context,
   Model,
   OpenAICompletionsCompat,
-} from "@mariozechner/companion-ai";
-import { getApiProvider } from "@mariozechner/companion-ai";
-import { getOAuthProvider } from "@mariozechner/companion-ai/oauth";
+} from "@mariozechner/clanker-ai";
+import { getApiProvider } from "@mariozechner/clanker-ai";
+import { getOAuthProvider } from "@mariozechner/clanker-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { AuthStorage } from "../src/core/auth-storage.js";
 import { clearApiKeyCache, ModelRegistry } from "../src/core/model-registry.js";
@@ -27,7 +27,7 @@ describe("ModelRegistry", () => {
   beforeEach(() => {
     tempDir = join(
       tmpdir(),
-      `companion-test-model-registry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `clanker-test-model-registry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     mkdirSync(tempDir, { recursive: true });
     modelsJsonPath = join(tempDir, "models.json");

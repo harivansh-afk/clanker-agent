@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "clanker-agent",
+			"path": "."
+		},
+		{
+			"path": "../../moms"
+		}
+	],
+	"settings": {}
+}

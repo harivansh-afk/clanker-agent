@@ -2,7 +2,7 @@ import {
   DEFAULT_EDITOR_KEYBINDINGS,
   EditorKeybindingsManager,
   setEditorKeybindings,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { KeybindingsManager } from "../src/core/keybindings.js";
 import type { SessionInfo } from "../src/core/session-manager.js";

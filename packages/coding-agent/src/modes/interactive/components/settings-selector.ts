@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@mariozechner/companion-agent-core";
-import type { Transport } from "@mariozechner/companion-ai";
+import type { ThinkingLevel } from "@mariozechner/clanker-agent-core";
+import type { Transport } from "@mariozechner/clanker-ai";
 import {
   Container,
   getCapabilities,
@@ -9,7 +9,7 @@ import {
   SettingsList,
   Spacer,
   Text,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import {
   getSelectListTheme,
   getSettingsListTheme,

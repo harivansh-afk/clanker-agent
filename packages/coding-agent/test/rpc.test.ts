@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AgentEvent } from "@mariozechner/companion-agent-core";
+import type { AgentEvent } from "@mariozechner/clanker-agent-core";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RpcClient } from "../src/modes/rpc/rpc-client.js";
 
@@ -18,11 +18,11 @@ describe.skipIf(
   let sessionDir: string;
 
   beforeEach(() => {
-    sessionDir = join(tmpdir(), `companion-rpc-test-${Date.now()}`);
+    sessionDir = join(tmpdir(), `clanker-rpc-test-${Date.now()}`);
     client = new RpcClient({
       cliPath: join(__dirname, "..", "dist", "cli.js"),
       cwd: join(__dirname, ".."),
-      env: { COMPANION_CODING_AGENT_DIR: sessionDir },
+      env: { CLANKER_CODING_AGENT_DIR: sessionDir },
       provider: "anthropic",
       model: "claude-sonnet-4-5",
     });

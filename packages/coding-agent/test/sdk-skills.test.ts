@@ -14,12 +14,12 @@ describe("createAgentSession skills option", () => {
   beforeEach(() => {
     tempDir = join(
       tmpdir(),
-      `companion-sdk-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `clanker-sdk-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     skillsDir = join(tempDir, "skills", "test-skill");
     mkdirSync(skillsDir, { recursive: true });
 
-    // Create a test skill in the companion skills directory
+    // Create a test skill in the clanker skills directory
     writeFileSync(
       join(skillsDir, "SKILL.md"),
       `---

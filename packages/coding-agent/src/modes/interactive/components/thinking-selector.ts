@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@mariozechner/companion-agent-core";
-import { Container, type SelectItem, SelectList } from "@mariozechner/companion-tui";
+import type { ThinkingLevel } from "@mariozechner/clanker-agent-core";
+import { Container, type SelectItem, SelectList } from "@mariozechner/clanker-tui";
 import { getSelectListTheme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

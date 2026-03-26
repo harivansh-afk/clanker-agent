@@ -313,22 +313,22 @@ describe("DefaultPackageManager git update", () => {
         .slice(0, 8);
       const cachedDir = join(
         tmpdir(),
-        "companion-extensions",
+        "clanker-extensions",
         `git-${gitHost}`,
         hash,
         gitPath,
       );
       const extensionFile = join(
         cachedDir,
-        "companion-extensions",
+        "clanker-extensions",
         "session-breakdown.ts",
       );
 
       rmSync(cachedDir, { recursive: true, force: true });
-      mkdirSync(join(cachedDir, "companion-extensions"), { recursive: true });
+      mkdirSync(join(cachedDir, "clanker-extensions"), { recursive: true });
       writeFileSync(
         join(cachedDir, "package.json"),
-        JSON.stringify({ companion: { extensions: ["./companion-extensions"] } }, null, 2),
+        JSON.stringify({ clanker: { extensions: ["./clanker-extensions"] } }, null, 2),
       );
       writeFileSync(extensionFile, "// stale");
 
@@ -353,7 +353,7 @@ describe("DefaultPackageManager git update", () => {
 
       expect(executedCommands).toContain("git fetch --prune origin");
       expect(
-        getFileContent(cachedDir, "companion-extensions/session-breakdown.ts"),
+        getFileContent(cachedDir, "clanker-extensions/session-breakdown.ts"),
       ).toBe("// fresh");
     });
 
@@ -366,22 +366,22 @@ describe("DefaultPackageManager git update", () => {
         .slice(0, 8);
       const cachedDir = join(
         tmpdir(),
-        "companion-extensions",
+        "clanker-extensions",
         `git-${gitHost}`,
         hash,
         gitPath,
       );
       const extensionFile = join(
         cachedDir,
-        "companion-extensions",
+        "clanker-extensions",
         "session-breakdown.ts",
       );
 
       rmSync(cachedDir, { recursive: true, force: true });
-      mkdirSync(join(cachedDir, "companion-extensions"), { recursive: true });
+      mkdirSync(join(cachedDir, "clanker-extensions"), { recursive: true });
       writeFileSync(
         join(cachedDir, "package.json"),
-        JSON.stringify({ companion: { extensions: ["./companion-extensions"] } }, null, 2),
+        JSON.stringify({ clanker: { extensions: ["./clanker-extensions"] } }, null, 2),
       );
       writeFileSync(extensionFile, "// pinned");
 
@@ -403,7 +403,7 @@ describe("DefaultPackageManager git update", () => {
 
       expect(executedCommands).toEqual([]);
       expect(
-        getFileContent(cachedDir, "companion-extensions/session-breakdown.ts"),
+        getFileContent(cachedDir, "clanker-extensions/session-breakdown.ts"),
       ).toBe("// pinned");
     });
   });
@@ -418,7 +418,7 @@ describe("DefaultPackageManager git update", () => {
       // The project-scope install path should not exist before or after update
       const projectGitDir = join(
         tempDir,
-        ".companion",
+        ".clanker",
         "git",
         "github.com",
         "test",

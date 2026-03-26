@@ -324,7 +324,7 @@ describe("Tool Call Without Result Tests", () => {
   });
 
   // =========================================================================
-  // OAuth-based providers (credentials from ~/.companion/agent/oauth.json)
+  // OAuth-based providers (credentials from ~/.clanker/agent/oauth.json)
   // =========================================================================
 
   describe("Anthropic OAuth Provider", () => {

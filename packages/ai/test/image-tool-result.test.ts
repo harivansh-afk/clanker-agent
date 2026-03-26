@@ -476,7 +476,7 @@ describe("Tool Results with Images", () => {
   );
 
   // =========================================================================
-  // OAuth-based providers (credentials from ~/.companion/agent/oauth.json)
+  // OAuth-based providers (credentials from ~/.clanker/agent/oauth.json)
   // =========================================================================
 
   describe("Anthropic OAuth Provider (claude-sonnet-4-5)", () => {
@@ -584,7 +584,7 @@ describe("Tool Results with Images", () => {
       },
     );
 
-    /** These two don't work, the model simply won't call the tool, works in companion
+    /** These two don't work, the model simply won't call the tool, works in clanker
 		it.skipIf(!antigravityToken)(
 			"claude-sonnet-4-5 - should handle tool result with only image",
 			{ retry: 3, timeout: 30000 },

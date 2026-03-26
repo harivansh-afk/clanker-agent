@@ -4,8 +4,8 @@
  * Run with: npx tsx test/streaming-render-debug.ts
  */
 
-import type { AssistantMessage } from "@mariozechner/companion-ai";
-import { ProcessTerminal, TUI } from "@mariozechner/companion-tui";
+import type { AssistantMessage } from "@mariozechner/clanker-ai";
+import { ProcessTerminal, TUI } from "@mariozechner/clanker-tui";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";

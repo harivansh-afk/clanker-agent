@@ -1,11 +1,11 @@
 # Settings
 
-Companion uses JSON settings files with project settings overriding global settings.
+Clanker uses JSON settings files with project settings overriding global settings.
 
 | Location                    | Scope                       |
 | --------------------------- | --------------------------- |
-| `~/.companion/agent/settings.json` | Global (all projects)       |
-| `.companion/settings.json`         | Project (current directory) |
+| `~/.clanker/agent/settings.json` | Global (all projects)       |
+| `.clanker/settings.json`         | Project (current directory) |
 
 Edit directly or use `/settings` for common options.
 
@@ -140,7 +140,7 @@ When a provider requests a retry delay longer than `maxDelayMs` (e.g., Google's 
 
 These settings define where to load extensions, skills, prompts, and themes from.
 
-Paths in `~/.companion/agent/settings.json` resolve relative to `~/.companion/agent`. Paths in `.companion/settings.json` resolve relative to `.companion`. Absolute paths and `~` are supported.
+Paths in `~/.clanker/agent/settings.json` resolve relative to `~/.clanker/agent`. Paths in `.clanker/settings.json` resolve relative to `.clanker`. Absolute paths and `~` are supported.
 
 | Setting               | Type     | Default | Description                                |
 | --------------------- | -------- | ------- | ------------------------------------------ |
@@ -159,7 +159,7 @@ String form loads all resources from a package:
 
 ```json
 {
-  "packages": ["companion-skills", "@org/my-extension"]
+  "packages": ["clanker-skills", "@org/my-extension"]
 }
 ```
 
@@ -169,7 +169,7 @@ Object form filters which resources to load:
 {
   "packages": [
     {
-      "source": "companion-skills",
+      "source": "clanker-skills",
       "skills": ["brave-search", "transcribe"],
       "extensions": []
     }
@@ -197,22 +197,22 @@ See [packages.md](packages.md) for package management details.
     "maxRetries": 3
   },
   "enabledModels": ["claude-*", "gpt-4o"],
-  "packages": ["companion-skills"]
+  "packages": ["clanker-skills"]
 }
 ```
 
 ## Project Overrides
 
-Project settings (`.companion/settings.json`) override global settings. Nested objects are merged:
+Project settings (`.clanker/settings.json`) override global settings. Nested objects are merged:
 
 ```json
-// ~/.companion/agent/settings.json (global)
+// ~/.clanker/agent/settings.json (global)
 {
   "theme": "dark",
   "compaction": { "enabled": true, "reserveTokens": 16384 }
 }
 
-// .companion/settings.json (project)
+// .clanker/settings.json (project)
 {
   "compaction": { "reserveTokens": 8192 }
 }

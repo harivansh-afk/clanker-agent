@@ -1,11 +1,11 @@
-import type { OAuthProviderInterface } from "@mariozechner/companion-ai";
-import { getOAuthProviders } from "@mariozechner/companion-ai/oauth";
+import type { OAuthProviderInterface } from "@mariozechner/clanker-ai";
+import { getOAuthProviders } from "@mariozechner/clanker-ai/oauth";
 import {
   Container,
   getEditorKeybindings,
   Spacer,
   TruncatedText,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type { AuthStorage } from "../../../core/auth-storage.js";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";

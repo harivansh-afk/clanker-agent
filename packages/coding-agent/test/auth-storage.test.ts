@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { registerOAuthProvider } from "@mariozechner/companion-ai/oauth";
+import { registerOAuthProvider } from "@mariozechner/clanker-ai/oauth";
 import lockfile from "proper-lockfile";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthStorage } from "../src/core/auth-storage.js";
@@ -21,7 +21,7 @@ describe("AuthStorage", () => {
   beforeEach(() => {
     tempDir = join(
       tmpdir(),
-      `companion-test-auth-storage-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `clanker-test-auth-storage-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     mkdirSync(tempDir, { recursive: true });
     authJsonPath = join(tempDir, "auth.json");

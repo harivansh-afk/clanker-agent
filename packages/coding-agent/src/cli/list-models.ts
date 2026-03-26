@@ -2,8 +2,8 @@
  * List available models with optional fuzzy search
  */
 
-import type { Api, Model } from "@mariozechner/companion-ai";
-import { fuzzyFilter } from "@mariozechner/companion-tui";
+import type { Api, Model } from "@mariozechner/clanker-ai";
+import { fuzzyFilter } from "@mariozechner/clanker-tui";
 import type { ModelRegistry } from "../core/model-registry.js";
 
 /**

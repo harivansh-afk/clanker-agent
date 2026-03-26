@@ -1,9 +1,9 @@
 /**
  * Central timing instrumentation for startup profiling.
- * Enable with COMPANION_TIMING=1 environment variable.
+ * Enable with CLANKER_TIMING=1 environment variable.
  */
 
-const ENABLED = process.env.COMPANION_TIMING === "1";
+const ENABLED = process.env.CLANKER_TIMING === "1";
 const timings: Array<{ label: string; ms: number }> = [];
 let lastTime = Date.now();
 

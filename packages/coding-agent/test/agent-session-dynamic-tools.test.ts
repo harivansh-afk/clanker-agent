@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getModel } from "@mariozechner/companion-ai";
+import { getModel } from "@mariozechner/clanker-ai";
 import { Type } from "@sinclair/typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DefaultResourceLoader } from "../src/core/resource-loader.js";
@@ -16,7 +16,7 @@ describe("AgentSession dynamic tool registration", () => {
   beforeEach(() => {
     tempDir = join(
       tmpdir(),
-      `companion-dynamic-tool-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `clanker-dynamic-tool-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     agentDir = join(tempDir, "agent");
     mkdirSync(agentDir, { recursive: true });
@@ -37,9 +37,9 @@ describe("AgentSession dynamic tool registration", () => {
       agentDir,
       settingsManager,
       extensionFactories: [
-        (companion) => {
-          companion.on("session_start", () => {
-            companion.registerTool({
+        （clanker） => {
+          clanker.on("session_start", () => {
+            clanker.registerTool({
               name: "dynamic_tool",
               label: "Dynamic Tool",
               description: "Tool registered from session_start",

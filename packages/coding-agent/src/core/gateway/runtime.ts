@@ -7,7 +7,7 @@ import {
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { URL } from "node:url";
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
 import type { AgentSession, AgentSessionEvent } from "../agent-session.js";
 import type { Settings } from "../settings-manager.js";
 import { DurableChatRunReporter } from "./durable-chat-run.js";
@@ -66,7 +66,7 @@ const SSE_HEARTBEAT_MS = 15_000;
 type JsonRecord = Record<string, unknown>;
 type AssistantAgentMessage = Extract<AgentMessage, { role: "assistant" }>;
 
-type CompanionChannelsSettings = JsonRecord & {
+type ClankerChannelsSettings = JsonRecord & {
   adapters?: Record<string, JsonRecord>;
   bridge?: JsonRecord;
   slack?: JsonRecord;
@@ -1264,7 +1264,7 @@ export class GatewayRuntime {
       path.slice(this.config.webhook.basePath.length).replace(/^\/+/, "") ||
       "default";
     if (this.config.webhook.secret) {
-      const presentedSecret = request.headers["x-companion-webhook-secret"];
+      const presentedSecret = request.headers["x-clanker-webhook-secret"];
       if (presentedSecret !== this.config.webhook.secret) {
         this.writeJson(response, 401, { error: "Invalid webhook secret" });
         return;
@@ -1502,7 +1502,7 @@ export class GatewayRuntime {
   }
 
   // ---------------------------------------------------------------------------
-  // New handler methods added for companion-cloud web app integration
+  // New handler methods added for clanker-cloud web app integration
   // ---------------------------------------------------------------------------
 
   private async handleGetModels(): Promise<{
@@ -1636,7 +1636,7 @@ export class GatewayRuntime {
     this.primarySession.settingsManager.applyOverrides(patch as Settings);
   }
 
-  private getCompanionChannelsSettings(): CompanionChannelsSettings {
+  private getClankerChannelsSettings(): ClankerChannelsSettings {
     const globalSettings =
       this.primarySession.settingsManager.getGlobalSettings();
     const projectSettings =
@@ -1645,14 +1645,14 @@ export class GatewayRuntime {
       isRecord(globalSettings) ? globalSettings : {},
       isRecord(projectSettings) ? projectSettings : {},
     );
-    const piChannels = mergedSettings["companion-channels"];
+    const piChannels = mergedSettings["clanker-channels"];
     return isRecord(piChannels)
-      ? (piChannels as CompanionChannelsSettings)
+      ? (piChannels as ClankerChannelsSettings)
       : {};
   }
 
   private buildSlackChannelStatus(
-    config: CompanionChannelsSettings,
+    config: ClankerChannelsSettings,
     bridgeEnabled: boolean,
   ): ChannelStatus {
     const adapters = isRecord(config.adapters) ? config.adapters : {};
@@ -1671,13 +1671,13 @@ export class GatewayRuntime {
     if (hasConfig) {
       if (!adapter) {
         error =
-          'Slack requires `companion-channels.adapters.slack = { "type": "slack" }`.';
+          'Slack requires `clanker-channels.adapters.slack = { "type": "slack" }`.';
       } else if (adapterType !== "slack") {
         error = 'Slack adapter type must be "slack".';
       } else if (!appToken) {
-        error = "Slack requires companion-channels.slack.appToken.";
+        error = "Slack requires clanker-channels.slack.appToken.";
       } else if (!botToken) {
-        error = "Slack requires companion-channels.slack.botToken.";
+        error = "Slack requires clanker-channels.slack.botToken.";
       } else {
         configured = true;
       }
@@ -1685,7 +1685,7 @@ export class GatewayRuntime {
 
     if (configured && !bridgeEnabled) {
       error =
-        "Slack is configured, but companion-channels.bridge.enabled is false, so messages will not reach the agent.";
+        "Slack is configured, but clanker-channels.bridge.enabled is false, so messages will not reach the agent.";
     }
 
     return {
@@ -1699,7 +1699,7 @@ export class GatewayRuntime {
   }
 
   private buildTelegramChannelStatus(
-    config: CompanionChannelsSettings,
+    config: ClankerChannelsSettings,
     bridgeEnabled: boolean,
   ): ChannelStatus {
     const adapters = isRecord(config.adapters) ? config.adapters : {};
@@ -1716,15 +1716,15 @@ export class GatewayRuntime {
     if (hasConfig) {
       if (!adapter) {
         error =
-          'Telegram requires `companion-channels.adapters.telegram = { "type": "telegram", "botToken": "...", "polling": true }`.';
+          'Telegram requires `clanker-channels.adapters.telegram = { "type": "telegram", "botToken": "...", "polling": true }`.';
       } else if (adapterType !== "telegram") {
         error = 'Telegram adapter type must be "telegram".';
       } else if (!botToken) {
         error =
-          "Telegram requires companion-channels.adapters.telegram.botToken.";
+          "Telegram requires clanker-channels.adapters.telegram.botToken.";
       } else if (!pollingEnabled) {
         error =
-          "Telegram requires companion-channels.adapters.telegram.polling = true.";
+          "Telegram requires clanker-channels.adapters.telegram.polling = true.";
       } else {
         configured = true;
       }
@@ -1732,7 +1732,7 @@ export class GatewayRuntime {
 
     if (configured && !bridgeEnabled) {
       error =
-        "Telegram is configured, but companion-channels.bridge.enabled is false, so messages will not reach the agent.";
+        "Telegram is configured, but clanker-channels.bridge.enabled is false, so messages will not reach the agent.";
     }
 
     return {
@@ -1746,7 +1746,7 @@ export class GatewayRuntime {
   }
 
   private handleGetChannelsStatus(): ChannelStatus[] {
-    const config = this.getCompanionChannelsSettings();
+    const config = this.getClankerChannelsSettings();
     const bridgeEnabled = config.bridge?.enabled === true;
 
     return [

@@ -997,10 +997,10 @@ function buildHeaders(
   headers.set("Authorization", `Bearer ${token}`);
   headers.set("chatgpt-account-id", accountId);
   headers.set("OpenAI-Beta", "responses=experimental");
-  headers.set("originator", "companion");
+  headers.set("originator", "clanker");
   const userAgent = _os
-    ? `companion (${_os.platform()} ${_os.release()}; ${_os.arch()})`
-    : "companion (browser)";
+    ? `clanker (${_os.platform()} ${_os.release()}; ${_os.arch()})`
+    : "clanker (browser)";
   headers.set("User-Agent", userAgent);
   headers.set("accept", "text/event-stream");
   headers.set("content-type", "application/json");

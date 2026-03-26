@@ -1,18 +1,18 @@
-# @mariozechner/companion-agent-core
+# @mariozechner/clanker-agent-core
 
-Stateful agent with tool execution and event streaming. Built on `@mariozechner/companion-ai`.
+Stateful agent with tool execution and event streaming. Built on `@mariozechner/clanker-ai`.
 
 ## Installation
 
 ```bash
-npm install @mariozechner/companion-agent-core
+npm install @mariozechner/clanker-agent-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { Agent } from "@mariozechner/companion-agent-core";
-import { getModel } from "@mariozechner/companion-ai";
+import { Agent } from "@mariozechner/clanker-agent-core";
+import { getModel } from "@mariozechner/clanker-ai";
 
 const agent = new Agent({
   initialState: {
@@ -298,7 +298,7 @@ Follow-up messages are checked only when there are no more tool calls and no ste
 Extend `AgentMessage` via declaration merging:
 
 ```typescript
-declare module "@mariozechner/companion-agent-core" {
+declare module "@mariozechner/clanker-agent-core" {
   interface CustomAgentMessages {
     notification: { role: "notification"; text: string; timestamp: number };
   }
@@ -378,7 +378,7 @@ Thrown errors are caught by the agent and reported to the LLM as tool errors wit
 For browser apps that proxy through a backend:
 
 ```typescript
-import { Agent, streamProxy } from "@mariozechner/companion-agent-core";
+import { Agent, streamProxy } from "@mariozechner/clanker-agent-core";
 
 const agent = new Agent({
   streamFn: (model, context, options) =>
@@ -395,7 +395,7 @@ const agent = new Agent({
 For direct control without the Agent class:
 
 ```typescript
-import { agentLoop, agentLoopContinue } from "@mariozechner/companion-agent-core";
+import { agentLoop, agentLoopContinue } from "@mariozechner/clanker-agent-core";
 
 const context: AgentContext = {
   systemPrompt: "You are helpful.",

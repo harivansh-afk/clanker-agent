@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Companion Coding Agent Theme",
-  "description": "Theme schema for companion coding agent",
+  "title": "Clanker Coding Agent Theme",
+  "description": "Theme schema for clanker coding agent",
   "type": "object",
   "required": ["name", "colors"],
   "properties": {

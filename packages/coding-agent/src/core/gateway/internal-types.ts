@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
 import type { AgentSession } from "../agent-session.js";
 import type { DurableChatRunReporter } from "./durable-chat-run.js";
 import type {

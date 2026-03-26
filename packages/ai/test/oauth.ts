@@ -1,5 +1,5 @@
 /**
- * Test helper for resolving API keys from ~/.companion/agent/auth.json
+ * Test helper for resolving API keys from ~/.clanker/agent/auth.json
  *
  * Supports both API key and OAuth credentials.
  * OAuth tokens are automatically refreshed if expired and saved back to auth.json.
@@ -20,7 +20,7 @@ import type {
   OAuthProvider,
 } from "../src/utils/oauth/types.js";
 
-const AUTH_PATH = join(homedir(), ".companion", "agent", "auth.json");
+const AUTH_PATH = join(homedir(), ".clanker", "agent", "auth.json");
 
 type ApiKeyCredential = {
   type: "api_key";
@@ -57,7 +57,7 @@ function saveAuthStorage(storage: AuthStorage): void {
 }
 
 /**
- * Resolve API key for a provider from ~/.companion/agent/auth.json
+ * Resolve API key for a provider from ~/.clanker/agent/auth.json
  *
  * For API key credentials, returns the key directly.
  * For OAuth credentials, returns the access token (refreshing if expired and saving back).

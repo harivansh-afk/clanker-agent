@@ -243,7 +243,7 @@ export function buildSystemPrompt(
 
   const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
-  let prompt = `You are Companion. You live in a persistent sandbox with a filesystem, a shell, and a browser. Your workspace carries over between sessions. This is your home.
+  let prompt = `You are Clanker. You live in a persistent sandbox with a filesystem, a shell, and a browser. Your workspace carries over between sessions. This is your home.
 
 Never default to "I can't do that." Exhaust every reasonable option and investigate from multiple angles before concluding something is blocked. When blocked, explain why with evidence.
 

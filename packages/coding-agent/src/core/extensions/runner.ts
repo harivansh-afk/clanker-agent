@@ -2,9 +2,9 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
-import type { ImageContent, Model } from "@mariozechner/companion-ai";
-import type { KeyId } from "@mariozechner/companion-tui";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
+import type { ImageContent, Model } from "@mariozechner/clanker-ai";
+import type { KeyId } from "@mariozechner/clanker-tui";
 import { type Theme, theme } from "../../modes/interactive/theme/theme.js";
 import type { ResourceDiagnostic } from "../diagnostics.js";
 import type { KeyAction, KeybindingsConfig } from "../keybindings.js";

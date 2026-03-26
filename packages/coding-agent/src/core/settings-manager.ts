@@ -1,4 +1,4 @@
-import type { Transport } from "@mariozechner/companion-ai";
+import type { Transport } from "@mariozechner/clanker-ai";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -63,7 +63,7 @@ export interface GatewaySettings {
   webhook?: GatewayWebhookSettings;
 }
 
-export interface CompanionMemorySettings {
+export interface ClankerMemorySettings {
   enabled?: boolean;
   storageDir?: string;
   maxCoreTokens?: number;
@@ -136,7 +136,7 @@ export interface Settings {
   showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
   markdown?: MarkdownSettings;
   gateway?: GatewaySettings;
-  companionMemory?: CompanionMemorySettings;
+  clankerMemory?: ClankerMemorySettings;
 }
 
 /** Deep merge settings: project/overrides take precedence, nested objects merge recursively */
@@ -944,7 +944,7 @@ export class SettingsManager {
     if (this.settings.terminal?.clearOnShrink !== undefined) {
       return this.settings.terminal.clearOnShrink;
     }
-    return process.env.COMPANION_CLEAR_ON_SHRINK === "1";
+    return process.env.CLANKER_CLEAR_ON_SHRINK === "1";
   }
 
   setClearOnShrink(enabled: boolean): void {
@@ -1023,7 +1023,7 @@ export class SettingsManager {
 
   getShowHardwareCursor(): boolean {
     return (
-      this.settings.showHardwareCursor ?? process.env.COMPANION_HARDWARE_CURSOR === "1"
+      this.settings.showHardwareCursor ?? process.env.CLANKER_HARDWARE_CURSOR === "1"
     );
   }
 

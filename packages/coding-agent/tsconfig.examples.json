@@ -3,10 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "paths": {
-      "@mariozechner/companion-coding-agent": ["./src/index.ts"],
-      "@mariozechner/companion-coding-agent/hooks": ["./src/core/hooks/index.ts"],
-      "@mariozechner/companion-tui": ["../tui/src/index.ts"],
-      "@mariozechner/companion-ai": ["../ai/src/index.ts"],
+      "@mariozechner/clanker-coding-agent": ["./src/index.ts"],
+      "@mariozechner/clanker-coding-agent/hooks": ["./src/core/hooks/index.ts"],
+      "@mariozechner/clanker-tui": ["../tui/src/index.ts"],
+      "@mariozechner/clanker-ai": ["../ai/src/index.ts"],
       "@sinclair/typebox": ["../../node_modules/@sinclair/typebox"]
     },
     "skipLibCheck": true

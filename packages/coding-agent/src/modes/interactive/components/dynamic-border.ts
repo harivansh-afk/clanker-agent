@@ -1,4 +1,4 @@
-import type { Component } from "@mariozechner/companion-tui";
+import type { Component } from "@mariozechner/clanker-tui";
 import { theme } from "../theme/theme.js";
 
 /**

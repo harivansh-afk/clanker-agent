@@ -12,7 +12,7 @@ describe("extensions discovery", () => {
   let extensionsDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "companion-ext-test-"));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "clanker-ext-test-"));
     extensionsDir = path.join(tempDir, "extensions");
     fs.mkdirSync(extensionsDir);
   });
@@ -22,15 +22,15 @@ describe("extensions discovery", () => {
   });
 
   const extensionCode = `
-		export default function(companion) {
-			companion.registerCommand("test", { handler: async () => {} });
+		export default function(clanker) {
+			clanker.registerCommand("test", { handler: async () => {} });
 		}
 	`;
 
   const extensionCodeWithTool = (toolName: string) => `
 		import { Type } from "@sinclair/typebox";
-		export default function(companion) {
-			companion.registerTool({
+		export default function(clanker) {
+			clanker.registerTool({
 				name: "${toolName}",
 				label: "${toolName}",
 				description: "Test tool",
@@ -102,7 +102,7 @@ describe("extensions discovery", () => {
     expect(result.extensions[0].path).toContain("index.ts");
   });
 
-  it("discovers subdirectory with package.json companion field", async () => {
+  it("discovers subdirectory with package.json clanker field", async () => {
     const subdir = path.join(extensionsDir, "my-package");
     const srcDir = path.join(subdir, "src");
     fs.mkdirSync(subdir);
@@ -112,7 +112,7 @@ describe("extensions discovery", () => {
       path.join(subdir, "package.json"),
       JSON.stringify({
         name: "my-package",
-        companion: {
+        clanker: {
           extensions: ["./src/main.ts"],
         },
       }),
@@ -135,7 +135,7 @@ describe("extensions discovery", () => {
       path.join(subdir, "package.json"),
       JSON.stringify({
         name: "my-package",
-        companion: {
+        clanker: {
           extensions: ["./ext1.ts", "./ext2.ts"],
         },
       }),
@@ -147,7 +147,7 @@ describe("extensions discovery", () => {
     expect(result.extensions).toHaveLength(2);
   });
 
-  it("package.json with companion field takes precedence over index.ts", async () => {
+  it("package.json with clanker field takes precedence over index.ts", async () => {
     const subdir = path.join(extensionsDir, "my-package");
     fs.mkdirSync(subdir);
     fs.writeFileSync(
@@ -162,7 +162,7 @@ describe("extensions discovery", () => {
       path.join(subdir, "package.json"),
       JSON.stringify({
         name: "my-package",
-        companion: {
+        clanker: {
           extensions: ["./custom.ts"],
         },
       }),
@@ -178,7 +178,7 @@ describe("extensions discovery", () => {
     expect(result.extensions[0].tools.has("from-index")).toBe(false);
   });
 
-  it("ignores package.json without companion field, falls back to index.ts", async () => {
+  it("ignores package.json without clanker field, falls back to index.ts", async () => {
     const subdir = path.join(extensionsDir, "my-package");
     fs.mkdirSync(subdir);
     fs.writeFileSync(path.join(subdir, "index.ts"), extensionCode);
@@ -238,7 +238,7 @@ describe("extensions discovery", () => {
     fs.writeFileSync(path.join(subdir2, "entry.ts"), extensionCode);
     fs.writeFileSync(
       path.join(subdir2, "package.json"),
-      JSON.stringify({ companion: { extensions: ["./entry.ts"] } }),
+      JSON.stringify({ clanker: { extensions: ["./entry.ts"] } }),
     );
 
     const result = await discoverAndLoadExtensions([], tempDir, tempDir);
@@ -254,7 +254,7 @@ describe("extensions discovery", () => {
     fs.writeFileSync(
       path.join(subdir, "package.json"),
       JSON.stringify({
-        companion: {
+        clanker: {
           extensions: ["./exists.ts", "./missing.ts"],
         },
       }),
@@ -331,8 +331,8 @@ describe("extensions discovery", () => {
       `
 				import { Type } from "@sinclair/typebox";
 				import ms from "ms";
-				export default function(companion) {
-					companion.registerTool({
+				export default function(clanker) {
+					clanker.registerTool({
 						name: "parse_duration",
 						label: "parse_duration",
 						description: "Parse a duration string",
@@ -375,8 +375,8 @@ describe("extensions discovery", () => {
 
   it("registers message renderers", async () => {
     const extCode = `
-			export default function(companion) {
-				companion.registerMessageRenderer("my-custom-type", (message, options, theme) => {
+			export default function(clanker) {
+				clanker.registerMessageRenderer("my-custom-type", (message, options, theme) => {
 					return null; // Use default rendering
 				});
 			}
@@ -394,7 +394,7 @@ describe("extensions discovery", () => {
 
   it("reports error when extension throws during initialization", async () => {
     const extCode = `
-			export default function(companion) {
+			export default function(clanker) {
 				throw new Error("Initialization failed!");
 			}
 		`;
@@ -409,8 +409,8 @@ describe("extensions discovery", () => {
 
   it("reports error when extension has no default export", async () => {
     const extCode = `
-			export function notDefault(companion) {
-				companion.registerCommand("test", { handler: async () => {} });
+			export function notDefault（clanker） {
+				clanker.registerCommand("test", { handler: async () => {} });
 			}
 		`;
     fs.writeFileSync(path.join(extensionsDir, "no-default.ts"), extCode);
@@ -451,10 +451,10 @@ describe("extensions discovery", () => {
 
   it("loads extension with event handlers", async () => {
     const extCode = `
-			export default function(companion) {
-				companion.on("agent_start", async () => {});
-				companion.on("tool_call", async (event) => undefined);
-				companion.on("agent_end", async () => {});
+			export default function(clanker) {
+				clanker.on("agent_start", async () => {});
+				clanker.on("tool_call", async (event) => undefined);
+				clanker.on("agent_end", async () => {});
 			}
 		`;
     fs.writeFileSync(path.join(extensionsDir, "with-handlers.ts"), extCode);
@@ -470,8 +470,8 @@ describe("extensions discovery", () => {
 
   it("loads extension with shortcuts", async () => {
     const extCode = `
-			export default function(companion) {
-				companion.registerShortcut("ctrl+t", {
+			export default function(clanker) {
+				clanker.registerShortcut("ctrl+t", {
 					description: "Test shortcut",
 					handler: async (ctx) => {},
 				});
@@ -488,8 +488,8 @@ describe("extensions discovery", () => {
 
   it("loads extension with flags", async () => {
     const extCode = `
-			export default function(companion) {
-				companion.registerFlag("my-flag", {
+			export default function(clanker) {
+				clanker.registerFlag("my-flag", {
 					description: "My custom flag",
 					handler: async (value) => {},
 				});

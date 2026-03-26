@@ -3,7 +3,7 @@ import {
   type EditorOptions,
   type EditorTheme,
   type TUI,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type {
   AppAction,
   KeybindingsManager,

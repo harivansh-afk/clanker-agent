@@ -10,7 +10,7 @@ import {
   streamSimple,
   type ToolResultMessage,
   validateToolArguments,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import type {
   AgentContext,
   AgentEvent,

@@ -13,7 +13,7 @@ import {
   Spacer,
   truncateToWidth,
   visibleWidth,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { CONFIG_DIR_NAME } from "../../../config.js";
 import type {
   PathMetadata,
@@ -68,7 +68,7 @@ function getGroupLabel(metadata: PathMetadata): string {
   }
   // Top-level resources
   if (metadata.source === "auto") {
-    return metadata.scope === "user" ? "User (~/.companion/agent/)" : "Project (.companion/)";
+    return metadata.scope === "user" ? "User (~/.clanker/agent/)" : "Project (.clanker/)";
   }
   return metadata.scope === "user" ? "User settings" : "Project settings";
 }

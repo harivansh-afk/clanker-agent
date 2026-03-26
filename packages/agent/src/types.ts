@@ -8,7 +8,7 @@ import type {
   TextContent,
   Tool,
   ToolResultMessage,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import type { Static, TSchema } from "@sinclair/typebox";
 
 /** Stream function - can return sync or Promise for async config lookup */

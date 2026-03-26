@@ -20,7 +20,7 @@ import type { PackageSource, SettingsManager } from "./settings-manager.js";
 const NETWORK_TIMEOUT_MS = 10000;
 
 function isOfflineModeEnabled(): boolean {
-  const value = process.env.COMPANION_OFFLINE;
+  const value = process.env.CLANKER_OFFLINE;
   if (!value) return false;
   return (
     value === "1" ||
@@ -445,8 +445,8 @@ function collectAutoThemeEntries(dir: string): string[] {
 function readPiManifestFile(packageJsonPath: string): PiManifest | null {
   try {
     const content = readFileSync(packageJsonPath, "utf-8");
-    const pkg = JSON.parse(content) as { companion?: PiManifest };
-    return pkg.companion ?? null;
+    const pkg = JSON.parse(content) as { clanker?: PiManifest };
+    return pkg.clanker ?? null;
   } catch {
     return null;
   }
@@ -1529,7 +1529,7 @@ export class DefaultPackageManager implements PackageManager {
     this.ensureGitIgnore(installRoot);
     const packageJsonPath = join(installRoot, "package.json");
     if (!existsSync(packageJsonPath)) {
-      const pkgJson = { name: "companion-extensions", private: true };
+      const pkgJson = { name: "clanker-extensions", private: true };
       writeFileSync(packageJsonPath, JSON.stringify(pkgJson, null, 2), "utf-8");
     }
   }
@@ -1595,7 +1595,7 @@ export class DefaultPackageManager implements PackageManager {
       .update(`${prefix}-${suffix ?? ""}`)
       .digest("hex")
       .slice(0, 8);
-    return join(tmpdir(), "companion-extensions", prefix, hash, suffix ?? "");
+    return join(tmpdir(), "clanker-extensions", prefix, hash, suffix ?? "");
   }
 
   private getBaseDirForScope(scope: SourceScope): string {
@@ -1784,8 +1784,8 @@ export class DefaultPackageManager implements PackageManager {
 
     try {
       const content = readFileSync(packageJsonPath, "utf-8");
-      const pkg = JSON.parse(content) as { companion?: PiManifest };
-      return pkg.companion ?? null;
+      const pkg = JSON.parse(content) as { clanker?: PiManifest };
+      return pkg.clanker ?? null;
     } catch {
       return null;
     }

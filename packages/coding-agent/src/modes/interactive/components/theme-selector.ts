@@ -1,4 +1,4 @@
-import { Container, type SelectItem, SelectList } from "@mariozechner/companion-tui";
+import { Container, type SelectItem, SelectList } from "@mariozechner/clanker-tui";
 import { getAvailableThemes, getSelectListTheme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

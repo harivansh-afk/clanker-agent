@@ -2,7 +2,7 @@ import {
   type Component,
   truncateToWidth,
   visibleWidth,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import type { AgentSession } from "../../../core/agent-session.js";
 import type { ReadonlyFooterDataProvider } from "../../../core/footer-data-provider.js";
 import { theme } from "../theme/theme.js";

@@ -6,7 +6,7 @@ import {
   type KeyId,
   matchesKey,
   setEditorKeybindings,
-} from "@mariozechner/companion-tui";
+} from "@mariozechner/clanker-tui";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getAgentDir } from "../config.js";

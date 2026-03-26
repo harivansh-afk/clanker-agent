@@ -14,7 +14,7 @@ import {
   type SimpleStreamOptions,
   type StopReason,
   type ToolCall,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 
 // Create stream class matching ProxyMessageEventStream
 class ProxyMessageEventStream extends EventStream<

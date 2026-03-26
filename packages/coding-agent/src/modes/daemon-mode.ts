@@ -6,7 +6,7 @@
  * until explicitly stopped.
  */
 
-import type { ImageContent } from "@mariozechner/companion-ai";
+import type { ImageContent } from "@mariozechner/clanker-ai";
 import type { AgentSession } from "../core/agent-session.js";
 import {
   GatewayRuntime,
@@ -98,13 +98,13 @@ export async function runDaemonMode(
     resolveReady = resolve;
   });
   const gatewayBind =
-    process.env.COMPANION_GATEWAY_BIND ?? options.gateway.bind ?? "127.0.0.1";
+    process.env.CLANKER_GATEWAY_BIND ?? options.gateway.bind ?? "127.0.0.1";
   const gatewayPort =
-    Number.parseInt(process.env.COMPANION_GATEWAY_PORT ?? "", 10) ||
+    Number.parseInt(process.env.CLANKER_GATEWAY_PORT ?? "", 10) ||
     options.gateway.port ||
     8787;
   const gatewayToken =
-    process.env.COMPANION_GATEWAY_TOKEN ?? options.gateway.bearerToken;
+    process.env.CLANKER_GATEWAY_TOKEN ?? options.gateway.bearerToken;
   const gateway = new GatewayRuntime({
     config: {
       bind: gatewayBind,
@@ -118,7 +118,7 @@ export async function runDaemonMode(
         enabled: options.gateway.webhook?.enabled ?? true,
         basePath: options.gateway.webhook?.basePath ?? "/webhooks",
         secret:
-          process.env.COMPANION_GATEWAY_WEBHOOK_SECRET ??
+          process.env.CLANKER_GATEWAY_WEBHOOK_SECRET ??
           options.gateway.webhook?.secret,
       },
     },
@@ -126,7 +126,7 @@ export async function runDaemonMode(
     primarySession: session,
     createSession: options.createSession,
     log: (message) => {
-      console.error(`[companion-gateway] ${message}`);
+      console.error(`[clanker-gateway] ${message}`);
     },
   });
   setActiveGatewayRuntime(gateway);
@@ -135,7 +135,7 @@ export async function runDaemonMode(
     if (isShuttingDown) return;
     isShuttingDown = true;
 
-    console.error(`[companion-gateway] shutdown requested: ${reason}`);
+    console.error(`[clanker-gateway] shutdown requested: ${reason}`);
     setActiveGatewayRuntime(null);
     await gateway.stop();
 
@@ -151,7 +151,7 @@ export async function runDaemonMode(
   const handleShutdownSignal = (signal: NodeJS.Signals) => {
     void shutdown("signal").catch((error) => {
       console.error(
-        `[companion-gateway] shutdown failed for ${signal}: ${error instanceof Error ? error.message : String(error)}`,
+        `[clanker-gateway] shutdown failed for ${signal}: ${error instanceof Error ? error.message : String(error)}`,
       );
       resolveReady({ reason: "shutdown" });
     });
@@ -162,7 +162,7 @@ export async function runDaemonMode(
   const sighupHandler = () => handleShutdownSignal("SIGHUP");
   const unhandledRejectionHandler = (error: unknown) => {
     console.error(
-      `[companion-gateway] unhandled rejection: ${error instanceof Error ? error.message : String(error)}`,
+      `[clanker-gateway] unhandled rejection: ${error instanceof Error ? error.message : String(error)}`,
     );
   };
 
@@ -177,7 +177,7 @@ export async function runDaemonMode(
     shutdownHandler: () => {
       void shutdown("extension").catch((error) => {
         console.error(
-          `[companion-gateway] extension shutdown failed: ${error instanceof Error ? error.message : String(error)}`,
+          `[clanker-gateway] extension shutdown failed: ${error instanceof Error ? error.message : String(error)}`,
         );
         resolveReady({ reason: "shutdown" });
       });
@@ -208,7 +208,7 @@ export async function runDaemonMode(
 
   await gateway.start();
   console.error(
-    `[companion-gateway] startup complete (session=${session.sessionId ?? "unknown"}, bind=${gatewayBind}, port=${gatewayPort})`,
+    `[clanker-gateway] startup complete (session=${session.sessionId ?? "unknown"}, bind=${gatewayBind}, port=${gatewayPort})`,
   );
 
   // Keep process alive forever.

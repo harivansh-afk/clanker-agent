@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
 import type { AgentSessionEvent } from "../agent-session.js";
 import { extractMessageText } from "./helpers.js";
 import { messageContentToHistoryParts } from "./session-state.js";

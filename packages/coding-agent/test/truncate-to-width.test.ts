@@ -1,4 +1,4 @@
-import { truncateToWidth, visibleWidth } from "@mariozechner/companion-tui";
+import { truncateToWidth, visibleWidth } from "@mariozechner/clanker-tui";
 import { describe, expect, it } from "vitest";
 
 /**

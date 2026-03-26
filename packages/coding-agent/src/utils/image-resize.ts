@@ -1,4 +1,4 @@
-import type { ImageContent } from "@mariozechner/companion-ai";
+import type { ImageContent } from "@mariozechner/clanker-ai";
 import { loadPhoton } from "./photon.js";
 
 export interface ImageResizeOptions {

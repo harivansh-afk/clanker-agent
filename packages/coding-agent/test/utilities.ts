@@ -12,13 +12,13 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { Agent } from "@mariozechner/companion-agent-core";
+import { Agent } from "@mariozechner/clanker-agent-core";
 import {
   getModel,
   type OAuthCredentials,
   type OAuthProvider,
-} from "@mariozechner/companion-ai";
-import { getOAuthApiKey } from "@mariozechner/companion-ai/oauth";
+} from "@mariozechner/clanker-ai";
+import { getOAuthApiKey } from "@mariozechner/clanker-ai/oauth";
 import { AgentSession } from "../src/core/agent-session.js";
 import { AuthStorage } from "../src/core/auth-storage.js";
 import { createExtensionRuntime } from "../src/core/extensions/loader.js";
@@ -36,10 +36,10 @@ export const API_KEY =
   process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
 
 // ============================================================================
-// OAuth API key resolution from ~/.companion/agent/auth.json
+// OAuth API key resolution from ~/.clanker/agent/auth.json
 // ============================================================================
 
-const AUTH_PATH = join(homedir(), ".companion", "agent", "auth.json");
+const AUTH_PATH = join(homedir(), ".clanker", "agent", "auth.json");
 
 type ApiKeyCredential = {
   type: "api_key";
@@ -76,7 +76,7 @@ function saveAuthStorage(storage: AuthStorageData): void {
 }
 
 /**
- * Resolve API key for a provider from ~/.companion/agent/auth.json
+ * Resolve API key for a provider from ~/.clanker/agent/auth.json
  *
  * For API key credentials, returns the key directly.
  * For OAuth credentials, returns the access token (refreshing if expired and saving back).
@@ -122,18 +122,18 @@ export async function resolveApiKey(
 }
 
 /**
- * Check if a provider has credentials in ~/.companion/agent/auth.json
+ * Check if a provider has credentials in ~/.clanker/agent/auth.json
  */
 export function hasAuthForProvider(provider: string): boolean {
   const storage = loadAuthStorage();
   return provider in storage;
 }
 
-/** Path to the real companion agent config directory */
-export const COMPANION_AGENT_DIR = join(homedir(), ".companion", "agent");
+/** Path to the real clanker agent config directory */
+export const CLANKER_AGENT_DIR = join(homedir(), ".clanker", "agent");
 
 /**
- * Get an AuthStorage instance backed by ~/.companion/agent/auth.json
+ * Get an AuthStorage instance backed by ~/.clanker/agent/auth.json
  * Use this for tests that need real OAuth credentials.
  */
 export function getRealAuthStorage(): AuthStorage {
@@ -220,7 +220,7 @@ export function createTestSession(
 ): TestSessionContext {
   const tempDir = join(
     tmpdir(),
-    `companion-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    `clanker-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   mkdirSync(tempDir, { recursive: true });
 

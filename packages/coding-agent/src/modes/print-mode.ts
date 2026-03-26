@@ -2,11 +2,11 @@
  * Print mode (single-shot): Send prompts, output result, exit.
  *
  * Used for:
- * - `companion -p "prompt"` - text output
- * - `companion --mode json "prompt"` - JSON event stream
+ * - `clanker -p "prompt"` - text output
+ * - `clanker --mode json "prompt"` - JSON event stream
  */
 
-import type { AssistantMessage, ImageContent } from "@mariozechner/companion-ai";
+import type { AssistantMessage, ImageContent } from "@mariozechner/clanker-ai";
 import type { AgentSession } from "../core/agent-session.js";
 
 /**

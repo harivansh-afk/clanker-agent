@@ -2,13 +2,13 @@
  * Model resolution, scoping, and initial selection
  */
 
-import type { ThinkingLevel } from "@mariozechner/companion-agent-core";
+import type { ThinkingLevel } from "@mariozechner/clanker-agent-core";
 import {
   type Api,
   type KnownProvider,
   type Model,
   modelsAreEqual,
-} from "@mariozechner/companion-ai";
+} from "@mariozechner/clanker-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
 import { isValidThinkingLevel } from "../cli/args.js";

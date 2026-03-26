@@ -5,9 +5,9 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage } from "@mariozechner/companion-agent-core";
-import type { AssistantMessage, Model, Usage } from "@mariozechner/companion-ai";
-import { completeSimple } from "@mariozechner/companion-ai";
+import type { AgentMessage } from "@mariozechner/clanker-agent-core";
+import type { AssistantMessage, Model, Usage } from "@mariozechner/clanker-ai";
+import { completeSimple } from "@mariozechner/clanker-ai";
 import {
   convertToLlm,
   createBranchSummaryMessage,
@@ -45,7 +45,7 @@ function extractFileOperations(
 ): FileOperations {
   const fileOps = createFileOps();
 
-  // Collect from previous compaction's details (if companion-generated)
+  // Collect from previous compaction's details (if clanker-generated)
   if (prevCompactionIndex >= 0) {
     const prevCompaction = entries[prevCompactionIndex] as CompactionEntry;
     if (!prevCompaction.fromHook && prevCompaction.details) {

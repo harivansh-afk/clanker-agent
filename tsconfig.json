@@ -4,25 +4,25 @@
     "noEmit": true,
     "paths": {
       "*": ["./*"],
-      "@mariozechner/companion-ai": ["./packages/ai/src/index.ts"],
-      "@mariozechner/companion-ai/bedrock-provider": [
+      "@mariozechner/clanker-ai": ["./packages/ai/src/index.ts"],
+      "@mariozechner/clanker-ai/bedrock-provider": [
         "./packages/ai/src/bedrock-provider.ts"
       ],
-      "@mariozechner/companion-ai/oauth": ["./packages/ai/src/oauth.ts"],
-      "@mariozechner/companion-ai/*": ["./packages/ai/src/*"],
-      "@mariozechner/companion-ai/dist/*": ["./packages/ai/src/*"],
-      "@mariozechner/companion-agent-core": ["./packages/agent/src/index.ts"],
-      "@mariozechner/companion-agent-core/*": ["./packages/agent/src/*"],
-      "@mariozechner/companion-coding-agent": ["./packages/coding-agent/src/index.ts"],
-      "@mariozechner/companion-coding-agent/hooks": [
+      "@mariozechner/clanker-ai/oauth": ["./packages/ai/src/oauth.ts"],
+      "@mariozechner/clanker-ai/*": ["./packages/ai/src/*"],
+      "@mariozechner/clanker-ai/dist/*": ["./packages/ai/src/*"],
+      "@mariozechner/clanker-agent-core": ["./packages/agent/src/index.ts"],
+      "@mariozechner/clanker-agent-core/*": ["./packages/agent/src/*"],
+      "@mariozechner/clanker-coding-agent": ["./packages/coding-agent/src/index.ts"],
+      "@mariozechner/clanker-coding-agent/hooks": [
         "./packages/coding-agent/src/core/hooks/index.ts"
       ],
-      "@mariozechner/companion-coding-agent/*": ["./packages/coding-agent/src/*"],
+      "@mariozechner/clanker-coding-agent/*": ["./packages/coding-agent/src/*"],
       "@sinclair/typebox": ["./node_modules/@sinclair/typebox"],
-      "@mariozechner/companion-tui": ["./packages/tui/src/index.ts"],
-      "@mariozechner/companion-tui/*": ["./packages/tui/src/*"],
-      "@mariozechner/companion-agent-old": ["./packages/agent-old/src/index.ts"],
-      "@mariozechner/companion-agent-old/*": ["./packages/agent-old/src/*"]
+      "@mariozechner/clanker-tui": ["./packages/tui/src/index.ts"],
+      "@mariozechner/clanker-tui/*": ["./packages/tui/src/*"],
+      "@mariozechner/clanker-agent-old": ["./packages/agent-old/src/index.ts"],
+      "@mariozechner/clanker-agent-old/*": ["./packages/agent-old/src/*"]
     }
   },
   "include": ["packages/*/src/**/*", "packages/*/test/**/*"],

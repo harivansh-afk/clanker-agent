@@ -1,8 +1,8 @@
-> companion can help you use the SDK. Ask it to build an integration for your use case.
+> clanker can help you use the SDK. Ask it to build an integration for your use case.
 
 # SDK
 
-The SDK provides programmatic access to companion's agent capabilities. Use it to embed companion in other applications, build custom interfaces, or integrate with automated workflows.
+The SDK provides programmatic access to clanker's agent capabilities. Use it to embed clanker in other applications, build custom interfaces, or integrate with automated workflows.
 
 **Example use cases:**
 
@@ -22,7 +22,7 @@ import {
   createAgentSession,
   ModelRegistry,
   SessionManager,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // Set up credential storage and model registry
 const authStorage = AuthStorage.create();
@@ -49,7 +49,7 @@ await session.prompt("What files are in the current directory?");
 ## Installation
 
 ```bash
-npm install @mariozechner/companion-coding-agent
+npm install @mariozechner/clanker-coding-agent
 ```
 
 The SDK is included in the main package. No separate installation needed.
@@ -63,7 +63,7 @@ The main factory function. Creates an `AgentSession` with configurable options.
 `createAgentSession()` uses a `ResourceLoader` to supply extensions, skills, prompt templates, themes, and context files. If you do not provide one, it uses `DefaultResourceLoader` with standard discovery.
 
 ```typescript
-import { createAgentSession } from "@mariozechner/companion-coding-agent";
+import { createAgentSession } from "@mariozechner/clanker-coding-agent";
 
 // Minimal: defaults with DefaultResourceLoader
 const { session } = await createAgentSession();
@@ -170,7 +170,7 @@ await session.prompt("After you're done, also check X", {
 
 **Behavior:**
 
-- **Extension commands** (e.g., `/mycommand`): Execute immediately, even during streaming. They manage their own LLM interaction via `companion.sendMessage()`.
+- **Extension commands** (e.g., `/mycommand`): Execute immediately, even during streaming. They manage their own LLM interaction via `clanker.sendMessage()`.
 - **File-based prompt templates** (from `.md` files): Expanded to their content before sending/queueing.
 - **During streaming without `streamingBehavior`**: Throws an error. Use `steer()` or `followUp()` directly, or specify the option.
 
@@ -188,7 +188,7 @@ Both `steer()` and `followUp()` expand file-based prompt templates but error on 
 
 ### Agent and AgentState
 
-The `Agent` class (from `@mariozechner/companion-agent-core`) handles the core LLM interaction. Access it via `session.agent`.
+The `Agent` class (from `@mariozechner/clanker-agent-core`) handles the core LLM interaction. Access it via `session.agent`.
 
 ```typescript
 // Access current state
@@ -279,17 +279,17 @@ const { session } = await createAgentSession({
   cwd: process.cwd(), // default
 
   // Global config directory
-  agentDir: "~/.companion/agent", // default (expands ~)
+  agentDir: "~/.clanker/agent", // default (expands ~)
 });
 ```
 
 `cwd` is used by `DefaultResourceLoader` for:
 
-- Project extensions (`.companion/extensions/`)
+- Project extensions (`.clanker/extensions/`)
 - Project skills:
-  - `.companion/skills/`
+  - `.clanker/skills/`
   - `.agents/skills/` in `cwd` and ancestor directories (up to git repo root, or filesystem root when not in a repo)
-- Project prompts (`.companion/prompts/`)
+- Project prompts (`.clanker/prompts/`)
 - Context files (`AGENTS.md` walking up from cwd)
 - Session directory naming
 
@@ -297,7 +297,7 @@ const { session } = await createAgentSession({
 
 - Global extensions (`extensions/`)
 - Global skills:
-  - `skills/` under `agentDir` (for example `~/.companion/agent/skills/`)
+  - `skills/` under `agentDir` (for example `~/.clanker/agent/skills/`)
   - `~/.agents/skills/`
 - Global prompts (`prompts/`)
 - Global context file (`AGENTS.md`)
@@ -311,8 +311,8 @@ When you pass a custom `ResourceLoader`, `cwd` and `agentDir` no longer control 
 ### Model
 
 ```typescript
-import { getModel } from "@mariozechner/companion-ai";
-import { AuthStorage, ModelRegistry } from "@mariozechner/companion-coding-agent";
+import { getModel } from "@mariozechner/clanker-ai";
+import { AuthStorage, ModelRegistry } from "@mariozechner/clanker-coding-agent";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = new ModelRegistry(authStorage);
@@ -359,9 +359,9 @@ API key resolution priority (handled by AuthStorage):
 4. Fallback resolver (for custom provider keys from `models.json`)
 
 ```typescript
-import { AuthStorage, ModelRegistry } from "@mariozechner/companion-coding-agent";
+import { AuthStorage, ModelRegistry } from "@mariozechner/clanker-coding-agent";
 
-// Default: uses ~/.companion/agent/auth.json and ~/.companion/agent/models.json
+// Default: uses ~/.clanker/agent/auth.json and ~/.clanker/agent/models.json
 const authStorage = AuthStorage.create();
 const modelRegistry = new ModelRegistry(authStorage);
 
@@ -396,7 +396,7 @@ Use a `ResourceLoader` to override the system prompt:
 import {
   createAgentSession,
   DefaultResourceLoader,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const loader = new DefaultResourceLoader({
   systemPromptOverride: () => "You are a helpful assistant.",
@@ -419,7 +419,7 @@ import {
   grepTool,
   findTool,
   lsTool,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // Use built-in tool set
 const { session } = await createAgentSession({
@@ -447,7 +447,7 @@ import {
   createGrepTool,
   createFindTool,
   createLsTool,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const cwd = "/path/to/project";
 
@@ -466,7 +466,7 @@ const { session } = await createAgentSession({
 
 **When you don't need factories:**
 
-- If you omit `tools`, companion automatically creates them with the correct `cwd`
+- If you omit `tools`, clanker automatically creates them with the correct `cwd`
 - If you use `process.cwd()` as your `cwd`, the pre-built instances work fine
 
 **When you must use factories:**
@@ -480,7 +480,7 @@ import { Type } from "@sinclair/typebox";
 import {
   createAgentSession,
   type ToolDefinition,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // Inline custom tool
 const myTool: ToolDefinition = {
@@ -502,23 +502,23 @@ const { session } = await createAgentSession({
 });
 ```
 
-Custom tools passed via `customTools` are combined with extension-registered tools. Extensions loaded by the ResourceLoader can also register tools via `companion.registerTool()`.
+Custom tools passed via `customTools` are combined with extension-registered tools. Extensions loaded by the ResourceLoader can also register tools via `clanker.registerTool()`.
 
 ### Extensions
 
-Extensions are loaded by the `ResourceLoader`. `DefaultResourceLoader` discovers extensions from `~/.companion/agent/extensions/`, `.companion/extensions/`, and settings.json extension sources.
+Extensions are loaded by the `ResourceLoader`. `DefaultResourceLoader` discovers extensions from `~/.clanker/agent/extensions/`, `.clanker/extensions/`, and settings.json extension sources.
 
 ```typescript
 import {
   createAgentSession,
   DefaultResourceLoader,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const loader = new DefaultResourceLoader({
   additionalExtensionPaths: ["/path/to/my-extension.ts"],
   extensionFactories: [
-    (companion) => {
-      companion.on("agent_start", () => {
+    (clanker) => {
+      clanker.on("agent_start", () => {
         console.log("[Inline Extension] Agent starting");
       });
     },
@@ -531,13 +531,13 @@ const { session } = await createAgentSession({ resourceLoader: loader });
 
 Extensions can register tools, subscribe to events, add commands, and more. See [extensions.md](extensions.md) for the full API.
 
-**Event Bus:** Extensions can communicate via `companion.events`. Pass a shared `eventBus` to `DefaultResourceLoader` if you need to emit or listen from outside:
+**Event Bus:** Extensions can communicate via `clanker.events`. Pass a shared `eventBus` to `DefaultResourceLoader` if you need to emit or listen from outside:
 
 ```typescript
 import {
   createEventBus,
   DefaultResourceLoader,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const eventBus = createEventBus();
 const loader = new DefaultResourceLoader({
@@ -555,7 +555,7 @@ import {
   createAgentSession,
   DefaultResourceLoader,
   type Skill,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const customSkill: Skill = {
   name: "my-skill",
@@ -582,7 +582,7 @@ const { session } = await createAgentSession({ resourceLoader: loader });
 import {
   createAgentSession,
   DefaultResourceLoader,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const loader = new DefaultResourceLoader({
   agentsFilesOverride: (current) => ({
@@ -604,7 +604,7 @@ import {
   createAgentSession,
   DefaultResourceLoader,
   type PromptTemplate,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const customCommand: PromptTemplate = {
   name: "deploy",
@@ -632,7 +632,7 @@ Sessions use a tree structure with `id`/`parentId` linking, enabling in-place br
 import {
   createAgentSession,
   SessionManager,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // In-memory (no persistence)
 const { session } = await createAgentSession({
@@ -707,7 +707,7 @@ import {
   createAgentSession,
   SettingsManager,
   SessionManager,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // Default: loads from files (global + project merged)
 const { session } = await createAgentSession({
@@ -743,8 +743,8 @@ const { session } = await createAgentSession({
 
 Settings load from two locations and merge:
 
-1. Global: `~/.companion/agent/settings.json`
-2. Project: `<cwd>/.companion/settings.json`
+1. Global: `~/.clanker/agent/settings.json`
+2. Project: `<cwd>/.clanker/settings.json`
 
 Project overrides global. Nested objects merge keys. Setters modify global settings by default.
 
@@ -763,7 +763,7 @@ Use `DefaultResourceLoader` to discover extensions, skills, prompts, themes, and
 import {
   DefaultResourceLoader,
   getAgentDir,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const loader = new DefaultResourceLoader({
   cwd,
@@ -804,7 +804,7 @@ interface LoadExtensionsResult {
 ## Complete Example
 
 ```typescript
-import { getModel } from "@mariozechner/companion-ai";
+import { getModel } from "@mariozechner/clanker-ai";
 import { Type } from "@sinclair/typebox";
 import {
   AuthStorage,
@@ -816,7 +816,7 @@ import {
   readTool,
   bashTool,
   type ToolDefinition,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 // Set up auth storage (custom location)
 const authStorage = AuthStorage.create("/custom/agent/auth.json");
@@ -899,7 +899,7 @@ Full TUI interactive mode with editor, chat history, and all built-in commands:
 import {
   createAgentSession,
   InteractiveMode,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const { session } = await createAgentSession({
   /* ... */
@@ -925,7 +925,7 @@ Single-shot mode: send prompts, output result, exit:
 import {
   createAgentSession,
   runPrintMode,
-} from "@mariozechner/companion-coding-agent";
+} from "@mariozechner/clanker-coding-agent";
 
 const { session } = await createAgentSession({
   /* ... */
@@ -944,7 +944,7 @@ await runPrintMode(session, {
 JSON-RPC mode for subprocess integration:
 
 ```typescript
-import { createAgentSession, runRpcMode } from "@mariozechner/companion-coding-agent";
+import { createAgentSession, runRpcMode } from "@mariozechner/clanker-coding-agent";
 
 const { session } = await createAgentSession({
   /* ... */
@@ -960,7 +960,7 @@ See [RPC documentation](rpc.md) for the JSON protocol.
 For subprocess-based integration without building with the SDK, use the CLI directly:
 
 ```bash
-companion --mode rpc --no-session
+clanker --mode rpc --no-session
 ```
 
 See [RPC documentation](rpc.md) for the JSON protocol.

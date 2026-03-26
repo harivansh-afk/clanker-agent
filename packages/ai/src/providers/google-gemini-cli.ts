@@ -88,7 +88,7 @@ const DEFAULT_ANTIGRAVITY_VERSION = "1.18.3";
 
 function getAntigravityHeaders() {
   const version =
-    process.env.COMPANION_AI_ANTIGRAVITY_VERSION || DEFAULT_ANTIGRAVITY_VERSION;
+    process.env.CLANKER_AI_ANTIGRAVITY_VERSION || DEFAULT_ANTIGRAVITY_VERSION;
   return {
     "User-Agent": `antigravity/${version} darwin/arm64`,
   };
@@ -1040,8 +1040,8 @@ export function buildRequest(
     model: model.id,
     request,
     ...(isAntigravity ? { requestType: "agent" } : {}),
-    userAgent: isAntigravity ? "antigravity" : "companion-coding-agent",
-    requestId: `${isAntigravity ? "agent" : "companion"}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    userAgent: isAntigravity ? "antigravity" : "clanker-coding-agent",
+    requestId: `${isAntigravity ? "agent" : "clanker"}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   };
 }
 
