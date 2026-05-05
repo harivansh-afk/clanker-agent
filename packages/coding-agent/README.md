@@ -6,7 +6,7 @@
 <p align="center">
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
   <a href="https://www.npmjs.com/package/@mariozechner/clanker-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@mariozechner/clanker-coding-agent?style=flat-square" /></a>
-  <a href="https://github.com/harivansh-afk/clanker-agent/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/harivansh-afk/clanker-agent/ci.yml?style=flat-square&branch=main" /></a>
+  <a href="https://git.harivan.sh/harivansh-afk/clanker-agent/actions"><img alt="Build status" src="https://img.shields.io/badge/ci-forgejo-blue?style=flat-square" /></a>
 </p>
 <p align="center">
   <a href="https://clanker.dev">clanker.dev</a> domain graciously donated by
